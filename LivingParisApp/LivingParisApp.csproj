@@ -8,4 +8,7 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LivingParisApp.Services\LivingParisApp.Services.csproj" />
+  </ItemGroup>
 </Project>
