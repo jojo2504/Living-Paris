@@ -2,13 +2,14 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Collections.Generic;
+using static LivingParisApp.Services.EnvironmentSetup.Constants;
 
 namespace LivingParisApp.Services {
     public class MySQLManager {
         private readonly string _connectionString;
 
-        public MySQLManager(string server, string database, string username, string password, uint port = 3306) {
-            _connectionString = $"Server={server};Database={database};Uid={username};Pwd={password};Port={port};";
+        public MySQLManager() {
+            _connectionString = GetConnectionString();
         }
 
         public bool TestConnection() {

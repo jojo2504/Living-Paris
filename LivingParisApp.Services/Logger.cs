@@ -4,30 +4,13 @@ using Serilog.Events;
 using Serilog.Sinks;
 using System;
 using System.IO;
+using static LivingParisApp.Services.EnvironmentSetup.Constants;
 
-namespace LivingParisApp.Services
-{
-    public static class Logger
-    {
+namespace LivingParisApp.Services {
+    public static class Logger {
         private static ILogger _logger;
-        private static readonly string _appFolderName = "Living Paris";
-        private static readonly string _logsFolderName = "Logs";
-        private static readonly string _logFileName = "app_log.log";
-        private static string LogFilePath => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            _appFolderName,
-            _logsFolderName,
-            _logFileName);
 
-        public static void ConfigureLogger()
-        {
-            // Ensure directory exists
-            var logDirectory = Path.GetDirectoryName(LogFilePath);
-            if (!Directory.Exists(logDirectory))
-            {
-                Directory.CreateDirectory(logDirectory);
-            }
-
+        public static void ConfigureLogger() {
             _logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.File(LogFilePath,
@@ -43,36 +26,28 @@ namespace LivingParisApp.Services
             Log("Logging initialized");
         }
 
-        public static void LogMessage(string message, LogEventLevel level = LogEventLevel.Information, Exception ex = null)
-        {
-            if (_logger == null)
-            {
+        public static void LogMessage(string message, LogEventLevel level = LogEventLevel.Information, Exception ex = null) {
+            if (_logger == null) {
                 ConfigureLogger(); // Auto-initialize if not done
             }
 
-            try
-            {
-                if (ex != null)
-                {
+            try {
+                if (ex != null) {
                     _logger.Write(level, ex, message);
                 }
-                else
-                {
+                else {
                     _logger.Write(level, message);
                 }
 
-                if (level == LogEventLevel.Fatal)
-                {
+                if (level == LogEventLevel.Fatal) {
                     Environment.Exit(1);
                 }
             }
-            catch (Exception loggingEx)
-            {
+            catch (Exception loggingEx) {
                 // Fallback to console in case of logging failure
                 Console.WriteLine($"Logging failed: {loggingEx.Message}");
                 Console.WriteLine($"Original message: [{level}] {message}");
-                if (ex != null)
-                {
+                if (ex != null) {
                     Console.WriteLine($"Original exception: {ex}");
                 }
             }
@@ -85,18 +60,14 @@ namespace LivingParisApp.Services
         public static void Error(string message = "", Exception ex = null) => LogMessage(message, LogEventLevel.Error, ex);
         public static void Fatal(string message = "", Exception ex = null) => LogMessage(message, LogEventLevel.Fatal, ex);
 
-        public static void ClearLog()
-        {
-            try
-            {
-                if (File.Exists(LogFilePath))
-                {
+        public static void ClearLog() {
+            try {
+                if (File.Exists(LogFilePath)) {
                     File.WriteAllText(LogFilePath, $"Log file cleared at {DateTime.Now}\n");
                     Log("Log file cleared");
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Console.WriteLine($"Failed to clear log file: {ex.Message}");
             }
         }
