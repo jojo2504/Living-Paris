@@ -2,9 +2,10 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Data;
 using System.Collections.Generic;
+using LivingParisApp.Services.Logging;
 using static LivingParisApp.Services.EnvironmentSetup.Constants;
 
-namespace LivingParisApp.Services {
+namespace LivingParisApp.Services.MySQL {
     public class MySQLManager {
         private readonly string _connectionString;
 

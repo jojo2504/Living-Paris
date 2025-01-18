@@ -1,12 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
-using Serilog.Sinks;
-using System;
-using System.IO;
 using static LivingParisApp.Services.EnvironmentSetup.Constants;
 
-namespace LivingParisApp.Services {
+namespace LivingParisApp.Services.Logging {
     public static class Logger {
         private static ILogger _logger;
 
