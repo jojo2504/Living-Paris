@@ -10,5 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LivingParisApp.Services\LivingParisApp.Services.csproj" />
+    <ProjectReference Include="..\LivingParisApp.Core\LivingParisApp.Core.csproj" />
   </ItemGroup>
 </Project>
