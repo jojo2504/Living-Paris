@@ -21,7 +21,7 @@ namespace LivingParisApp.Services.MySQL {
                 }
             }
             catch (Exception ex) {
-                Logger.Error("Database connection test failed", ex);
+                Logger.Error("Database connection test failed");
                 return false;
             }
         }
@@ -41,7 +41,7 @@ namespace LivingParisApp.Services.MySQL {
                 }
             }
             catch (Exception ex) {
-                Logger.Error($"Failed to execute query: {query}", ex);
+                Logger.Error($"Failed to execute query: {query}");
                 throw;
             }
         }
@@ -61,7 +61,7 @@ namespace LivingParisApp.Services.MySQL {
                 }
             }
             catch (Exception ex) {
-                Logger.Error($"Failed to execute scalar query: {query}", ex);
+                Logger.Error($"Failed to execute scalar query: {query}");
                 throw;
             }
         }
@@ -86,7 +86,7 @@ namespace LivingParisApp.Services.MySQL {
                 }
             }
             catch (Exception ex) {
-                Logger.Error($"Failed to execute query: {query}", ex);
+                Logger.Error($"Failed to execute query: {query}");
                 throw;
             }
         }
@@ -107,7 +107,7 @@ namespace LivingParisApp.Services.MySQL {
                 Logger.Log("Database initialized successfully");
             }
             catch (Exception ex) {
-                Logger.Error("Failed to initialize database", ex);
+                Logger.Error("Failed to initialize database");
                 throw;
             }
         }
