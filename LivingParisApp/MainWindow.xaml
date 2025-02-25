@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LivingParisApp"
         mc:Ignorable="d"
-        Title="Graph Visualizer" Height="1080" Width="1980"
+        Title="Graph Visualizer" Height="900" Width="1500"
         Background="#1E1E1E">
     <Grid>
         <Canvas Name="GraphCanvas" Background="#252526"/>

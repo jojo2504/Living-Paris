@@ -4,25 +4,22 @@ namespace LivingParisApp.Core.GraphStructure {
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class Node<T> {
-        public readonly T Object;
-
-        public Node(T Object) {
-            this.Object = Object;
-        }
-
-        public override bool Equals(object obj) {
-            if (obj is Node<T> other) {
-                return EqualityComparer<T>.Default.Equals(this.Object, other.Object);
-            }
-            return false;
-        }   
-
-        public override int GetHashCode() {
-            return EqualityComparer<T>.Default.GetHashCode(this.Object);
-        }
+        public T Object { get; }
+        public Node(T obj) => Object = obj;
 
         public override string ToString() {
-            throw new NotImplementedException();
+            return Object?.ToString() ?? "null"; // Safely handle null Object
+        }
+
+        // Optional: Override Equals and GetHashCode for dictionary key usage
+        public override bool Equals(object obj) {
+            if (obj is Node<T> other)
+                return EqualityComparer<T>.Default.Equals(Object, other.Object);
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return Object != null ? Object.GetHashCode() : 0;
         }
     }
 }

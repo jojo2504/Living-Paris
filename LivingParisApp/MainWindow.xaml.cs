@@ -8,70 +8,129 @@ using System.Windows.Media;
 using System.Windows.Input;
 using LivingParisApp.Core.GraphStructure;
 using System.Windows.Threading;
-using System.Windows.Media.Effects;
 using System.Windows.Media.Animation;
-using System.Diagnostics;
 using LivingParisApp.Services.Logging;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
-        private Dictionary<Node<string>, Point> nodePositions = new();
-        private Dictionary<Node<string>, Ellipse> nodeShapes = new();
-        private Dictionary<Node<string>, TextBlock> nodeLabels = new();
-        private Dictionary<Node<string>, List<Line>> edgeLines = new();
+        private readonly IGraphVisualizer graphVisualizer;
 
-        private Rectangle nightModeOverlay;
+        public MainWindow()
+            : this(new Graph<int>(s => int.Parse(s))) // Default to Graph<int> for soc-karate.mtx
+        {
+        }
 
-        private Node<string> draggingNode = null;
+        public MainWindow(Graph<int> graph) {
+            InitializeComponent();
+            graphVisualizer = new GraphVisualizer<int>(graph, GraphCanvas);
+            Logger.Log("MainWindow initialized with Graph<int>");
+        }
+
+        private void ToggleSearchMode(object sender, RoutedEventArgs e) => graphVisualizer.ToggleSearchMode(sender, e);
+        private void StartSearch(object sender, RoutedEventArgs e) => graphVisualizer.StartSearch(sender, e);
+        private void TogglePhysicsMode(object sender, RoutedEventArgs e) => graphVisualizer.TogglePhysicsMode(sender, e);
+    }
+
+    public interface IGraphVisualizer {
+        void ToggleSearchMode(object sender, RoutedEventArgs e);
+        void StartSearch(object sender, RoutedEventArgs e);
+        void TogglePhysicsMode(object sender, RoutedEventArgs e);
+    }
+
+    public class GraphVisualizer<T> : IGraphVisualizer {
+        private readonly Graph<T> graph;
+        private readonly Canvas graphCanvas;
+        private readonly Dictionary<Node<T>, Point> nodePositions = new();
+        private readonly Dictionary<Node<T>, Ellipse> nodeShapes = new();
+        private readonly Dictionary<Node<T>, TextBlock> nodeLabels = new();
+        private readonly Dictionary<Node<T>, List<Line>> edgeLines = new();
+        private readonly Dictionary<(Node<T>, Node<T>), (Line Line, string State)> edgeStates = new();
+        private readonly Dictionary<Node<T>, Node<T>> parentNodes = new();
+        private readonly Dictionary<Node<T>, Vector> nodeVelocities = new();
+
+        private Node<T> draggingNode;
         private Point lastMousePosition;
 
-        // BFS variables
-        private Queue<Node<string>> bfsQueue;
-        private DispatcherTimer bfsTimer;
-        private HashSet<Node<string>> visitedNodes;
-        private HashSet<Node<string>> animatedNodes = new();
-        private Dictionary<Line, DropShadowEffect> edgeEffects;
-        private HashSet<(Node<string>, Node<string>)> animatedEdges = new();  // Set to track animated edges
+        private Queue<Node<T>> bfsQueue;
+        private Stack<Node<T>> dfsStack;
+        private DispatcherTimer searchTimer;
+        private DispatcherTimer physicsTimer;
+        private HashSet<Node<T>> visitedNodes;
+        private readonly HashSet<Node<T>> animatedNodes = new();
+        private bool isBFS = true;
+        private Node<T> targetNode;
+        private bool targetFound = false;
+        private TextBlock searchModeText;
+        private TextBlock targetStatusText;
+        private TextBlock instructionsText;
+        private TextBlock nodeStatsText;
+        private TextBlock physicsModeText;
+        private bool isMagneticMode = true;
 
-        private Graph<string> graph;
+        private const double MagneticSpringConstant = 0.01;
+        private const double MagneticRepulsionConstant = 1000.0;
+        private const double RepulsionConstant = 500.0;
+        private const double DraggingRepulsionConstant = 2000.0;
+        private const double Damping = 0.85;
+        private const double MaxVelocity = 50.0;
+        private const double MinDistance = 10.0;
+        private const double RepulsionDecayRate = 0.01;
 
-        public MainWindow(Graph<string> graph) {
-            InitializeComponent();
-            this.graph = graph;
-            DrawGraph(graph);
-
-            bfsTimer = new DispatcherTimer {
-                Interval = TimeSpan.FromMilliseconds(2000) // Animation speed
-            };
-            bfsTimer.Tick += OnBfsTick;
+        public GraphVisualizer(Graph<T> graph, Canvas canvas) {
+            this.graph = graph ?? throw new ArgumentNullException(nameof(graph));
+            this.graphCanvas = canvas ?? throw new ArgumentNullException(nameof(canvas));
+            graphCanvas.Loaded += (s, e) => InitializeGraph();
         }
 
-        private void InitializeNightMode() {
-            // Create a dark overlay to simulate night mode
-            nightModeOverlay = new Rectangle {
-                Width = GraphCanvas.ActualWidth,
-                Height = GraphCanvas.ActualHeight,
-                Fill = new SolidColorBrush(Color.FromArgb(180, 0, 0, 0)), // Semi-transparent black
-                IsHitTestVisible = false // Allows interaction with nodes
-            };
-
-            // Add overlay as the first child (background layer)
-            GraphCanvas.Children.Insert(0, nightModeOverlay);
-        }
-
-        private void DrawGraph(Graph<string> graph) {
+        private void InitializeGraph() {
             try {
-                Random rand = new Random();
+                Logger.Log("Initializing graph visualization");
+                DrawGraph();
+                SetupUIControls();
 
-                // Assign random initial positions to nodes
+                searchTimer = new DispatcherTimer {
+                    Interval = TimeSpan.FromMilliseconds(1000)
+                };
+                searchTimer.Tick += OnSearchTick;
+
+                physicsTimer = new DispatcherTimer {
+                    Interval = TimeSpan.FromMilliseconds(16)
+                };
+                physicsTimer.Tick += OnPhysicsTick;
+                physicsTimer.Start();
+
+                Logger.Log("Graph visualization initialized");
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private void DrawGraph() {
+            try {
+                Logger.Log("DrawGraph started");
+                Random rand = new Random();
+                double canvasWidth = graphCanvas.ActualWidth;
+                double canvasHeight = graphCanvas.ActualHeight;
+
+                if (canvasWidth <= 0 || canvasHeight <= 0) {
+                    Logger.Log("Canvas size not yet available, skipping node placement");
+                    return;
+                }
+
                 foreach (var node in graph.AdjacencyList.Keys) {
                     if (!nodePositions.ContainsKey(node)) {
-                        nodePositions[node] = new Point(rand.Next(100, 1880), rand.Next(100, 980));
+                        int minX = 50;
+                        int maxX = (int)canvasWidth - 50;
+                        int minY = 50;
+                        int maxY = (int)canvasHeight - 50;
+
+                        nodePositions[node] = new Point(rand.Next(minX, maxX), rand.Next(minY, maxY));
+                        nodeVelocities[node] = new Vector(0, 0);
                     }
                 }
 
-                // Draw edges
-                HashSet<(Node<string>, Node<string>)> drawnEdges = new();
+                HashSet<(Node<T>, Node<T>)> drawnEdges = new();
                 foreach (var kvp in graph.AdjacencyList) {
                     var fromNode = kvp.Key;
                     foreach (var edge in kvp.Value) {
@@ -83,443 +142,797 @@ namespace LivingParisApp {
                     }
                 }
 
-                // Draw nodes
                 foreach (var node in graph.AdjacencyList.Keys) {
                     DrawNode(node);
                 }
+                Logger.Log($"DrawGraph completed with {nodePositions.Count} nodes and {edgeStates.Count} edges");
             }
             catch (Exception ex) {
-                Logger.Log(ex.Message);
+                Logger.Log(ex);
             }
         }
 
+        private void SetupUIControls() {
+            try {
+                Logger.Log("SetupUIControls started");
+                Button toggleButton = new Button {
+                    Content = "Switch to DFS",
+                    Width = 100,
+                    Height = 30,
+                    Margin = new Thickness(10, 10, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                toggleButton.Click += ToggleSearchMode;
+                graphCanvas.Children.Add(toggleButton);
 
-        private void DrawNode(Node<string> node) {
-            Point position = nodePositions[node];
+                Button playButton = new Button {
+                    Content = "Play",
+                    Width = 100,
+                    Height = 30,
+                    Margin = new Thickness(120, 10, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                playButton.Click += StartSearch;
+                graphCanvas.Children.Add(playButton);
 
-            Canvas nodeContainer = new Canvas {
-                Width = 100,
-                Height = 100,
-                ClipToBounds = false
-            };
+                searchModeText = new TextBlock {
+                    Text = "Current Mode: BFS",
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontSize = 16,
+                    Margin = new Thickness(230, 15, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                graphCanvas.Children.Add(searchModeText);
 
-            // Create a much darker base node
-            Ellipse ellipse = new Ellipse {
-                Width = 60,
-                Height = 60,
-                StrokeThickness = 2,
-                Stroke = new SolidColorBrush(Color.FromArgb(40, 100, 100, 100)), // Very faint outline
-                Fill = new RadialGradientBrush {
-                    GradientStops = new GradientStopCollection {
-                new GradientStop(Color.FromArgb(30, 20, 20, 35), 0.0), // Almost black with slight blue tint
-                new GradientStop(Color.FromArgb(20, 10, 10, 25), 1.0)  // Even darker edge
+                targetStatusText = new TextBlock {
+                    Text = "Target: None",
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontSize = 16,
+                    Margin = new Thickness(400, 15, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                graphCanvas.Children.Add(targetStatusText);
+
+                instructionsText = new TextBlock {
+                    Text = "Instructions:\n- Click 'Switch to DFS' to toggle BFS/DFS.\n- Click 'Play' to start the search.\n- Right-click a node to set it as the target (red border).\n- Double-click a node to start search from it.\n- Left-click a node to see its stats.\n- Drag nodes (or text) to reposition.\n- Click 'Toggle Forces' to switch physics.",
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontSize = 14,
+                    Margin = new Thickness(10, 50, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    TextWrapping = TextWrapping.Wrap,
+                    Width = 300
+                };
+                graphCanvas.Children.Add(instructionsText);
+
+                nodeStatsText = new TextBlock {
+                    Text = "Node Stats: None",
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontSize = 14,
+                    Margin = new Thickness(320, 50, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    TextWrapping = TextWrapping.Wrap,
+                    Width = 200
+                };
+                graphCanvas.Children.Add(nodeStatsText);
+
+                Button toggleForcesButton = new Button {
+                    Content = "Toggle Forces",
+                    Width = 100,
+                    Height = 30,
+                    Margin = new Thickness(10, 220, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                toggleForcesButton.Click += TogglePhysicsMode;
+                graphCanvas.Children.Add(toggleForcesButton);
+
+                physicsModeText = new TextBlock {
+                    Text = "Physics: Magnetic",
+                    Foreground = new SolidColorBrush(Colors.White),
+                    FontSize = 16,
+                    Margin = new Thickness(120, 225, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
+                graphCanvas.Children.Add(physicsModeText);
+
+                Logger.Log("SetupUIControls completed");
             }
-                },
-                Effect = new DropShadowEffect {
-                    Color = Colors.Black,
-                    BlurRadius = 5,
-                    ShadowDepth = 0,
-                    Opacity = 0.2
-                }
-            };
-
-            Canvas.SetLeft(ellipse, 20);
-            Canvas.SetTop(ellipse, 20);
-
-            // Darker, more subtle text
-            TextBlock text = new TextBlock {
-                Text = node.Object.ToString(),
-                Foreground = new SolidColorBrush(Color.FromArgb(120, 200, 200, 200)), // Very faint text
-                FontSize = 18,
-                FontWeight = FontWeights.Bold,
-                FontFamily = new FontFamily("Segoe UI"),
-                Effect = new DropShadowEffect {
-                    Color = Colors.Black,
-                    BlurRadius = 3,
-                    ShadowDepth = 0,
-                    Opacity = 0.8
-                },
-                Background = null,
-                TextAlignment = TextAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                IsHitTestVisible = false
-            };
-
-            text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Size textSize = text.DesiredSize;
-            Canvas.SetLeft(text, (60 - textSize.Width) / 2 + 20);
-            Canvas.SetTop(text, (60 - textSize.Height) / 2 + 20);
-
-            nodeContainer.Children.Add(ellipse);
-            nodeContainer.Children.Add(text);
-
-            Canvas.SetLeft(nodeContainer, position.X - 50);
-            Canvas.SetTop(nodeContainer, position.Y - 50);
-
-            // Event handlers remain the same
-            ellipse.MouseDown += (sender, e) => {
-                if (e.ChangedButton == MouseButton.Left && e.ClickCount >= 2) {
-                    StartBFS(node);
-                }
-            };
-
-            nodeContainer.MouseDown += (sender, e) => StartDragging(node, e);
-            nodeContainer.MouseMove += (sender, e) => DragNode(e);
-            nodeContainer.MouseUp += (sender, e) => StopDragging();
-
-            GraphCanvas.Children.Add(nodeContainer);
-            nodeShapes[node] = ellipse;
-            nodeLabels[node] = text;
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
         }
 
-        private void DrawEdge(Node<string> from, Node<string> to) {
-            // Increased edge opacity from 25 to 40 for better visibility
-            Line line = new Line {
-                X1 = nodePositions[from].X,
-                Y1 = nodePositions[from].Y,
-                X2 = nodePositions[to].X,
-                Y2 = nodePositions[to].Y,
-                Stroke = new SolidColorBrush(Color.FromArgb(40, 80, 80, 100)), // Increased opacity and slightly lighter color
-                StrokeThickness = 1.5
-            };
+        private void DrawNode(Node<T> node) {
+            try {
+                Logger.Log($"Drawing node: {node.Object}");
+                Point position = nodePositions[node];
+                int connectionCount = graph.AdjacencyList[node].Count;
+                double size = 40 + (connectionCount * 5);
+                Canvas nodeContainer = new Canvas { Width = size + 20, Height = size + 20 };
 
-            GraphCanvas.Children.Add(line);
+                Ellipse ellipse = new Ellipse {
+                    Width = size,
+                    Height = size,
+                    Fill = new SolidColorBrush(Color.FromRgb(20, 20, 35)),
+                    Stroke = new SolidColorBrush(Color.FromRgb(80, 80, 100)),
+                    StrokeThickness = 1
+                };
+                Canvas.SetLeft(ellipse, 10);
+                Canvas.SetTop(ellipse, 10);
 
-            if (!edgeLines.ContainsKey(from)) edgeLines[from] = new List<Line>();
-            if (!edgeLines.ContainsKey(to)) edgeLines[to] = new List<Line>();
+                TextBlock text = new TextBlock {
+                    Text = node.Object.ToString(),
+                    Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200)),
+                    FontSize = 14,
+                    TextAlignment = TextAlignment.Center
+                };
+                text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                Size textSize = text.DesiredSize;
+                Canvas.SetLeft(text, (size - textSize.Width) / 2 + 10);
+                Canvas.SetTop(text, (size - textSize.Height) / 2 + 10);
 
-            edgeLines[from].Add(line);
-            edgeLines[to].Add(line);
+                nodeContainer.Children.Add(ellipse);
+                nodeContainer.Children.Add(text);
+
+                Canvas.SetLeft(nodeContainer, position.X - (size + 20) / 2);
+                Canvas.SetTop(nodeContainer, position.Y - (size + 20) / 2);
+
+                ellipse.MouseDown += (sender, e) => {
+                    if (e.ChangedButton == MouseButton.Left && e.ClickCount >= 2) {
+                        StartSearchFromNode(node);
+                    }
+                    else if (e.ChangedButton == MouseButton.Right) {
+                        SetTargetNode(node);
+                    }
+                    else if (e.ChangedButton == MouseButton.Left && e.ClickCount == 1) {
+                        DisplayNodeStats(node);
+                    }
+                };
+                nodeContainer.MouseDown += (sender, e) => StartDragging(node, e);
+                nodeContainer.MouseMove += (sender, e) => DragNode(e);
+                nodeContainer.MouseUp += (sender, e) => StopDragging();
+
+                text.MouseDown += (sender, e) => StartDragging(node, e);
+                text.MouseMove += (sender, e) => DragNode(e);
+                text.MouseUp += (sender, e) => StopDragging();
+
+                graphCanvas.Children.Add(nodeContainer);
+                nodeShapes[node] = ellipse;
+                nodeLabels[node] = text;
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
         }
 
-        private void StartDragging(Node<string> node, MouseButtonEventArgs e) {
-            draggingNode = node;
-            lastMousePosition = e.GetPosition(GraphCanvas);
+        private void DrawEdge(Node<T> from, Node<T> to) {
+            try {
+                Line line = new Line {
+                    X1 = nodePositions[from].X,
+                    Y1 = nodePositions[from].Y,
+                    X2 = nodePositions[to].X,
+                    Y2 = nodePositions[to].Y,
+                    Stroke = new SolidColorBrush(Color.FromRgb(80, 80, 100)),
+                    StrokeThickness = 1,
+                    Opacity = 1
+                };
+                graphCanvas.Children.Add(line);
+
+                var edgeKey = Comparer<T>.Create((a, b) => a.ToString().CompareTo(b.ToString())).Compare(from.Object, to.Object) < 0 ? (from, to) : (to, from);
+                edgeStates[edgeKey] = (line, "Default");
+
+                if (!edgeLines.ContainsKey(from)) edgeLines[from] = new List<Line>();
+                if (!edgeLines.ContainsKey(to)) edgeLines[to] = new List<Line>();
+                edgeLines[from].Add(line);
+                edgeLines[to].Add(line);
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private void StartDragging(Node<T> node, MouseButtonEventArgs e) {
+            try {
+                if (node == null) {
+                    Logger.Log("Node is null in StartDragging");
+                    return;
+                }
+                draggingNode = node;
+                lastMousePosition = e.GetPosition(graphCanvas);
+                if (!nodeVelocities.ContainsKey(node)) {
+                    Logger.Log($"Initializing velocity for node: {node.Object}");
+                    nodeVelocities[node] = new Vector(0, 0);
+                }
+                else {
+                    nodeVelocities[node] = new Vector(0, 0);
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+                draggingNode = default;
+            }
         }
 
         private void DragNode(MouseEventArgs e) {
-            if (draggingNode == null) return;
+            try {
+                if (Equals(draggingNode, default(Node<T>))) {
+                    return;
+                }
+                Point newMousePosition = e.GetPosition(graphCanvas);
+                double dx = newMousePosition.X - lastMousePosition.X;
+                double dy = newMousePosition.Y - lastMousePosition.Y;
 
-            Point newMousePosition = e.GetPosition(GraphCanvas);
-            double dx = newMousePosition.X - lastMousePosition.X;
-            double dy = newMousePosition.Y - lastMousePosition.Y;
-
-            if (nodeShapes.TryGetValue(draggingNode, out Ellipse ellipse)) {
-                Canvas nodeContainer = (Canvas)ellipse.Parent;
-                double newX = Canvas.GetLeft(nodeContainer) + dx;
-                double newY = Canvas.GetTop(nodeContainer) + dy;
-
-                // Update container position and node position
-                Canvas.SetLeft(nodeContainer, newX);
-                Canvas.SetTop(nodeContainer, newY);
-                nodePositions[draggingNode] = new Point(newX + 50, newY + 50);
-                lastMousePosition = newMousePosition;
-
-                UpdateAllEdges(); // Update edges immediately
+                if (nodeShapes.TryGetValue(draggingNode, out Ellipse ellipse) && ellipse != null) {
+                    Canvas nodeContainer = ellipse.Parent as Canvas;
+                    if (nodeContainer != null) {
+                        double newX = Canvas.GetLeft(nodeContainer) + dx;
+                        double newY = Canvas.GetTop(nodeContainer) + dy;
+                        newX = Math.Max(0, Math.Min(newX, graphCanvas.ActualWidth - nodeContainer.Width));
+                        newY = Math.Max(0, Math.Min(newY, graphCanvas.ActualHeight - nodeContainer.Height));
+                        Canvas.SetLeft(nodeContainer, newX);
+                        Canvas.SetTop(nodeContainer, newY);
+                        nodePositions[draggingNode] = new Point(newX + nodeContainer.Width / 2, newY + nodeContainer.Height / 2);
+                        lastMousePosition = newMousePosition;
+                        UpdateAllEdges();
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
         }
 
         private void StopDragging() {
-            draggingNode = null;
+            try {
+                draggingNode = default;
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
         }
 
         private void UpdateAllEdges() {
-            foreach (var line in edgeLines.Values.SelectMany(x => x).Distinct()) {
-                var connectedNodes = nodePositions.Keys
-                    .Where(n => edgeLines[n].Contains(line))
-                    .Take(2).ToList();
-
-                if (connectedNodes.Count == 2) {
-                    line.X1 = nodePositions[connectedNodes[0]].X;
-                    line.Y1 = nodePositions[connectedNodes[0]].Y;
-                    line.X2 = nodePositions[connectedNodes[1]].X;
-                    line.Y2 = nodePositions[connectedNodes[1]].Y;
+            try {
+                foreach (var line in edgeLines.Values.SelectMany(x => x).Distinct()) {
+                    var connectedNodes = nodePositions.Keys
+                        .Where(n => edgeLines[n].Contains(line))
+                        .Take(2).ToList();
+                    if (connectedNodes.Count == 2) {
+                        line.X1 = nodePositions[connectedNodes[0]].X;
+                        line.Y1 = nodePositions[connectedNodes[0]].Y;
+                        line.X2 = nodePositions[connectedNodes[1]].X;
+                        line.Y2 = nodePositions[connectedNodes[1]].Y;
+                    }
                 }
             }
-        }
-
-        private void StartBFS(Node<string> startNode) {
-            if (bfsTimer.IsEnabled) return;
-
-            bfsQueue = new Queue<Node<string>>();
-            visitedNodes = new HashSet<Node<string>>();
-            edgeEffects = new Dictionary<Line, DropShadowEffect>();
-            animatedEdges.Clear();
-            animatedNodes.Clear(); // Reset animation tracker
-
-            bfsQueue.Enqueue(startNode);
-            visitedNodes.Add(startNode);
-
-            bfsTimer.Start(); // Start BFS animation
-        }
-
-
-        private void OnBfsTick(object sender, EventArgs e) {
-            if (bfsQueue.Count == 0) {
-                bfsTimer.Stop();
-                ResetColors();
-                return;
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
+        }
 
-            var currentLayer = new List<Node<string>>();
-            var nextLayerQueue = new Queue<Node<string>>();
+        public void TogglePhysicsMode(object sender, RoutedEventArgs e) {
+            try {
+                isMagneticMode = !isMagneticMode;
+                physicsModeText.Text = isMagneticMode ? "Physics: Magnetic" : "Physics: Repulsion";
+                Logger.Log($"Physics mode toggled to: {physicsModeText.Text}");
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
 
-            while (bfsQueue.Count > 0) {
-                var currentNode = bfsQueue.Dequeue();
+        private void OnPhysicsTick(object sender, EventArgs e) {
+            try {
+                if (graph.AdjacencyList.Count == 0) return;
 
-                // Highlight the current node
-                if (!animatedNodes.Contains(currentNode)) {
-                    HighlightNode(currentNode);
-                    animatedNodes.Add(currentNode);
+                double canvasWidth = Math.Max(graphCanvas.ActualWidth, 200);
+                double canvasHeight = Math.Max(graphCanvas.ActualHeight, 200);
 
-                    // Find and highlight all edges where currentNode is the target
-                    foreach (var sourceNode in graph.AdjacencyList.Keys) {
-                        foreach (var edge in graph.AdjacencyList[sourceNode]) {
-                            if (edge.Item1 == currentNode) {
-                                var edgePair = string.Compare(sourceNode.Object, currentNode.Object, StringComparison.Ordinal) < 0
-                                    ? (sourceNode, currentNode)
-                                    : (currentNode, sourceNode);
+                if (canvasWidth <= 0 || canvasHeight <= 0) return;
 
-                                if (!animatedEdges.Contains(edgePair)) {
-                                    HighlightEdge(sourceNode, currentNode);
-                                    animatedEdges.Add(edgePair);
+                foreach (var node1 in graph.AdjacencyList.Keys) {
+                    Vector force = new Vector(0, 0);
+
+                    foreach (var node2 in graph.AdjacencyList.Keys) {
+                        if (node1 != node2) {
+                            Vector diff = nodePositions[node1] - nodePositions[node2];
+                            double distance = Math.Max(diff.Length, MinDistance);
+                            double repulsion = (isMagneticMode ? MagneticRepulsionConstant : RepulsionConstant) / (distance * distance);
+                            if (distance > 300) {
+                                repulsion *= Math.Exp(-RepulsionDecayRate * (distance - 300));
+                            }
+                            force += diff * (repulsion / distance);
+                        }
+                    }
+
+                    if (isMagneticMode) {
+                        foreach (var edge in graph.AdjacencyList[node1]) {
+                            Node<T> node2 = edge.Item1;
+                            Vector diff = nodePositions[node2] - nodePositions[node1];
+                            double distance = diff.Length;
+                            double attraction = MagneticSpringConstant * (distance - 100);
+                            force += diff * (attraction / Math.Max(distance, MinDistance));
+                        }
+                    }
+
+                    if (!isMagneticMode && !Equals(draggingNode, default(Node<T>)) && node1 != draggingNode) {
+                        Vector diff = nodePositions[node1] - nodePositions[draggingNode];
+                        double distance = Math.Max(diff.Length, MinDistance);
+                        int draggingConnections = graph.AdjacencyList[draggingNode].Count;
+                        double dragForce = DraggingRepulsionConstant * (1 + draggingConnections) / (distance * distance);
+                        if (distance < 200) {
+                            force += diff * (dragForce / distance);
+                        }
+                    }
+
+                    if (!Equals(node1, draggingNode)) {
+                        if (!nodeVelocities.ContainsKey(node1)) {
+                            nodeVelocities[node1] = new Vector(0, 0);
+                        }
+                        nodeVelocities[node1] += force;
+                        if (nodeVelocities[node1].Length > MaxVelocity) {
+                            nodeVelocities[node1] = nodeVelocities[node1] * (MaxVelocity / nodeVelocities[node1].Length);
+                        }
+                        nodeVelocities[node1] *= Damping;
+
+                        Point newPosition = nodePositions[node1] + nodeVelocities[node1];
+                        if (!double.IsNaN(newPosition.X) && !double.IsNaN(newPosition.Y)) {
+                            double halfWidth = nodeShapes.TryGetValue(node1, out Ellipse ellipse) ? ellipse.Width / 2 : 20;
+                            double halfHeight = ellipse != null ? ellipse.Height / 2 : 20;
+                            newPosition.X = Math.Max(halfWidth, Math.Min(newPosition.X, canvasWidth - halfWidth));
+                            newPosition.Y = Math.Max(halfHeight, Math.Min(newPosition.Y, canvasHeight - halfHeight));
+                            nodePositions[node1] = newPosition;
+
+                            if (ellipse != null) {
+                                Canvas nodeContainer = ellipse.Parent as Canvas;
+                                if (nodeContainer != null) {
+                                    Canvas.SetLeft(nodeContainer, newPosition.X - nodeContainer.Width / 2);
+                                    Canvas.SetTop(nodeContainer, newPosition.Y - nodeContainer.Height / 2);
                                 }
                             }
                         }
                     }
                 }
-                currentLayer.Add(currentNode);
 
-                // Queue up neighbors for next layer
-                foreach (var edge in graph.AdjacencyList[currentNode]) {
-                    Node<string> neighbor = edge.Item1;
+                UpdateAllEdges();
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        public void ToggleSearchMode(object sender, RoutedEventArgs e) {
+            try {
+                isBFS = !isBFS;
+                ((Button)sender).Content = isBFS ? "Switch to DFS" : "Switch to BFS";
+                searchModeText.Text = isBFS ? "Current Mode: BFS" : "Current Mode: DFS";
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        public void StartSearch(object sender, RoutedEventArgs e) {
+            try {
+                if (graph.AdjacencyList.Count == 0) {
+                    MessageBox.Show("Graph is empty. Add nodes and edges to start the search.");
+                    return;
+                }
+                Node<T> startNode = graph.AdjacencyList.Keys.First();
+                StartSearchFromNode(startNode);
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private void StartSearchFromNode(Node<T> startNode) {
+            try {
+                if (searchTimer.IsEnabled) return;
+
+                visitedNodes = new HashSet<Node<T>>();
+                animatedNodes.Clear();
+                parentNodes.Clear();
+                targetFound = false;
+
+                if (isBFS) {
+                    bfsQueue = new Queue<Node<T>>();
+                    bfsQueue.Enqueue(startNode);
+                }
+                else {
+                    dfsStack = new Stack<Node<T>>();
+                    dfsStack.Push(startNode);
+                }
+                visitedNodes.Add(startNode);
+
+                foreach (var edge in edgeStates) {
+                    SetEdgeState(edge.Key.Item1, edge.Key.Item2, "Default");
+                }
+
+                searchTimer.Start();
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private void SetTargetNode(Node<T> node) {
+            try {
+                if (Equals(targetNode, node)) {
+                    targetNode = default;
+                    if (nodeShapes.TryGetValue(node, out Ellipse ellipse)) {
+                        ellipse.Stroke = new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                        ellipse.StrokeThickness = 1;
+                    }
+                    targetStatusText.Text = "Target: None";
+                }
+                else {
+                    if (!Equals(targetNode, default(Node<T>)) && nodeShapes.TryGetValue(targetNode, out Ellipse oldTarget)) {
+                        oldTarget.Stroke = new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                        oldTarget.StrokeThickness = 1;
+                    }
+                    targetNode = node;
+                    if (nodeShapes.TryGetValue(targetNode, out Ellipse ellipse)) {
+                        ellipse.Stroke = new SolidColorBrush(Colors.Red);
+                        ellipse.StrokeThickness = 3;
+                    }
+                    targetStatusText.Text = $"Target: {node.Object}";
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private void DisplayNodeStats(Node<T> node) {
+            try {
+                int connectionCount = graph.AdjacencyList[node].Count;
+                bool isConnected = IsGraphConnected();
+                bool hasCycle = HasCycle();
+
+                nodeStatsText.Text = $"Node Stats:\nName: {node.Object}\nConnections: {connectionCount}\nGraph Connected: {isConnected}\nContains Cycle: {hasCycle}";
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        // Detect if the graph is connected using BFS
+        private bool IsGraphConnected() {
+            if (graph.AdjacencyList.Count == 0) return true; // Empty graph is trivially connected
+
+            var startNode = graph.AdjacencyList.Keys.First();
+            var visited = new HashSet<Node<T>>();
+            var queue = new Queue<Node<T>>();
+
+            queue.Enqueue(startNode);
+            visited.Add(startNode);
+
+            while (queue.Count > 0) {
+                var current = queue.Dequeue();
+                foreach (var edge in graph.AdjacencyList[current]) {
+                    var neighbor = edge.Item1;
+                    if (!visited.Contains(neighbor)) {
+                        visited.Add(neighbor);
+                        queue.Enqueue(neighbor);
+                    }
+                }
+            }
+
+            return visited.Count == graph.AdjacencyList.Count;
+        }
+
+        // Detect if the graph has a cycle using DFS
+        private bool HasCycle() {
+            var visited = new HashSet<Node<T>>();
+            var recStack = new HashSet<Node<T>>();
+            var parent = new Dictionary<Node<T>, Node<T>>();
+
+            foreach (var node in graph.AdjacencyList.Keys) {
+                if (!visited.Contains(node)) {
+                    if (DFSHasCycle(node, visited, recStack, parent))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private bool DFSHasCycle(Node<T> node, HashSet<Node<T>> visited, HashSet<Node<T>> recStack, Dictionary<Node<T>, Node<T>> parent) {
+            visited.Add(node);
+            recStack.Add(node);
+
+            foreach (var edge in graph.AdjacencyList[node]) {
+                var neighbor = edge.Item1;
+                if (!visited.Contains(neighbor)) {
+                    parent[neighbor] = node;
+                    if (DFSHasCycle(neighbor, visited, recStack, parent))
+                        return true;
+                }
+                else if (recStack.Contains(neighbor) && !Equals(parent.GetValueOrDefault(node), neighbor)) {
+                    return true; // Back edge found
+                }
+            }
+
+            recStack.Remove(node);
+            return false;
+        }
+
+        private void OnSearchTick(object sender, EventArgs e) {
+            try {
+                if ((isBFS && bfsQueue.Count == 0) || (!isBFS && dfsStack.Count == 0)) {
+                    searchTimer.Stop();
+                    ResetColors();
+                    return;
+                }
+
+                bool targetReached = false;
+                if (isBFS) {
+                    targetReached = ProcessBFSLayer();
+                }
+                else {
+                    targetReached = ProcessDFSStep();
+                }
+
+                if (targetReached && !Equals(targetNode, default(Node<T>)) && animatedNodes.Contains(targetNode)) {
+                    searchTimer.Stop();
+                    targetFound = true;
+                    HighlightTarget();
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private bool ProcessBFSLayer() {
+            try {
+                int nodesInCurrentLayer = bfsQueue.Count;
+                var currentLayer = new List<Node<T>>();
+                bool targetReached = false;
+
+                for (int i = 0; i < nodesInCurrentLayer && bfsQueue.Count > 0; i++) {
+                    var currentNode = bfsQueue.Dequeue();
+                    currentLayer.Add(currentNode);
+
+                    if (!animatedNodes.Contains(currentNode)) {
+                        HighlightNode(currentNode);
+                        animatedNodes.Add(currentNode);
+                        if (Equals(currentNode, targetNode)) targetReached = true;
+                    }
+
+                    foreach (var edge in graph.AdjacencyList[currentNode]) {
+                        Node<T> neighbor = edge.Item1;
+                        if (!visitedNodes.Contains(neighbor)) {
+                            visitedNodes.Add(neighbor);
+                            bfsQueue.Enqueue(neighbor);
+                            parentNodes[neighbor] = currentNode;
+                            DispatcherTimer edgeTimer = new DispatcherTimer {
+                                Interval = TimeSpan.FromMilliseconds(200)
+                            };
+                            edgeTimer.Tick += (s, e) => {
+                                SetEdgeState(currentNode, neighbor, "Current");
+                                edgeTimer.Stop();
+                            };
+                            edgeTimer.Start();
+                        }
+                    }
+
+                    if (parentNodes.ContainsKey(currentNode)) {
+                        SetEdgeState(parentNodes[currentNode], currentNode, "Explored");
+                    }
+
+                    foreach (var edge in graph.AdjacencyList[currentNode]) {
+                        Node<T> neighbor = edge.Item1;
+                        if (visitedNodes.Contains(neighbor) && (bfsQueue.Count == 0 || !Equals(neighbor, PeekOrDefault(bfsQueue))) && !Equals(neighbor, currentNode)) {
+                            SetEdgeState(currentNode, neighbor, "Explored");
+                        }
+                    }
+                }
+
+                foreach (var node in animatedNodes.Except(currentLayer)) {
+                    DimNode(node);
+                }
+
+                return targetReached;
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+                return false;
+            }
+        }
+
+        private bool ProcessDFSStep() {
+            try {
+                var currentNode = dfsStack.Pop();
+                bool targetReached = false;
+
+                if (!animatedNodes.Contains(currentNode)) {
+                    HighlightNode(currentNode);
+                    animatedNodes.Add(currentNode);
+                    if (Equals(currentNode, targetNode)) targetReached = true;
+                }
+
+                var neighbors = graph.AdjacencyList[currentNode].Select(e => e.Item1).Reverse();
+                foreach (var neighbor in neighbors) {
                     if (!visitedNodes.Contains(neighbor)) {
                         visitedNodes.Add(neighbor);
-                        nextLayerQueue.Enqueue(neighbor);
+                        dfsStack.Push(neighbor);
+                        parentNodes[neighbor] = currentNode;
+                        DispatcherTimer edgeTimer = new DispatcherTimer {
+                            Interval = TimeSpan.FromMilliseconds(200)
+                        };
+                        edgeTimer.Tick += (s, e) => {
+                            SetEdgeState(currentNode, neighbor, "Current");
+                            edgeTimer.Stop();
+                        };
+                        edgeTimer.Start();
+                    }
+                }
+
+                if (parentNodes.ContainsKey(currentNode)) {
+                    SetEdgeState(parentNodes[currentNode], currentNode, "Explored");
+                }
+
+                foreach (var edge in graph.AdjacencyList[currentNode]) {
+                    Node<T> neighbor = edge.Item1;
+                    if (visitedNodes.Contains(neighbor) && !dfsStack.Contains(neighbor) && !Equals(neighbor, currentNode)) {
+                        SetEdgeState(currentNode, neighbor, "Explored");
+                    }
+                }
+
+                foreach (var node in animatedNodes.Except(new[] { currentNode })) {
+                    DimNode(node);
+                }
+
+                return targetReached;
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+                return false;
+            }
+        }
+
+        private Node<T> PeekOrDefault(Queue<Node<T>> queue) {
+            try {
+                return queue.Count > 0 ? queue.Peek() : default;
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+                return default;
+            }
+        }
+
+        private void SetEdgeState(Node<T> from, Node<T> to, string state) {
+            try {
+                var edgeKey = Comparer<T>.Create((a, b) => a.ToString().CompareTo(b.ToString())).Compare(from.Object, to.Object) < 0 ? (from, to) : (to, from);
+                if (edgeStates.TryGetValue(edgeKey, out var edgeData)) {
+                    var line = edgeData.Line;
+                    switch (state) {
+                        case "Current":
+                            line.Stroke = new SolidColorBrush(Color.FromRgb(255, 200, 100));
+                            line.StrokeThickness = 2;
+                            line.Opacity = 0;
+                            var fadeInAnimation = new DoubleAnimation {
+                                From = 0,
+                                To = 1,
+                                Duration = TimeSpan.FromMilliseconds(300)
+                            };
+                            line.BeginAnimation(Line.OpacityProperty, fadeInAnimation);
+                            var thicknessAnimation = new DoubleAnimation {
+                                From = 2,
+                                To = 3,
+                                Duration = TimeSpan.FromMilliseconds(500),
+                                AutoReverse = true
+                            };
+                            line.BeginAnimation(Line.StrokeThicknessProperty, thicknessAnimation);
+                            break;
+                        case "Explored":
+                            line.Stroke = new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                            line.StrokeThickness = 1;
+                            line.Opacity = 0;
+                            line.BeginAnimation(Line.StrokeThicknessProperty, null);
+                            line.BeginAnimation(Line.OpacityProperty, null);
+                            break;
+                        case "Default":
+                            line.Stroke = new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                            line.StrokeThickness = 1;
+                            line.Opacity = 1;
+                            line.BeginAnimation(Line.StrokeThicknessProperty, null);
+                            line.BeginAnimation(Line.OpacityProperty, null);
+                            break;
+                    }
+                    edgeStates[edgeKey] = (line, state);
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        private void HighlightNode(Node<T> node) {
+            try {
+                if (nodeShapes.TryGetValue(node, out Ellipse ellipse)) {
+                    ellipse.Fill = new SolidColorBrush(Color.FromRgb(255, 200, 100));
+                    var scaleAnimation = new DoubleAnimation {
+                        From = 1.0,
+                        To = 1.3,
+                        Duration = TimeSpan.FromMilliseconds(800),
+                        AutoReverse = true
+                    };
+                    var transform = new ScaleTransform(1, 1, ellipse.Width / 2, ellipse.Height / 2);
+                    ellipse.RenderTransform = transform;
+                    transform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnimation);
+                    transform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnimation);
+
+                    if (nodeLabels.TryGetValue(node, out TextBlock text)) {
+                        text.Foreground = new SolidColorBrush(Colors.Black);
                     }
                 }
             }
-
-            // Move to the next BFS layer
-            if (nextLayerQueue.Count > 0) {
-                bfsQueue = nextLayerQueue;
-                foreach (var node in currentLayer) {
-                    DimNodeBrightness(node);
-                }
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
         }
 
-        private void HighlightNode(Node<string> node) {
-            if (nodeShapes.TryGetValue(node, out Ellipse ellipse)) {
-                // Dramatic contrast with bright illumination
-                var glowEffect = new DropShadowEffect {
-                    Color = Colors.Yellow,
-                    BlurRadius = 35,
-                    ShadowDepth = 0,
-                    Opacity = 0.9
-                };
-
-                ellipse.Effect = glowEffect;
-
-                // Larger, more prominent halo
-                var halo = new Ellipse {
-                    Width = 250,
-                    Height = 250,
-                    Fill = new RadialGradientBrush {
-                        GradientStops = new GradientStopCollection {
-                    new GradientStop(Color.FromArgb(120, 255, 255, 150), 0.0),
-                    new GradientStop(Color.FromArgb(0, 255, 255, 150), 1.0)
+        private void HighlightTarget() {
+            try {
+                if (!Equals(targetNode, default(Node<T>)) && nodeShapes.TryGetValue(targetNode, out Ellipse ellipse)) {
+                    ellipse.Fill = new SolidColorBrush(Colors.Green);
+                    ellipse.Stroke = new SolidColorBrush(Colors.Red);
+                    ellipse.StrokeThickness = 3;
                 }
-                    }
-                };
-
-                Canvas.SetLeft(halo, nodePositions[node].X - 125);
-                Canvas.SetTop(halo, nodePositions[node].Y - 125);
-                GraphCanvas.Children.Add(halo);
-
-                // More dramatic pulsing effect
-                var lightAnimation = new DoubleAnimation {
-                    From = 1.0,
-                    To = 0.4,
-                    Duration = TimeSpan.FromSeconds(1.2),
-                    AutoReverse = true,
-                    RepeatBehavior = new RepeatBehavior(2)
-                };
-                halo.BeginAnimation(Ellipse.OpacityProperty, lightAnimation);
-
-                // Brighter node illumination
-                ellipse.Fill = new RadialGradientBrush {
-                    GradientStops = new GradientStopCollection {
-                new GradientStop(Color.FromRgb(255, 235, 150), 0.0),
-                new GradientStop(Color.FromRgb(255, 200, 100), 1.0)
             }
-                };
-
-                // Make text more visible during highlight
-                if (nodeLabels.TryGetValue(node, out TextBlock text)) {
-                    text.Foreground = new SolidColorBrush(Colors.White);
-                    text.Effect = new DropShadowEffect {
-                        Color = Colors.Black,
-                        BlurRadius = 5,
-                        ShadowDepth = 0,
-                        Opacity = 1
-                    };
-                }
-
-                Task.Delay(1500).ContinueWith(_ => Dispatcher.Invoke(() => {
-                    FadeOutNode(node, glowEffect);
-                    GraphCanvas.Children.Remove(halo);
-
-                    // Reset text to dark state
-                    if (nodeLabels.TryGetValue(node, out TextBlock textBlock)) {
-                        textBlock.Foreground = new SolidColorBrush(Color.FromArgb(60, 200, 200, 200));
-                        textBlock.Effect = new DropShadowEffect {
-                            Color = Colors.Black,
-                            BlurRadius = 3,
-                            ShadowDepth = 0,
-                            Opacity = 0.8
-                        };
-                    }
-                }));
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
         }
 
-        private void FadeOutNode(Node<string> node, DropShadowEffect glowEffect) {
-            if (nodeShapes.TryGetValue(node, out Ellipse ellipse)) {
-                // Fade out glow smoothly (Without reactivating it)
-                var fadeOutAnimation = new DoubleAnimation {
-                    From = glowEffect.Opacity,
-                    To = 0.3,  // Dim brightness
-                    Duration = TimeSpan.FromSeconds(1),
-                    EasingFunction = new ExponentialEase { EasingMode = EasingMode.EaseIn }
-                };
-
-                glowEffect.BeginAnimation(DropShadowEffect.OpacityProperty, fadeOutAnimation);
-
-                // Reset color back to normal
-                ellipse.Fill = new RadialGradientBrush(
-                    Color.FromRgb(100, 181, 246),
-                    Color.FromRgb(30, 136, 229)
-                );
-            }
-        }
-
-        private void HighlightEdge(Node<string> from, Node<string> to) {
-            if (edgeLines.TryGetValue(from, out List<Line> lines)) {
-                var line = lines.FirstOrDefault(l =>
-                    (Math.Abs(l.X2 - nodePositions[to].X) <= 2 && Math.Abs(l.Y2 - nodePositions[to].Y) <= 2) ||
-                    (Math.Abs(l.X1 - nodePositions[to].X) <= 2 && Math.Abs(l.Y1 - nodePositions[to].Y) <= 2));
-
-                if (line != null) {
-                    // Create a storyboard for coordinated animations
-                    Storyboard storyboard = new Storyboard();
-
-                    // Brighter edge illumination with more dramatic effect
-                    line.Stroke = new SolidColorBrush(Color.FromArgb(255, 200, 255, 255));
-                    line.StrokeThickness = 3;
-
-                    // Enhanced glow effect
-                    var glowEffect = new DropShadowEffect {
-                        Color = Colors.Cyan,
-                        BlurRadius = 15,
-                        ShadowDepth = 0,
-                        Opacity = 0.7
-                    };
-                    line.Effect = glowEffect;
-
-                    // Thickness animation
-                    var thicknessAnimation = new DoubleAnimation {
-                        From = 3,
-                        To = 5,
-                        Duration = TimeSpan.FromMilliseconds(500),
-                        AutoReverse = true,
-                        RepeatBehavior = new RepeatBehavior(2)
-                    };
-                    Storyboard.SetTarget(thicknessAnimation, line);
-                    Storyboard.SetTargetProperty(thicknessAnimation, new PropertyPath(Line.StrokeThicknessProperty));
-                    storyboard.Children.Add(thicknessAnimation);
-
-                    // Start the animations
-                    storyboard.Begin();
-
-                    // Fade out edge after delay
-                    Task.Delay(2000).ContinueWith(_ => Dispatcher.Invoke(() => {
-                        // Fade out animation
-                        var fadeOutStoryboard = new Storyboard();
-                        
-                        var opacityAnimation = new DoubleAnimation {
-                            From = 1.0,
-                            To = 0.4,
-                            Duration = TimeSpan.FromSeconds(0.5),
-                            EasingFunction = new ExponentialEase { EasingMode = EasingMode.EaseOut }
-                        };
-
-                        var brushAnimation = new ColorAnimation {
-                            To = Color.FromArgb(40, 80, 80, 100),
-                            Duration = TimeSpan.FromSeconds(0.5),
-                            EasingFunction = new ExponentialEase { EasingMode = EasingMode.EaseOut }
-                        };
-
-                        Storyboard.SetTarget(opacityAnimation, line);
-                        Storyboard.SetTargetProperty(opacityAnimation, new PropertyPath("(Line.Effect).(DropShadowEffect.Opacity)"));
-                        fadeOutStoryboard.Children.Add(opacityAnimation);
-
-                        fadeOutStoryboard.Completed += (s, e) => {
-                            line.Stroke = new SolidColorBrush(Color.FromArgb(40, 80, 80, 100));
-                            line.StrokeThickness = 1.5;
-                            line.Effect = null;
-                        };
-
-                        fadeOutStoryboard.Begin();
-                    }));
+        private void DimNode(Node<T> node) {
+            try {
+                if (nodeShapes.TryGetValue(node, out Ellipse ellipse)) {
+                    ellipse.Fill = new SolidColorBrush(Color.FromRgb(100, 100, 150));
+                    ellipse.RenderTransform = null;
                 }
             }
-        }
-        private void DimNodeBrightness(Node<string> node) {
-            if (nodeShapes.TryGetValue(node, out Ellipse ellipse)) {
-                // Gradually reduce the brightness of the node's glow after each BFS layer
-                var currentEffect = (DropShadowEffect)ellipse.Effect;
-                if (currentEffect != null) {
-                    var fadeOutAnimation = new DoubleAnimation {
-                        From = currentEffect.Opacity,
-                        To = 0.3,  // Dimming the brightness
-                        Duration = TimeSpan.FromSeconds(1),
-                        EasingFunction = new ExponentialEase { EasingMode = EasingMode.EaseIn }
-                    };
-
-                    currentEffect.BeginAnimation(DropShadowEffect.OpacityProperty, fadeOutAnimation);
-                }
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
         }
 
         private void ResetColors() {
-            foreach (var node in nodeShapes.Keys) {
-                var ellipse = nodeShapes[node];
-                ellipse.Fill = new RadialGradientBrush {
-                    GradientStops = new GradientStopCollection {
-                new GradientStop(Color.FromArgb(30, 20, 20, 35), 0.0),
-                new GradientStop(Color.FromArgb(20, 10, 10, 25), 1.0)
-            }
-                };
+            try {
+                foreach (var node in nodeShapes.Keys) {
+                    var ellipse = nodeShapes[node];
+                    if (Equals(node, targetNode) && targetFound) {
+                        ellipse.Fill = new SolidColorBrush(Colors.Green);
+                        ellipse.Stroke = new SolidColorBrush(Colors.Red);
+                        ellipse.StrokeThickness = 3;
+                    }
+                    else {
+                        ellipse.Fill = new SolidColorBrush(Color.FromRgb(20, 20, 35));
+                        ellipse.Stroke = Equals(node, targetNode) ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                        ellipse.StrokeThickness = Equals(node, targetNode) ? 3 : 1;
+                    }
+                    ellipse.RenderTransform = null;
 
-                ellipse.Effect = new DropShadowEffect {
-                    Color = Colors.Black,
-                    BlurRadius = 5,
-                    ShadowDepth = 0,
-                    Opacity = 0.2
-                };
+                    if (nodeLabels.TryGetValue(node, out TextBlock text)) {
+                        text.Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+                    }
+                }
 
-                if (nodeLabels.TryGetValue(node, out TextBlock text)) {
-                    text.Foreground = new SolidColorBrush(Color.FromArgb(120, 200, 200, 200)); // Match the new text opacity
+                foreach (var edge in edgeStates) {
+                    SetEdgeState(edge.Key.Item1, edge.Key.Item2, "Default");
                 }
             }
-
-            foreach (var line in edgeLines.Values.SelectMany(l => l)) {
-                line.Stroke = new SolidColorBrush(Color.FromArgb(40, 80, 80, 100)); // Match the new edge opacity
-                line.StrokeThickness = 1.5;
-                line.Effect = null;
-                line.BeginAnimation(Line.StrokeThicknessProperty, null);
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
         }
     }

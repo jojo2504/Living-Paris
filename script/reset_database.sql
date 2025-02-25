@@ -1,3 +1,5 @@
+USE LivingParis;
+
 -- Disable foreign key checks temporarily to avoid errors when dropping tables
 SET FOREIGN_KEY_CHECKS = 0;
 
