@@ -4,8 +4,8 @@ USE LivingParis;
 
 CREATE TABLE Persons (
     PersonID INT AUTO_INCREMENT NOT NULL,
-    FirstName VARCHAR(255) NOT NULL,
     LastName VARCHAR(255) NOT NULL,
+    FirstName VARCHAR(255) NOT NULL,
     Street VARCHAR(255) NOT NULL,
     StreetNumber INT NOT NULL,
     Postcode VARCHAR(5) NOT NULL,
@@ -16,24 +16,6 @@ CREATE TABLE Persons (
     PRIMARY KEY (PersonID),
     CHECK (CHAR_LENGTH(PhoneNumber) = 10)
 );
-
--- Switch delimiter to create the trigger
-DELIMITER //
-
--- Create the trigger for email validation
-CREATE TRIGGER validate_email_format
-BEFORE INSERT ON Persons
-FOR EACH ROW
-BEGIN
-    -- Check if Mail follows a valid email format using REGEXP
-    IF NOT NEW.Mail REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Invalid email format';
-    END IF;
-END //
-
--- Reset delimiter back to default
-DELIMITER ;
 
 CREATE TABLE Clients (
     ClientID int AUTO_INCREMENT NOT NULL,
@@ -59,7 +41,7 @@ CREATE TABLE Orders (
     PRIMARY KEY (OrderID),
     FOREIGN KEY (ChefID) REFERENCES Chefs(ChefID),
     FOREIGN KEY (ClientID) REFERENCES Clients(ClientID)
-);
+);  
 
 CREATE TABLE Dishes (
     DishID INT AUTO_INCREMENT NOT NULL,
@@ -75,7 +57,6 @@ CREATE TABLE Dishes (
     FOREIGN KEY (ChefID) REFERENCES Chefs(ChefID),
     CHECK (Type IN ('entree', 'main dish', 'dessert'))
 );
-
 
 CREATE TABLE Ingredients (
     IngredientID INT AUTO_INCREMENT NOT NULL,
@@ -99,8 +80,17 @@ CREATE TABLE DishIngredients(
     IngredientID INT NOT NULL,
     VolumeID INT NOT NULL,
     DishID INT NOT NULL,
-    PRIMARY KEY (DishIngredientsID)
+    PRIMARY KEY (DishIngredientsID),
     FOREIGN KEY (IngredientID) REFERENCES Ingredients(IngredientID),
     FOREIGN KEY (VolumeID) REFERENCES Volume(VolumeID),
-    FOREIGN KEY (DishID) REFERENCES Dishes(DishID),
-)
+    FOREIGN KEY (DishID) REFERENCES Dishes(DishID)
+);
+
+CREATE TRIGGER validate_email_format
+BEFORE INSERT ON Persons
+FOR EACH ROW
+BEGIN
+    IF NOT (NEW.Mail REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid email format';
+    END IF;
+END

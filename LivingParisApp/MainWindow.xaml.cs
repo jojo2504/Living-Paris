@@ -251,7 +251,6 @@ namespace LivingParisApp {
 
         private void DrawNode(Node<T> node) {
             try {
-                Logger.Log($"Drawing node: {node.Object}");
                 Point position = nodePositions[node];
                 int connectionCount = graph.AdjacencyList[node].Count;
                 double size = 40 + (connectionCount * 5);
