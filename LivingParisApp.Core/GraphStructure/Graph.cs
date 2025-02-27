@@ -1,10 +1,12 @@
 using System.Text;
 using LivingParisApp.Services.FileHandling;
 using LivingParisApp.Services.Logging;
+using Mysqlx.Crud;
 
 namespace LivingParisApp.Core.GraphStructure {
     public class Graph<T> {
-        private List<Link<T>> _links;
+        private readonly List<Link<T>> _links;
+        private Dictionary<Node<T>, int> nodeToIndexMap = [];
         public Dictionary<Node<T>, List<Tuple<Node<T>, double>>> AdjacencyList { get; private set; } = [];
         public int?[,] AdjacencyMatrix { get; private set; }
 
@@ -36,7 +38,7 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
-        public void AddEdge(Link<T> link) {
+        public void AddEdgeList(Link<T> link) {
             var A = link.A;
             var B = link.B;
             var existingNodeA = AdjacencyList.Keys.FirstOrDefault(n => n.Equals(A));
@@ -59,11 +61,52 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
+        public void AddEdgeMatrix(Link<T> link) {
+            Node<T> fromNode = link.A;
+            int fromIndex = nodeToIndexMap[fromNode]; // Get the index of the source node
+
+            Node<T> toNode = link.B; // Destination node
+            double weight = link.Weight;   // Weight of the edge
+            int toIndex = nodeToIndexMap[toNode]; // Get the index of the destination node
+
+            // Set the weight in the adjacency matrix (or 1 if unweighted)
+            AdjacencyMatrix[fromIndex, toIndex] = (int)Math.Round(weight); // Convert double to int, or use 1 for unweighted
+        }
+
         private void CreateAdjacencies() {
             Logger.Log("Creating Adjacencies...");
             Logger.Important($"{_links.Count()}");
-            foreach (var link in _links) {
-                AddEdge(link);
+            try {
+                Logger.Log("Creating Adjacency List");
+                foreach (var link in _links) {
+                    AddEdgeList(link);
+                }
+                for (int i = 0; i < AdjacencyList.Count(); i++) {
+                    nodeToIndexMap[AdjacencyList.Keys.ToList()[i]] = i;
+                }
+                Logger.Success("");
+            }
+            catch (Exception ex) {
+                Logger.Log(ex.Message);
+            }
+            try {
+                var nodeCount = AdjacencyList.Count();
+                AdjacencyMatrix = new int?[nodeCount, nodeCount];
+                // Set all elements to 0
+                for (int i = 0; i < nodeCount; i++) {
+                    for (int j = 0; j < nodeCount; j++) {
+                        AdjacencyMatrix[i, j] = 0; // Initialize with 0 instead of null
+                    }
+                }
+                
+                Logger.Log("Creating Adjacency Matrix");
+                foreach (var link in _links) {
+                    AddEdgeMatrix(link);
+                }
+                Logger.Success("");
+            }
+            catch (Exception ex) {
+                Logger.Log(ex.Message);
             }
         }
 
@@ -103,6 +146,17 @@ namespace LivingParisApp.Core.GraphStructure {
                     stringBuilder.Append($"{node.Item1.Object}({node.Item2}), ");
                 }
                 stringBuilder.Length -= 2;
+                stringBuilder.AppendLine();
+            }
+            return stringBuilder.ToString().TrimEnd();
+        }
+
+        public string DisplayAdjacencyMatrix() {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < AdjacencyMatrix.GetLength(0); i++) {
+                for (int j = 0; j < AdjacencyMatrix.GetLength(1); j++) {
+                    stringBuilder.Append($"{AdjacencyMatrix[i, j]}");
+                }
                 stringBuilder.AppendLine();
             }
             return stringBuilder.ToString().TrimEnd();
