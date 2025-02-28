@@ -6,7 +6,7 @@ using Mysqlx.Crud;
 namespace LivingParisApp.Core.GraphStructure {
     public class Graph<T> {
         private readonly List<Link<T>> _links;
-        private Dictionary<Node<T>, int> nodeToIndexMap = [];
+        public Dictionary<Node<T>, int> nodeToIndexMap = [];
         public Dictionary<Node<T>, List<Tuple<Node<T>, double>>> AdjacencyList { get; private set; } = [];
         public int?[,] AdjacencyMatrix { get; private set; }
 

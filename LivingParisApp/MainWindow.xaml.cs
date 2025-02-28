@@ -11,6 +11,91 @@ using System.Windows.Threading;
 using System.Windows.Media.Animation;
 using LivingParisApp.Services.Logging;
 
+/*
+I want you to create a C# WPF application called LivingParisApp that visualizes and interacts with an undirected graph structure. The application should display nodes and edges on a canvas, implement graph traversal algorithms (BFS and DFS), and include physics-based node movement with toggleable force modes. Below are the detailed requirements for the project. Please implement this with proper error handling, logging, and a clean object-oriented design.
+
+Project Overview
+Namespace: LivingParisApp
+Main Window: A WPF MainWindow class that serves as the entry point and hosts a Canvas (named GraphCanvas) for rendering the graph.
+Graph Representation: Use a generic Graph<T> class (assumed to be predefined in LivingParisApp.Core.GraphStructure) with an adjacency list structure. For this implementation, assume T is int by default, and the graph is undirected and unweighted unless specified otherwise.
+Visualization: Nodes should be represented as ellipses with labels, and edges as lines connecting them. The layout should be dynamic, with nodes initially placed randomly and adjusted via physics simulation or user dragging.
+Core Components
+MainWindow Class
+Inherits from System.Windows.Window.
+Takes an optional Graph<int> parameter in the constructor (defaults to a new graph if none provided).
+Initializes a GraphVisualizer<int> instance to handle rendering and interaction.
+Defines event handlers for toggling search mode, starting searches, and toggling physics mode, delegating to the visualizer.
+IGraphVisualizer Interface
+Defines methods: ToggleSearchMode, StartSearch, and TogglePhysicsMode to standardize the visualizer’s public API.
+GraphVisualizer<T> Class
+Implements IGraphVisualizer.
+Manages the visualization and interaction of the graph on the provided Canvas.
+Generic type T matches the graph’s node type.
+Visualization Requirements
+Nodes:
+Represented as Ellipse objects with a TextBlock label showing the node’s value (node.Object.ToString()).
+Size varies based on the number of connections (e.g., base size of 40 + 5 per connection).
+Positioned initially at random coordinates within the canvas bounds (50 to canvasWidth-50, 50 to canvasHeight-50).
+Stored in dictionaries for positions (Point), shapes (Ellipse), labels (TextBlock), and velocities (Vector).
+Edges:
+Drawn as Line objects connecting node centers.
+Stored in dictionaries for lines per node and edge states (with a tuple of Line and state string like "Default", "Current", "Explored", or "Path").
+Undirected edges should only be drawn once (avoid duplicates).
+User Interaction
+Dragging:
+Nodes can be dragged by left-clicking and moving the mouse (either on the ellipse or its text).
+Update node positions and connected edges in real-time.
+Node Selection:
+Left-click: Display node stats (name, connections, graph order, size, type, connectivity, cycle presence).
+Right-click: Set/unset the node as the target (highlighted with a red border).
+Double-click: Start BFS/DFS from that node.
+UI Controls:
+Buttons: "Switch to DFS" (toggles BFS/DFS), "Play" (starts search), "Toggle Forces" (switches physics mode), "Reset" (clears search state).
+TextBlocks: Show current search mode, target status, instructions, node stats, and physics mode.
+Physics Simulation
+Timer: Use a DispatcherTimer with a 16ms interval (~60 FPS) for physics updates.
+Modes:
+Magnetic Mode (default):
+Repulsion: Nodes push each other away with force proportional to MagneticRepulsionConstant / distance^2, decaying exponentially beyond 300 units.
+Attraction: Connected nodes pull toward each other with a spring force (MagneticSpringConstant * (distance - 100)).
+Repulsion Mode:
+Repulsion only: Stronger force (RepulsionConstant / distance^2) without attraction.
+Dragging Repulsion: Extra force (DraggingRepulsionConstant) when dragging a node, scaled by its connections.
+Constants:
+MagneticSpringConstant = 0.01, MagneticRepulsionConstant = 1000.0, RepulsionConstant = 500.0, DraggingRepulsionConstant = 2000.0.
+Damping = 0.85, MaxVelocity = 50.0, MinDistance = 10.0, RepulsionDecayRate = 0.01.
+Boundary Handling: Keep nodes within canvas bounds, accounting for their size.
+Search Algorithms
+Timer: Use a DispatcherTimer with a 1000ms interval for step-by-step visualization.
+BFS:
+Process one layer per tick, enqueueing unvisited neighbors.
+Highlight the current layer, dim previous nodes.
+DFS:
+Process one node per tick, pushing unvisited neighbors in reverse order.
+Highlight the current node, dim others.
+Visual Feedback:
+Nodes: Highlight current (yellow, scaling animation), dim explored (gray-blue), reset to default (dark blue).
+Edges: Animate "Current" (yellow, fading in), set "Explored" (gray), reset to "Default" (gray).
+Target: Green fill when found, with the shortest path highlighted in yellow.
+Path Display: On completion, show the path to the target (if set) or all explored paths in nodeStatsText.
+Graph Analysis
+Connectedness: Check if all nodes are reachable from one via BFS.
+Cycles: Detect using DFS with a recursion stack.
+Order: Number of nodes.
+Size: Number of unique edges.
+Type: Report as "Undirected, Unweighted" (hardcode for simplicity).
+Logging
+Use a Logger class (assumed in LivingParisApp.Services.Logging) to log initialization, errors, and key events (e.g., search start/completion, physics toggle).
+Error Handling
+Wrap all methods in try-catch blocks, logging exceptions via Logger.Log(ex).
+Handle edge cases like empty graphs, null references, or invalid canvas sizes.
+Implementation Notes
+Use WPF animations for smooth transitions (e.g., edge fading, node scaling).
+Ensure thread safety with DispatcherTimer.
+Keep the code modular, with separate methods for drawing, physics, search, and UI setup.
+Please generate the complete C# code for this application, including all classes and methods described. The result should be a functional WPF app ready to visualize and interact with a graph.
+*/
+
 namespace LivingParisApp {
     public partial class MainWindow : Window {
         private readonly IGraphVisualizer graphVisualizer;
@@ -613,8 +698,18 @@ namespace LivingParisApp {
                 int connectionCount = graph.AdjacencyList[node].Count;
                 bool isConnected = IsGraphConnected();
                 bool hasCycle = HasCycle();
+                int graphOrder = GetGraphOrder();
+                int graphSize = GetGraphSize();
+                string graphType = GetGraphType();
 
-                nodeStatsText.Text = $"Node Stats:\nName: {node.Object}\nConnections: {connectionCount}\nGraph Connected: {isConnected}\nContains Cycle: {hasCycle}";
+                nodeStatsText.Text = $"Node Stats:\n" +
+                                     $"Name: {node.Object}\n" +
+                                     $"Connections: {connectionCount}\n" +
+                                     $"Graph Order (Nodes): {graphOrder}\n" +
+                                     $"Graph Size (Edges): {graphSize}\n" +
+                                     $"{graphType}\n" +
+                                     $"Graph Connected: {isConnected}\n" +
+                                     $"Contains Cycle: {hasCycle}";
             }
             catch (Exception ex) {
                 Logger.Log(ex);
@@ -644,6 +739,45 @@ namespace LivingParisApp {
             }
 
             return visited.Count == graph.AdjacencyList.Count;
+        }
+
+        private int GetGraphOrder() {
+            return graph.AdjacencyList.Count; // Number of nodes
+        }
+
+        private int GetGraphSize() {
+            // Count unique edges (since it's undirected, avoid double-counting)
+            HashSet<(Node<T>, Node<T>)> uniqueEdges = new HashSet<(Node<T>, Node<T>)>();
+            foreach (var node in graph.AdjacencyList.Keys) {
+                foreach (var edge in graph.AdjacencyList[node]) {
+                    var from = node;
+                    var to = edge.Item1;
+                    var edgeKey = Comparer<T>.Create((a, b) => a.ToString().CompareTo(b.ToString())).Compare(from.Object, to.Object) < 0
+                        ? (from, to)
+                        : (to, from);
+                    uniqueEdges.Add(edgeKey);
+                }
+            }
+            return uniqueEdges.Count; // Number of unique edges
+        }
+
+        private string GetGraphType() {
+            bool isDirected = false; // Assume undirected unless proven otherwise
+            bool isWeighted = false; // Assume unweighted unless weights are present
+
+            isDirected = false; // Since DrawEdge adds edges symmetrically
+
+            foreach (var node in graph.AdjacencyList.Keys) {
+                foreach (var edge in graph.AdjacencyList[node]) {
+                    if (!object.Equals(edge.Item2, default(T)) && edge.Item2 != 1) {
+                        isWeighted = true;
+                        break;
+                    }
+                }
+                if (isWeighted) break;
+            }
+
+            return $"Type: {(isDirected ? "Directed" : "Undirected")}, {(isWeighted ? "Weighted" : "Unweighted")}";
         }
 
         // Detect if the graph has a cycle using DFS
@@ -680,148 +814,185 @@ namespace LivingParisApp {
             recStack.Remove(node);
             return false;
         }
+        private void OnSearchTick(object sender, EventArgs e) {
+            try {
+                // If target is already found, do nothing and exit
+                if (targetFound) {
+                    return;
+                }
 
-private void OnSearchTick(object sender, EventArgs e)
-{
-    try
-    {
-        if ((isBFS && bfsQueue.Count == 0) || (!isBFS && dfsStack.Count == 0))
-        {
-            if (!targetFound || animatedNodes.Count == 0)
-            {
-                searchTimer.Stop();
-                ResetColors();
-                Logger.Log("Search completed: Queue/Stack empty");
-                return;
-            }
-            return; // Allow animations to finish if target was found
-        }
+                // If queue/stack is empty, search is complete
+                if ((isBFS && bfsQueue.Count == 0) || (!isBFS && dfsStack.Count == 0)) {
+                    searchTimer.Stop();
+                    ResetColors();
 
-        if (targetFound) return; // Prevent further ticks after target is found
+                    var allPaths = ReconstructAllPaths();
+                    var pathText = string.Empty;
 
-        bool targetReached = false;
-        if (isBFS)
-        {
-            targetReached = ProcessBFSLayer();
-        }
-        else
-        {
-            targetReached = ProcessDFSStep();
-        }
+                    // If a target exists and was found, display only the path to the target
+                    if (!object.Equals(targetNode, default(Node<T>)) && targetFound && allPaths.ContainsKey(targetNode)) {
+                        var targetPath = allPaths[targetNode];
+                        pathText = $"Path to Target ({targetNode.Object}):\n{string.Join(" -> ", targetPath.Select(n => n.Object.ToString()))}";
+                    }
+                    // Otherwise, display all paths
+                    else {
+                        pathText = "Search Paths:\n";
+                        foreach (var kvp in allPaths) {
+                            var node = kvp.Key;
+                            var path = kvp.Value;
+                            pathText += $"{node.Object}: {string.Join(" -> ", path.Select(n => n.Object.ToString()))}\n";
+                        }
+                        pathText = pathText.TrimEnd('\n');
+                    }
 
-        if (targetReached && !Equals(targetNode, default(Node<T>)) && animatedNodes.Contains(targetNode))
-        {
-            targetFound = true;
-            searchTimer.Stop(); // Stop immediately to prevent extra ticks
-            HighlightTarget();
-            HighlightShortestPath(); // Ensure path is highlighted
-            Logger.Log($"Target {targetNode.Object} found");
+                    nodeStatsText.Text = pathText;
+                    Logger.Log($"Search completed. Paths displayed:\n{pathText}");
+                    return;
+                }
 
-            DispatcherTimer stopDelayTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(1500) // Delay for animations
-            };
-            stopDelayTimer.Tick += (s, args) =>
-            {
-                ResetColors(); // Reset visuals after delay, preserving path
-                Logger.Log("Visuals reset after target found animation delay");
-                stopDelayTimer.Stop();
-            };
-            stopDelayTimer.Start();
-        }
-    }
-    catch (Exception ex)
-    {
-        Logger.Log(ex);
-        searchTimer.Stop();
-    }
-}
+                bool targetReached = false;
+                if (isBFS) {
+                    targetReached = ProcessBFSLayer();
+                }
+                else {
+                    targetReached = ProcessDFSStep();
+                }
 
-private void HighlightShortestPath()
-{
-    try
-    {
-        if (!targetFound || Equals(targetNode, default(Node<T>)) || Equals(startNode, default(Node<T>)))
-        {
-            Logger.Log("Cannot highlight path: Target or start node not set");
-            return;
-        }
+                // If target is reached, stop immediately and handle visuals
+                if (targetReached && !object.Equals(targetNode, default(Node<T>)) && animatedNodes.Contains(targetNode)) {
+                    targetFound = true;
+                    searchTimer.Stop(); // Stop timer immediately to prevent extra ticks
+                    HighlightTarget();
+                    HighlightShortestPath();
+                    Logger.Log($"Target {targetNode.Object} found");
 
-        // Reconstruct the path from target to start using parentNodes
-        List<Node<T>> path = new List<Node<T>>();
-        Node<T> current = targetNode;
-        path.Add(current); // Include target node even if it's the start
-        while (!Equals(current, startNode) && !Equals(current, default(Node<T>)) && parentNodes.ContainsKey(current))
-        {
-            current = parentNodes[current];
-            path.Add(current);
-        }
-        if (!path.Contains(startNode))
-        {
-            Logger.Log("Path does not include start node; incomplete path");
-        }
-        path.Reverse(); // Reverse to get start -> target order
-        Logger.Log($"Reconstructed path: {string.Join(" -> ", path.Select(n => n.Object.ToString()))}");
+                    // Use a delay timer for resetting visuals and showing paths
+                    DispatcherTimer stopDelayTimer = new DispatcherTimer {
+                        Interval = TimeSpan.FromMilliseconds(1500)
+                    };
+                    stopDelayTimer.Tick += (s, args) => {
+                        ResetColors();
 
-        // Reset all nodes to default state except the target
-        foreach (var node in nodeShapes.Keys)
-        {
-            if (!Equals(node, targetNode)) // Leave target node green (handled by HighlightTarget)
-            {
-                var ellipse = nodeShapes[node];
-                ellipse.Fill = new SolidColorBrush(Color.FromRgb(20, 20, 35));
-                ellipse.Stroke = Equals(node, targetNode) ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Color.FromRgb(80, 80, 100));
-                ellipse.StrokeThickness = Equals(node, targetNode) ? 3 : 1;
-                ellipse.RenderTransform = null;
+                        var allPaths = ReconstructAllPaths();
+                        var pathText = string.Empty;
 
-                if (nodeLabels.TryGetValue(node, out TextBlock text))
-                {
-                    text.Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+                        // If a target exists and was found, display only the path to the target
+                        if (!object.Equals(targetNode, default(Node<T>)) && targetFound && allPaths.ContainsKey(targetNode)) {
+                            var targetPath = allPaths[targetNode];
+                            pathText = $"Path to Target ({targetNode.Object}):\n{string.Join(" -> ", targetPath.Select(n => n.Object.ToString()))}";
+                        }
+                        // Otherwise, display all paths
+                        else {
+                            pathText = "Search Paths:\n";
+                            foreach (var kvp in allPaths) {
+                                var node = kvp.Key;
+                                var path = kvp.Value;
+                                pathText += $"{node.Object}: {string.Join(" -> ", path.Select(n => n.Object.ToString()))}\n";
+                            }
+                            pathText = pathText.TrimEnd('\n');
+                        }
+
+                        nodeStatsText.Text = pathText;
+                        Logger.Log($"Target found. Paths displayed:\n{pathText}");
+
+                        stopDelayTimer.Stop();
+                    };
+                    stopDelayTimer.Start();
                 }
             }
-        }
-
-        // Highlight the edges in the path
-        for (int i = 0; i < path.Count - 1; i++)
-        {
-            Node<T> from = path[i];
-            Node<T> to = path[i + 1];
-            var edgeKey = Comparer<T>.Create((a, b) => a.ToString().CompareTo(b.ToString())).Compare(from.Object, to.Object) < 0 ? (from, to) : (to, from);
-            if (edgeStates.TryGetValue(edgeKey, out var edgeData))
-            {
-                var line = edgeData.Line;
-                line.Stroke = new SolidColorBrush(Colors.Yellow); // Distinct color for path
-                line.StrokeThickness = 4;                         // Thicker line for visibility
-                line.Opacity = 1;
-                line.BeginAnimation(Line.OpacityProperty, null);  // Clear any fading animations
-                edgeStates[edgeKey] = (line, "Path");
-                Logger.Log($"Highlighted edge: {from.Object} -> {to.Object}");
-            }
-            else
-            {
-                Logger.Log($"Edge not found in edgeStates: {from.Object} -> {to.Object}");
+            catch (Exception ex) {
+                Logger.Log(ex);
+                searchTimer.Stop();
             }
         }
-
-        // Reset all edges not in the path to default
-        foreach (var edge in edgeStates)
-        {
-            var from = edge.Key.Item1;
-            var to = edge.Key.Item2;
-            if (!path.Contains(from) || !path.Contains(to) || !path.Zip(path.Skip(1), (a, b) => (a, b)).Any(p => (p.a == from && p.b == to) || (p.a == to && p.b == from)))
-            {
-                SetEdgeState(from, to, "Default");
+        private Dictionary<Node<T>, List<Node<T>>> ReconstructAllPaths() {
+            var paths = new Dictionary<Node<T>, List<Node<T>>>();
+            foreach (var node in visitedNodes) {
+                var path = new List<Node<T>>();
+                Node<T> current = node;
+                path.Add(current);
+                while (!object.Equals(current, startNode) && !object.Equals(current, default(Node<T>)) && parentNodes.ContainsKey(current)) {
+                    current = parentNodes[current];
+                    path.Add(current);
+                }
+                path.Reverse(); // Start -> node order
+                paths[node] = path;
             }
+            return paths;
         }
 
-        Logger.Log($"Shortest path highlighted with {path.Count} nodes");
-    }
-    catch (Exception ex)
-    {
-        Logger.Log(ex);
-    }
-}
-      private bool ProcessDFSStep() {
+        private void HighlightShortestPath() {
+            try {
+                if (!targetFound || Equals(targetNode, default(Node<T>)) || Equals(startNode, default(Node<T>))) {
+                    Logger.Log("Cannot highlight path: Target or start node not set");
+                    return;
+                }
+
+                // Reconstruct the path from target to start using parentNodes
+                List<Node<T>> path = new List<Node<T>>();
+                Node<T> current = targetNode;
+                path.Add(current); // Include target node even if it's the start
+                while (!Equals(current, startNode) && !Equals(current, default(Node<T>)) && parentNodes.ContainsKey(current)) {
+                    current = parentNodes[current];
+                    path.Add(current);
+                }
+                if (!path.Contains(startNode)) {
+                    Logger.Log("Path does not include start node; incomplete path");
+                }
+                path.Reverse(); // Reverse to get start -> target order
+                Logger.Log($"Reconstructed path: {string.Join(" -> ", path.Select(n => n.Object.ToString()))}");
+
+                // Reset all nodes to default state except the target
+                foreach (var node in nodeShapes.Keys) {
+                    if (!Equals(node, targetNode)) // Leave target node green (handled by HighlightTarget)
+                    {
+                        var ellipse = nodeShapes[node];
+                        ellipse.Fill = new SolidColorBrush(Color.FromRgb(20, 20, 35));
+                        ellipse.Stroke = Equals(node, targetNode) ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                        ellipse.StrokeThickness = Equals(node, targetNode) ? 3 : 1;
+                        ellipse.RenderTransform = null;
+
+                        if (nodeLabels.TryGetValue(node, out TextBlock text)) {
+                            text.Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+                        }
+                    }
+                }
+
+                // Highlight the edges in the path
+                for (int i = 0; i < path.Count - 1; i++) {
+                    Node<T> from = path[i];
+                    Node<T> to = path[i + 1];
+                    var edgeKey = Comparer<T>.Create((a, b) => a.ToString().CompareTo(b.ToString())).Compare(from.Object, to.Object) < 0 ? (from, to) : (to, from);
+                    if (edgeStates.TryGetValue(edgeKey, out var edgeData)) {
+                        var line = edgeData.Line;
+                        line.Stroke = new SolidColorBrush(Colors.Yellow); // Distinct color for path
+                        line.StrokeThickness = 4;                         // Thicker line for visibility
+                        line.Opacity = 1;
+                        line.BeginAnimation(Line.OpacityProperty, null);  // Clear any fading animations
+                        edgeStates[edgeKey] = (line, "Path");
+                        Logger.Log($"Highlighted edge: {from.Object} -> {to.Object}");
+                    }
+                    else {
+                        Logger.Log($"Edge not found in edgeStates: {from.Object} -> {to.Object}");
+                    }
+                }
+
+                // Reset all edges not in the path to default
+                foreach (var edge in edgeStates) {
+                    var from = edge.Key.Item1;
+                    var to = edge.Key.Item2;
+                    if (!path.Contains(from) || !path.Contains(to) || !path.Zip(path.Skip(1), (a, b) => (a, b)).Any(p => (p.a == from && p.b == to) || (p.a == to && p.b == from))) {
+                        SetEdgeState(from, to, "Default");
+                    }
+                }
+
+                Logger.Log($"Shortest path highlighted with {path.Count} nodes");
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+        private bool ProcessDFSStep() {
             try {
                 var currentNode = dfsStack.Pop();
                 bool targetReached = false;
@@ -829,7 +1000,15 @@ private void HighlightShortestPath()
                 if (!animatedNodes.Contains(currentNode)) {
                     HighlightNode(currentNode);
                     animatedNodes.Add(currentNode);
-                    if (Equals(currentNode, targetNode)) targetReached = true;
+                    if (object.Equals(currentNode, targetNode)) // Use object.Equals
+                    {
+                        targetReached = true;
+                    }
+                }
+
+                if (targetReached) // Exit early if target is found
+                {
+                    return true;
                 }
 
                 var neighbors = graph.AdjacencyList[currentNode].Select(e => e.Item1).Reverse();
@@ -855,7 +1034,7 @@ private void HighlightShortestPath()
 
                 foreach (var edge in graph.AdjacencyList[currentNode]) {
                     Node<T> neighbor = edge.Item1;
-                    if (visitedNodes.Contains(neighbor) && !dfsStack.Contains(neighbor) && !Equals(neighbor, currentNode)) {
+                    if (visitedNodes.Contains(neighbor) && !dfsStack.Contains(neighbor) && !object.Equals(neighbor, currentNode)) {
                         SetEdgeState(currentNode, neighbor, "Explored");
                     }
                 }
@@ -871,21 +1050,24 @@ private void HighlightShortestPath()
                 return false;
             }
         }
-
         private bool ProcessBFSLayer() {
             try {
                 int nodesInCurrentLayer = bfsQueue.Count;
                 var currentLayer = new List<Node<T>>();
                 bool targetReached = false;
 
-                for (int i = 0; i < nodesInCurrentLayer && bfsQueue.Count > 0; i++) {
+                for (int i = 0; i < nodesInCurrentLayer && bfsQueue.Count > 0 && !targetReached; i++) // Added !targetReached to stop early
+                {
                     var currentNode = bfsQueue.Dequeue();
                     currentLayer.Add(currentNode);
 
                     if (!animatedNodes.Contains(currentNode)) {
                         HighlightNode(currentNode);
                         animatedNodes.Add(currentNode);
-                        if (Equals(currentNode, targetNode)) targetReached = true;
+                        if (object.Equals(currentNode, targetNode)) // Use object.Equals for consistency
+                        {
+                            targetReached = true;
+                        }
                     }
 
                     foreach (var edge in graph.AdjacencyList[currentNode]) {
@@ -911,7 +1093,7 @@ private void HighlightShortestPath()
 
                     foreach (var edge in graph.AdjacencyList[currentNode]) {
                         Node<T> neighbor = edge.Item1;
-                        if (visitedNodes.Contains(neighbor) && (bfsQueue.Count == 0 || !Equals(neighbor, PeekOrDefault(bfsQueue))) && !Equals(neighbor, currentNode)) {
+                        if (visitedNodes.Contains(neighbor) && (bfsQueue.Count == 0 || !object.Equals(neighbor, PeekOrDefault(bfsQueue))) && !object.Equals(neighbor, currentNode)) {
                             SetEdgeState(currentNode, neighbor, "Explored");
                         }
                     }
@@ -1053,37 +1235,30 @@ private void HighlightShortestPath()
             }
         }
 
-        private void ResetColors()
-{
-    try
-    {
-        foreach (var node in nodeShapes.Keys)
-        {
-            var ellipse = nodeShapes[node];
-            ellipse.Fill = new SolidColorBrush(Color.FromRgb(20, 20, 35));
-            ellipse.Stroke = Equals(node, targetNode) ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Color.FromRgb(80, 80, 100));
-            ellipse.StrokeThickness = Equals(node, targetNode) ? 3 : 1;
-            ellipse.RenderTransform = null;
+        private void ResetColors() {
+            try {
+                foreach (var node in nodeShapes.Keys) {
+                    var ellipse = nodeShapes[node];
+                    ellipse.Fill = new SolidColorBrush(Color.FromRgb(20, 20, 35));
+                    ellipse.Stroke = Equals(node, targetNode) ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Color.FromRgb(80, 80, 100));
+                    ellipse.StrokeThickness = Equals(node, targetNode) ? 3 : 1;
+                    ellipse.RenderTransform = null;
 
-            if (nodeLabels.TryGetValue(node, out TextBlock text))
-            {
-                text.Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+                    if (nodeLabels.TryGetValue(node, out TextBlock text)) {
+                        text.Foreground = new SolidColorBrush(Color.FromRgb(200, 200, 200));
+                    }
+                }
+
+                // Preserve "Path" state edges
+                foreach (var edge in edgeStates) {
+                    if (edge.Value.State != "Path") {
+                        SetEdgeState(edge.Key.Item1, edge.Key.Item2, "Default");
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
             }
         }
-
-        // Preserve "Path" state edges
-        foreach (var edge in edgeStates)
-        {
-            if (edge.Value.State != "Path")
-            {
-                SetEdgeState(edge.Key.Item1, edge.Key.Item2, "Default");
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Logger.Log(ex);
-    }
-}
     }
 }
