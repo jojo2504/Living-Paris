@@ -160,7 +160,8 @@ namespace LivingParisApp {
                 Logger.Error(ex);
             }
 
-            var graph = new Graph<int>(s => int.Parse(s)); // Populate with integer nodes
+            var karateFilePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "soc-karate.mtx");
+            var graph = new Graph<int>(s => int.Parse(s), karateFilePath); // Populate with integer nodes
             //Logger.Log(graph.DisplayAdjacencyMatrix());
 
             var window = new MainWindow(graph);

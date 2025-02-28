@@ -25,10 +25,10 @@ namespace LivingParisApp.Core.GraphStructure {
         }
 
         // Optional constructor for file-based initialization (for soc-karate.mtx)
-        public Graph(Func<string, T> converter) {
+        public Graph(Func<string, T> converter, string filePath) {
             Logger.Log("Initializing the graph from file");
             try {
-                _links = GetAllLinks(converter);
+                _links = GetAllLinks(converter, filePath);
                 CreateAdjacencies();
                 Logger.Log($"{AdjacencyList.Count()} nodes in AdjacencyList");
                 Logger.Success("Graph initialized from file");
@@ -110,11 +110,11 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
-        private List<Link<T>> GetAllLinks(Func<string, T> converter) {
+        private List<Link<T>> GetAllLinks(Func<string, T> converter, string filePath = "") {
             Logger.Log("Getting All Links from file");
             var links = new List<Link<T>>();
             try {
-                FileReader fileReader = new FileReader("C:/Users/jojod/Documents/c#/Living-Paris/assets/soc-karate.mtx");
+                FileReader fileReader = new FileReader(filePath);
                 foreach (string line in fileReader.ReadLines()) {
                     var parts = line.Split(' ');
                     if (!double.TryParse(parts[0], out _)) continue;
