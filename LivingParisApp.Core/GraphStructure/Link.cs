@@ -10,6 +10,14 @@ namespace LivingParisApp.Core.GraphStructure {
         public Node<T> B {get;}
         public Direction Direction {get;}
         public double Weight {get;}
+
+        /// <summary>
+        /// Represents a link between two nodes in a graph.
+        /// </summary>
+        /// <param name="A"></param>
+        /// <param name="B"></param>
+        /// <param name="direction"></param>
+        /// <param name="weight"></param>
         public Link(Node<T> A, Node<T> B, Direction direction, double weight) {
             this.A = A;
             this.B = B;

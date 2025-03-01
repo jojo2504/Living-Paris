@@ -10,7 +10,10 @@ namespace LivingParisApp.Core.GraphStructure {
         public Dictionary<Node<T>, List<Tuple<Node<T>, double>>> AdjacencyList { get; private set; } = [];
         public int?[,] AdjacencyMatrix { get; private set; }
 
-        // Constructor accepting optional links for flexibility
+        /// <summary>
+        /// Constructor accepting optional links for flexibility
+        /// </summary>
+        /// <param name="links"></param>
         public Graph(IEnumerable<Link<T>> links = null) {
             Logger.Log("Initializing the graph with existing? link");
             try {
@@ -24,7 +27,11 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
-        // Optional constructor for file-based initialization (for soc-karate.mtx)
+        /// <summary>
+        /// Optional constructor for file-based initialization (for soc-karate.mtx)
+        /// </summary>
+        /// <param name="converter"></param>
+        /// <param name="filePath"></param>
         public Graph(Func<string, T> converter, string filePath) {
             Logger.Log("Initializing the graph from file");
             try {
@@ -38,6 +45,10 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
+        /// <summary>
+        /// Adds a link to the adjacency list of the graph.
+        /// </summary>
+        /// <param name="link">The link to be added between two nodes.</param>
         public void AddEdgeList(Link<T> link) {
             var A = link.A;
             var B = link.B;
@@ -61,18 +72,24 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
+        /// <summary>
+        /// Adds a link to the adjacency matrix of the graph.
+        /// </summary>
+        /// <param name="link">The link to be added between two nodes.</param>
         public void AddEdgeMatrix(Link<T> link) {
             Node<T> fromNode = link.A;
-            int fromIndex = nodeToIndexMap[fromNode]; // Get the index of the source node
+            int fromIndex = nodeToIndexMap[fromNode];
 
-            Node<T> toNode = link.B; // Destination node
-            double weight = link.Weight;   // Weight of the edge
-            int toIndex = nodeToIndexMap[toNode]; // Get the index of the destination node
+            Node<T> toNode = link.B;
+            double weight = link.Weight;
+            int toIndex = nodeToIndexMap[toNode];
 
-            // Set the weight in the adjacency matrix (or 1 if unweighted)
-            AdjacencyMatrix[fromIndex, toIndex] = (int)Math.Round(weight); // Convert double to int, or use 1 for unweighted
+            AdjacencyMatrix[fromIndex, toIndex] = (int)Math.Round(weight);
         }
 
+        /// <summary>
+        /// Creates adjacency structures (list and matrix) from existing links.
+        /// </summary>
         private void CreateAdjacencies() {
             Logger.Log("Creating Adjacencies...");
             Logger.Important($"{_links.Count()}");
@@ -92,13 +109,12 @@ namespace LivingParisApp.Core.GraphStructure {
             try {
                 var nodeCount = AdjacencyList.Count();
                 AdjacencyMatrix = new int?[nodeCount, nodeCount];
-                // Set all elements to 0
                 for (int i = 0; i < nodeCount; i++) {
                     for (int j = 0; j < nodeCount; j++) {
-                        AdjacencyMatrix[i, j] = 0; // Initialize with 0 instead of null
+                        AdjacencyMatrix[i, j] = 0;
                     }
                 }
-                
+
                 Logger.Log("Creating Adjacency Matrix");
                 foreach (var link in _links) {
                     AddEdgeMatrix(link);
@@ -110,6 +126,12 @@ namespace LivingParisApp.Core.GraphStructure {
             }
         }
 
+        /// <summary>
+        /// Loads all links from a given file.
+        /// </summary>
+        /// <param name="converter">Function to convert a string to generic type T.</param>
+        /// <param name="filePath">Path to the file containing the links.</param>
+        /// <returns>List of links extracted from the file.</returns>
         private List<Link<T>> GetAllLinks(Func<string, T> converter, string filePath = "") {
             Logger.Log("Getting All Links from file");
             var links = new List<Link<T>>();
@@ -138,6 +160,10 @@ namespace LivingParisApp.Core.GraphStructure {
             return links;
         }
 
+        /// <summary>
+        /// Returns a string representation of the adjacency list.
+        /// </summary>
+        /// <returns>String representing the adjacency list.</returns>
         public override string ToString() {
             StringBuilder stringBuilder = new StringBuilder();
             foreach (KeyValuePair<Node<T>, List<Tuple<Node<T>, double>>> kpv in AdjacencyList) {
@@ -151,11 +177,15 @@ namespace LivingParisApp.Core.GraphStructure {
             return stringBuilder.ToString().TrimEnd();
         }
 
+        /// <summary>
+        /// Displays the adjacency matrix as a string.
+        /// </summary>
+        /// <returns>String representing the adjacency matrix.</returns>
         public string DisplayAdjacencyMatrix() {
             StringBuilder stringBuilder = new StringBuilder();
             for (int i = 0; i < AdjacencyMatrix.GetLength(0); i++) {
                 for (int j = 0; j < AdjacencyMatrix.GetLength(1); j++) {
-                    stringBuilder.Append($"{AdjacencyMatrix[i, j]}");
+                    stringBuilder.Append($"{AdjacencyMatrix[i, j]} ");
                 }
                 stringBuilder.AppendLine();
             }

@@ -332,7 +332,7 @@ namespace LivingParisApp {
                     Content = "Reset",
                     Width = 100,
                     Height = 30,
-                    Margin = new Thickness(230, 220, 0, 0),
+                    Margin = new Thickness(10, 255, 0, 0),
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Top
                 };
