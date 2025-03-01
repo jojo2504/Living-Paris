@@ -2,8 +2,8 @@ CREATE DATABASE IF NOT EXISTS LivingParis;
 
 USE LivingParis;
 
--- Persons table (base table, no dependencies)
-CREATE TABLE Persons (
+-- Persons TABLE IF NOT EXISTS (base TABLE IF NOT EXISTS, no dependencies)
+CREATE TABLE IF NOT EXISTS Persons (
     PersonID INT AUTO_INCREMENT NOT NULL,
     LastName VARCHAR(255) NOT NULL,
     FirstName VARCHAR(255) NOT NULL,
@@ -19,14 +19,14 @@ CREATE TABLE Persons (
 );
 
 -- Clients and Chefs depend on Persons
-CREATE TABLE Clients (
+CREATE TABLE IF NOT EXISTS Clients (
     ClientID int AUTO_INCREMENT NOT NULL,
     PersonID int NOT NULL,
     PRIMARY KEY (ClientID),
     FOREIGN KEY (PersonID) REFERENCES Persons(PersonID)
 );
 
-CREATE TABLE Chefs (
+CREATE TABLE IF NOT EXISTS Chefs (
     ChefID int AUTO_INCREMENT NOT NULL,
     PersonID int NOT NULL,
     PRIMARY KEY (ChefID),
@@ -34,7 +34,7 @@ CREATE TABLE Chefs (
 );
 
 -- Orders depends on Chefs and Clients and Dishes
-CREATE TABLE Orders (
+CREATE TABLE IF NOT EXISTS Orders (
 	OrderID INT AUTO_INCREMENT NOT NULL,
     ClientID INT NOT NULL,
     ChefID INT NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE Orders (
 );
 
 -- Dishes depends on Chefs
-CREATE TABLE Dishes (
+CREATE TABLE IF NOT EXISTS Dishes (
     DishID INT AUTO_INCREMENT NOT NULL,
     ChefID INT NOT NULL,
     Name VARCHAR(255) NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE Dishes (
     CHECK (DishPrice >= 0)
 );
 
-CREATE TABLE OrderDishes (
+CREATE TABLE IF NOT EXISTS OrderDishes (
     DishID INT NOT NULL,
     OrderID INT NOT NULL,
     Quantity INT NOT NULL DEFAULT 1,
@@ -72,15 +72,15 @@ CREATE TABLE OrderDishes (
     CHECK (Quantity > 0)
 );
 
--- Ingredients (base table, no dependencies)
-CREATE TABLE Ingredients (
+-- Ingredients (base TABLE IF NOT EXISTS, no dependencies)
+CREATE TABLE IF NOT EXISTS Ingredients (
     IngredientID INT AUTO_INCREMENT NOT NULL,
     Name VARCHAR(255) NOT NULL UNIQUE,
     PRIMARY KEY (IngredientID)
 );
 
 -- DishIngredients depends on Dishes and Ingredients
-CREATE TABLE DishIngredients(
+CREATE TABLE IF NOT EXISTS DishIngredients(
     DishIngredientsID INT AUTO_INCREMENT NOT NULL,
     IngredientID INT NOT NULL,
     DishID INT NOT NULL,
