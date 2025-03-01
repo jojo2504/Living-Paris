@@ -1,3 +1,4 @@
+CREATE DATABASE IF NOT EXISTS LivingParis;
 USE LivingParis;
 
 -- Disable foreign key checks temporarily to avoid errors when dropping tables

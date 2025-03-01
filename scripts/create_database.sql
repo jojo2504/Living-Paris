@@ -1,5 +1,3 @@
-DROP DATABASE LivingParis;
-
 CREATE DATABASE IF NOT EXISTS LivingParis;
 
 USE LivingParis;
