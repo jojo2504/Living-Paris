@@ -2,7 +2,11 @@
 
 
 ## Summary
-- [Introduction](https://github.com/jojo2504/Living-Paris?tab=readme-ov-file#introduction)
+- [Introduction](https://)
+- [Features (On-Progress)](https://)
+- [Getting Started (For Custom Building)](https://)
+- [Entity-Relationship Diagram](https://)
+
 
 ## Introduction
 Liv`in Paris is an application that facilitates meal sharing between neighbors within Paris. The platform allows individuals or local businesses to order homemade meals prepared by registered cooks. Users can register as either a cook or a client—or both simultaneously—by providing their personal details such as name, address, phone number, and email.
@@ -30,5 +34,4 @@ This project aims to explore graphs and their functionality, particularly in opt
 
 ## Entity-Relationship Diagram
 ![Entity Association Diagram](markdownassets\Image\Entity_Association_Diagram.png)
-
 This diagram will evolve in the future as we add more functionalities to the app.
