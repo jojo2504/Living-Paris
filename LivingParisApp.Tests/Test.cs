@@ -4,6 +4,9 @@ using Xunit;
 using LivingParisApp.Core.GraphStructure;
 
 public class GraphTests {
+    //cette region est pour le premier rendu, rien ne sera reutilise
+    #region 
+    /*
     [Fact]
     public void Graph_ShouldInitialize_EmptyGraph() {
         var graph = new Graph<int>();
@@ -60,5 +63,14 @@ public class GraphTests {
 
         string matrixDisplay = graph.DisplayAdjacencyMatrix();
         Assert.Contains("1", matrixDisplay);
+    }
+    */
+    #endregion
+}
+
+public class MapTests {
+    [Fact]
+    public void Map_Map() {
+        Assert.Equal(1,1);
     }
 }

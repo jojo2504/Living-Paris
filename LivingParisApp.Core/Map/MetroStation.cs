@@ -1,20 +1,24 @@
-namespace LivingParisApp.Core.Map {
-    internal class MetroStation {
-        public string Name { get; }
-        public double Latitude { get; }
-        public double Longitude { get; }
-        public bool IsTerminus { get; }
-        public int WaitingTime { get; }
-        public HashSet<string> Connections { get; } // Lines that connect at this station
+using LivingParisApp.Core.GraphStructure;
 
+namespace LivingParisApp.Core.Map {
+    public class MetroStation {
+        public int ID { get; }
+        public string LibelleLine { get; }
+        public string LibelleStation { get; }
+        public double Longitude { get; }
+        public double Latitude { get; }
+        public string CommuneName { get; }
+        public string CommuneCode { get; }
         const double earthRadius = 6371; // Earth's radius in kilometers
 
-        public MetroStation(string name, double latitude, double longitude, bool isTerminus = false) {
-            Name = name;
+        public MetroStation(int ID, string LibelleLine, string libelleStation, double latitude, double longitude, string CommuneName, string CommuneCode) {
+            this.ID = ID;
+            LibelleLine = LibelleLine;
+            LibelleStation = libelleStation;
             Latitude = latitude;
             Longitude = longitude;
-            IsTerminus = isTerminus;
-            Connections = new HashSet<string>();
+            CommuneName = CommuneName;
+            CommuneCode = CommuneCode;
         }
 
         public double CalculateDistance(MetroStation other) {
@@ -23,7 +27,7 @@ namespace LivingParisApp.Core.Map {
             var lon1 = ConvertToRadians(Longitude);
             var lon2 = ConvertToRadians(other.Longitude);
             var deltaLat = lat2 - lat1;
-            var deltaLon = lon2 - lon1;
+            var deltaLon = lon2 - lon1; 
 
             var a = Math.Pow(Math.Sin(deltaLat / 2), 2) +
                     Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2), 2);

@@ -6,7 +6,6 @@ namespace LivingParisApp.Core.GraphStructure {
     public class Node<T> {
         public T Object { get; }
         public Node(T obj) => Object = obj;
-
         /// <summary>
         /// Returns a string representation of the node.
         /// </summary>
