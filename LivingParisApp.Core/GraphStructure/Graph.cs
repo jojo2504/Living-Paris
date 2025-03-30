@@ -195,8 +195,8 @@ namespace LivingParisApp.Core.GraphStructure {
         }
         */
         #endregion
-
-        public abstract void ParseNodes(string filePathNode);
+        public abstract void AddEdge(T from, T to, double weight);
+        public abstract void ParseNodes(string filePathNode);   
         public abstract void ParseArcs(string filePathArcs);
         public abstract override string ToString();
     }

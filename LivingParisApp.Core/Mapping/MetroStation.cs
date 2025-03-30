@@ -1,6 +1,6 @@
 using LivingParisApp.Core.GraphStructure;
 
-namespace LivingParisApp.Core.Map {
+namespace LivingParisApp.Core.Mapping {
     public class MetroStation {
         public int ID { get; }
         public string LibelleLine { get; }
@@ -10,6 +10,7 @@ namespace LivingParisApp.Core.Map {
         public string CommuneName { get; }
         public string CommuneCode { get; }
         const double earthRadius = 6371; // Earth's radius in kilometers
+        private string v;
 
         public MetroStation(int ID, string LibelleLine, string libelleStation, double latitude, double longitude, string CommuneName, string CommuneCode) {
             this.ID = ID;
@@ -19,6 +20,10 @@ namespace LivingParisApp.Core.Map {
             Longitude = longitude;
             CommuneName = CommuneName;
             CommuneCode = CommuneCode;
+        }
+
+        public MetroStation(string v) {
+            this.v = v;
         }
 
         public double CalculateDistance(MetroStation other) {
