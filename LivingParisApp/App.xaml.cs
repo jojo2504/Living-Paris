@@ -10,7 +10,7 @@ using LivingParisApp.Services.MySQL;
 using System.IO;
 using System.Data;
 using System.Text;
-using LivingParisApp.Core.Map;
+using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp {
     public partial class App : Application {
@@ -38,7 +38,13 @@ namespace LivingParisApp {
             Map map = new Map(Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisNoeuds.csv"),
                               Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisArcs.csv"));
 
-            Logger.Log(map.ToString());
+            // Logger.Log(map.ToString());
+
+            Dijkstra<MetroStation> dijkstra = new Dijkstra<MetroStation>();
+            dijkstra.Init(map);
+            var (a,b) = dijkstra.GetPath(map.AdjacencyList.Keys.ToList()[0], map.AdjacencyList.Keys.ToList()[5]);
+
+            Logger.Log($"{a}, {b}");
 
             Window window = new Window();
             window.Show();
