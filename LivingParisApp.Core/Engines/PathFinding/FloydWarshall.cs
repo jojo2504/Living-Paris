@@ -2,8 +2,7 @@ using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths {
-    public class FloydWarshall<T> : ShortestPathsEngine<T> where T : IStation {
-
+    public class FloydWarshall<T> : ShortestPathsEngine<T> where T : IStation<T> {
         private int vertexCount;     
         private List<Node<T>> vertices; 
 

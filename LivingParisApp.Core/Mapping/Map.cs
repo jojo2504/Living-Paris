@@ -3,7 +3,7 @@ using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Services.FileHandling;
 
 namespace LivingParisApp.Core.Mapping {
-    public class Map<T> : Graph<T> where T : IStation {
+    public class Map<T> : Graph<T> where T : IStation<T>{
         private Dictionary<string, Node<T>> stationNodes = new Dictionary<string, Node<T>>();
         
         public Map(){
@@ -35,17 +35,8 @@ namespace LivingParisApp.Core.Mapping {
                 var parts = line.Split(',');
                 if (parts.Length < 7 || parts[0] == "ID Station") continue; // Skip header or malformed lines
 
-                string id = parts[0];
-                string lineLabel = parts[1];
-                string stationLabel = parts[2];
-                double longitude = string.IsNullOrEmpty(parts[3]) ? 0 : Convert.ToDouble(parts[3]);
-                double latitude = string.IsNullOrEmpty(parts[4]) ? 0 : Convert.ToDouble(parts[4]);
-                string communeName = parts[5];
-                string communeCode = parts[6];
-
-                var station = new {Id = Convert.ToInt32(id), lineLabel, stationLabel, longitude,
-                                                latitude, communeName, communeCode};
-                stationNodes[id] = new Node<T>((T)(object)station); //pas fou mais jsp comment faire d'autre
+                T station = T.FromParts(parts);
+                stationNodes[parts[0]] = new Node<T>(station);
             }
         }
 

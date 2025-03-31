@@ -2,7 +2,7 @@ using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths{
-    public class BellmanFord<T> : ShortestPathsEngine<T> where T : IStation {
+    public class BellmanFord<T> : ShortestPathsEngine<T> where T : IStation<T> {
 
         /// <summary>
         /// Initializes the algorithm with a map and a starting vertex.
