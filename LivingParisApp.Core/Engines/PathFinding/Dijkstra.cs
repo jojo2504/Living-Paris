@@ -3,7 +3,7 @@ using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths{
     public class Dijkstra<T> : ShortestPathsEngine<T> where T : IStation {
-        public override void Init(Map<T> map, Node<T>? first = default) {
+        public override void Init(Map<T> map, Node<T>? start = default) {
             throw new NotImplementedException();
         }
 
