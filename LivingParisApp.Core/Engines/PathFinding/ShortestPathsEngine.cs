@@ -7,5 +7,7 @@ namespace LivingParisApp.Core.Engines.ShortestPaths {
         public int[,]? predecessors {get; set;}
         public Dictionary<Node<T>,double>? _distances {get;set;}
         public Dictionary<Node<T>,Node<T>>? _predecessors {get;set;}
+        public Node<T>? _startVertice {get;set;}
+
     }
 }

@@ -4,8 +4,6 @@ using LivingParisApp.Core.Mapping;
 namespace LivingParisApp.Core.Engines.ShortestPaths{
     public class BellmanFord<T> : ShortestPathsEngine<T> where T : IStation {
 
-        private Node<T> _startVertice; 
-
         /// <summary>
         /// Initializes the algorithm with a map and a starting vertex.
         /// </summary>
