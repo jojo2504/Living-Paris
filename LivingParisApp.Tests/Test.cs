@@ -91,10 +91,10 @@ public class ShortestPathTests {
 
         // Initialize Dijkstra
         var dijkstra = new Dijkstra<MetroStation>();
-        dijkstra.Init(map);
+        dijkstra.Init(map, stationA);
 
         // Act
-        var (path, totalLength) = dijkstra.GetPath(stationA, stationD);
+        var (path, totalLength) = dijkstra.GetPath(stationD);
 
         // Assert
         var expectedPath = new LinkedList<Node<MetroStation>>(
@@ -126,17 +126,17 @@ public class ShortestPathTests {
         var stationD = new Node<MetroStation>(new MetroStation(4, "L1", "D", 3, 3, "Paris", "75004"));
 
         // Set up the graph exactly as in Dijkstra test
-        map.AddEdge(stationA.Object, stationB.Object, 4.0);
+        map.AddEdge(stationA.Object, stationB.Object, 10.0);
         map.AddEdge(stationA.Object, stationC.Object, 2.0);
         map.AddEdge(stationB.Object, stationD.Object, 3.0);
         map.AddEdge(stationC.Object, stationD.Object, 5.0);
 
         // Initialize Bellman-Ford
         var bellmanFord = new BellmanFord<MetroStation>();
-        bellmanFord.Init(map);
+        bellmanFord.Init(map, stationA);
 
         // Act
-        var (path, totalLength) = bellmanFord.GetPath(stationA, stationD);
+        var (path, totalLength) = bellmanFord.GetPath(stationD);
 
         // Assert
         var expectedPath = new LinkedList<Node<MetroStation>>(
