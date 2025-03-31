@@ -84,7 +84,7 @@ public class ShortestPathTests {
         var stationD = new Node<MetroStation>(new MetroStation(4, "L1", "D", 3, 3, "Paris", "75004"));
 
         // Set up the graph exactly as in Dijkstra test
-        map.AddEdge(stationA.Object, stationB.Object, 4.0);
+        map.AddEdge(stationA.Object, stationB.Object, 10.0);
         map.AddEdge(stationA.Object, stationC.Object, 2.0);
         map.AddEdge(stationB.Object, stationD.Object, 3.0);
         map.AddEdge(stationC.Object, stationD.Object, 5.0);

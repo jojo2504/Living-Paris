@@ -18,13 +18,16 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
                 _distances = new Dictionary<Node<T>,double>();
                 _predecessors = new Dictionary<Node<T>, Node<T>>();
 
-                foreach (var node in map.AdjacencyList){
-                    if(node.Key == _startVertice){
+                foreach (var node in map.AdjacencyList)
+                {
+                    if(node.Key.Object.ID == _startVertice.Object.ID)
+                    {
                         _distances[node.Key] = 0;
                     }
-                    else{
+                    else
+                    {
                         _distances[node.Key] = double.PositiveInfinity;
-                        _predecessors[node.Key] = _startVertice;
+                        _predecessors[node.Key] = null;
                     }
                 }
 
@@ -35,7 +38,6 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
                     foreach (var node in map.AdjacencyList){
                         foreach (var neighbor in node.Value){
                             if(_distances[node.Key] != double.PositiveInfinity && 
-                            neighbor.Item1 != _startVertice && 
                             _distances[neighbor.Item1] > _distances[node.Key]+neighbor.Item2){
                                 _distances[neighbor.Item1] = _distances[node.Key]+neighbor.Item2;
                                 _predecessors[neighbor.Item1] = node.Key;
@@ -43,6 +45,7 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
                             }
                         }
                     }
+                    iteration++;
                 }
             }
         }
@@ -53,21 +56,25 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
         /// <param name="to">The destination node</param>
         /// <returns>A tuple containing the path (LinkedList) and total length</returns>
         public (LinkedList<Node<T>> Path, double TotalLength) GetPath(Node<T> to) {
-
+            
             if (_distances[to] == double.PositiveInfinity) {
                 return (new LinkedList<Node<T>>(), double.PositiveInfinity);
             }
 
+            double totalLength = _distances[to];
             List<Node<T>> pathList = new List<Node<T>>();
             pathList.Add(to); 
 
-            while (_startVertice != to){
+            while (_startVertice.Object.ID != to.Object.ID){
+                if (_predecessors[to] == null){
+                    return (new LinkedList<Node<T>>(), double.PositiveInfinity); 
+                }
                 to = _predecessors[to];
                 pathList.Insert(0, to); 
             }
             LinkedList<Node<T>> path = new LinkedList<Node<T>>(pathList);
 
-            return (path,_distances[to]);
+            return (path,totalLength);
         }
     }
 }
