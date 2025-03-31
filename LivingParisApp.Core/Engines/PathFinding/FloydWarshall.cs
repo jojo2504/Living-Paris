@@ -6,7 +6,7 @@ namespace LivingParisApp.Core.Engines.ShortestPaths {
         private int vertexCount;        // Number of vertices
         private List<Node<T>> vertices; // List of vertices for indexing
 
-        public override void Init(Map<T> map, T? first = default) {
+        public override void Init(Map<T> map, Node<T>? first = default) {
             vertices = map.AdjacencyList.Keys.ToList();
             vertexCount = vertices.Count;
             distances = new double[vertexCount, vertexCount];
