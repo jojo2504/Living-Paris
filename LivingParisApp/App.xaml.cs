@@ -35,7 +35,7 @@ namespace LivingParisApp {
             //var graph = new Graph<int>(s => int.Parse(s), karateFilePath); // Populate with integer nodes
             //Logger.Log(graph.DisplayAdjacencyMatrix());
             Logger.Log("generating the map...");
-            Map map = new Map(Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisNoeuds.csv"),
+            Map<MetroStation> map = new Map<MetroStation>(Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisNoeuds.csv"),
                               Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisArcs.csv"));
 
             // Logger.Log(map.ToString());

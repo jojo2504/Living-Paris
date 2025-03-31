@@ -1,7 +1,7 @@
 using LivingParisApp.Core.GraphStructure;
 
 namespace LivingParisApp.Core.Mapping {
-    public class MetroStation {
+    public class MetroStation : IStation {
         public int ID { get; }
         public string LibelleLine { get; }
         public string LibelleStation { get; }

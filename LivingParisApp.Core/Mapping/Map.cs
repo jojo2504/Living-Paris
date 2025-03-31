@@ -3,8 +3,8 @@ using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Services.FileHandling;
 
 namespace LivingParisApp.Core.Mapping {
-    public class Map : Graph<MetroStation>{
-        private Dictionary<string, Node<MetroStation>> stationNodes = new Dictionary<string, Node<MetroStation>>();
+    public class Map<T> : Graph<T> where T : IStation {
+        private Dictionary<string, Node<T>> stationNodes = new Dictionary<string, Node<T>>();
         
         public Map(){
         }
@@ -14,15 +14,15 @@ namespace LivingParisApp.Core.Mapping {
             ParseArcs(filePathArcs);
         }
 
-        public override void AddEdge(MetroStation from, MetroStation to, double weight) {
-            var fromNode = new Node<MetroStation>(from);
-            var toNode = new Node<MetroStation>(to);
+        public override void AddEdge(T from, T to, double weight) {
+            var fromNode = new Node<T>(from);
+            var toNode = new Node<T>(to);
 
             // Ensure both nodes exist in the adjacency list
                 if (!AdjacencyList.ContainsKey(fromNode))
-                    AdjacencyList[fromNode] = new List<Tuple<Node<MetroStation>, double>>();
+                    AdjacencyList[fromNode] = new List<Tuple<Node<T>, double>>();
                 if (!AdjacencyList.ContainsKey(toNode))
-                    AdjacencyList[toNode] = new List<Tuple<Node<MetroStation>, double>>();
+                    AdjacencyList[toNode] = new List<Tuple<Node<T>, double>>();
 
             // Add the edge
             AdjacencyList[fromNode].Add(Tuple.Create(toNode, weight));
@@ -43,9 +43,9 @@ namespace LivingParisApp.Core.Mapping {
                 string communeName = parts[5];
                 string communeCode = parts[6];
 
-                var station = new MetroStation(Convert.ToInt32(id), lineLabel, stationLabel, longitude,
-                                                latitude, communeName, communeCode);
-                stationNodes[id] = new Node<MetroStation>(station);
+                var station = new {Id = Convert.ToInt32(id), lineLabel, stationLabel, longitude,
+                                                latitude, communeName, communeCode};
+                stationNodes[id] = new Node<T>((T)(object)station); //pas fou mais jsp comment faire d'autre
             }
         }
 
@@ -69,7 +69,7 @@ namespace LivingParisApp.Core.Mapping {
 
                 // Initialize neighbors list if not already present
                 if (!AdjacencyList.ContainsKey(currentNode)) {
-                    AdjacencyList[currentNode] = new List<Tuple<Node<MetroStation>, double>>();
+                    AdjacencyList[currentNode] = new List<Tuple<Node<T>, double>>();
                 }
 
                 // Add edge to Previous station (bidirectional)
@@ -90,7 +90,7 @@ namespace LivingParisApp.Core.Mapping {
 
         public override string ToString() {
             StringBuilder stringBuilder = new StringBuilder();
-            foreach (KeyValuePair<Node<MetroStation>, List<Tuple<Node<MetroStation>, double>>> kpv in AdjacencyList) {
+            foreach (KeyValuePair<Node<T>, List<Tuple<Node<T>, double>>> kpv in AdjacencyList) {
                 stringBuilder.Append($"{kpv.Key.Object.LibelleStation} => ");
                 foreach (var node in kpv.Value) {
                     stringBuilder.Append($"{node.Item1.Object.LibelleStation}({node.Item2}), ");

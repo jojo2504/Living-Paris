@@ -2,8 +2,8 @@ using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths{
-    public class BellmanFord<T> : ShortestPathsEngine<Node<T>> {
-        public override void Init(Map map) {
+    public class BellmanFord<T> : ShortestPathsEngine<T> where T : IStation {
+        public override void Init(Map<T> map) {
             throw new NotImplementedException();
         }
 

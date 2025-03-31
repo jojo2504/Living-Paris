@@ -4,6 +4,7 @@ using Xunit;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 using LivingParisApp.Core.Engines.ShortestPaths;
+using System.Diagnostics.Metrics;
 
 #region cette partie est pour le premier rendu, rien ne sera reutilise
 public class GraphTests {
@@ -74,7 +75,7 @@ public class ShortestPathTests {
     [Fact]
     public void Dijkstra_GetPath_ReturnsShortestPath() {
         // Arrange: Create a small test graph
-        var map = new Map();
+        var map = new Map<MetroStation>();
 
         // Create stations wrapped in Node<T> as per original Dijkstra test
         var stationA = new Node<MetroStation>(new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001"));
@@ -116,7 +117,7 @@ public class ShortestPathTests {
     [Fact]
     public void BellmanFord_GetPath_ReturnsShortestPath() {
         // Arrange: Create a small test graph
-        var map = new Map();
+        var map = new Map<MetroStation>();
 
         // Create stations wrapped in Node<T> as per original Dijkstra test
         var stationA = new Node<MetroStation>(new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001"));
@@ -158,7 +159,7 @@ public class ShortestPathTests {
     [Fact]
     public void FloydWarshall_GetPath_ReturnsShortestPath() {
         // Arrange: Create a small test graph
-        var map = new Map();
+        var map = new Map<MetroStation>();
 
         // Create stations wrapped in Node<T> as per original Dijkstra test
         var stationA = new Node<MetroStation>(new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001"));
@@ -170,7 +171,7 @@ public class ShortestPathTests {
         map.AddEdge(stationA.Object, stationB.Object, 4.0);
         map.AddEdge(stationA.Object, stationC.Object, 2.0);
         map.AddEdge(stationB.Object, stationD.Object, 3.0);
-        map.AddEdge(stationC.Object, stationD.Object, 5.0);
+        map.AddEdge(stationC.Object, stationD.Object, 10.0);
 
         // Initialize Floyd-Warshall
         var floydWarshall = new FloydWarshall<MetroStation>();
@@ -181,7 +182,7 @@ public class ShortestPathTests {
 
         // Assert
         var expectedPath = new LinkedList<Node<MetroStation>>(
-            new[] { stationA, stationC, stationD }
+            new[] { stationA, stationB, stationD }
         );
 
         Assert.NotNull(path);
