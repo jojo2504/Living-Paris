@@ -3,10 +3,16 @@ using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths {
     public class FloydWarshall<T> : ShortestPathsEngine<T> where T : IStation {
-        private int vertexCount;        // Number of vertices
-        private List<Node<T>> vertices; // List of vertices for indexing
 
+        private int vertexCount;     
+        private List<Node<T>> vertices; 
+
+        /// <summary>
+        /// Initializes the algorithm with a map and computes all shortest paths.
+        /// </summary>
+        /// <param name="map">The map containing nodes and their connections</param>
         public void Init(Map<T> map) {
+
             vertices = map.AdjacencyList.Keys.ToList();
             vertexCount = vertices.Count;
             distances = new double[vertexCount, vertexCount];
@@ -48,28 +54,30 @@ namespace LivingParisApp.Core.Engines.ShortestPaths {
             }
         }
 
+        /// <summary>
+        /// Returns the shortest path between two nodes and its total length.
+        /// </summary>
+        /// <param name="from">The starting node</param>
+        /// <param name="to">The destination node</param>
+        /// <returns>A tuple containing the path (LinkedList) and total length</returns>
         public (LinkedList<Node<T>> Path, double TotalLength) GetPath(Node<T> from, Node<T> to) {
             int startIndex = vertices.IndexOf(from);
             int endIndex = vertices.IndexOf(to);
 
-            // If no path exists, return an empty LinkedList and infinity as TotalLength
             if (distances[startIndex, endIndex] == double.PositiveInfinity) {
                 return (new LinkedList<Node<T>>(), double.PositiveInfinity);
             }
 
-            // Build the path as a List first (for easier insertion), then convert to LinkedList
             List<Node<T>> pathList = new List<Node<T>>();
-            pathList.Add(to); // Start with the destination node
+            pathList.Add(to); 
 
             while (startIndex != endIndex) {
                 endIndex = predecessors[startIndex, endIndex];
-                pathList.Insert(0, vertices[endIndex]); // Insert at the beginning to reverse the path
+                pathList.Insert(0, vertices[endIndex]); 
             }
 
-            // Convert List to LinkedList
             LinkedList<Node<T>> path = new LinkedList<Node<T>>(pathList);
 
-            // Return the path and the total length from the distances matrix
             return (path, distances[startIndex, vertices.IndexOf(to)]);
         }
     }
