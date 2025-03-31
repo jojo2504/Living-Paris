@@ -1,11 +1,8 @@
-using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 
-namespace LivingParisApp.Core.Engines.ShortestPaths{
-    public abstract class ShortestPathsEngine<T> where T : IStation{
-        public double[,]? distances;
-        public int[,]? predecessors;
-        public abstract void Init(Map<T> map, Node<T>? start = default);
-        public abstract (LinkedList<Node<T>> Path, double TotalLength) GetPath(Node<T> from, Node<T> to);
+namespace LivingParisApp.Core.Engines.ShortestPaths {
+    public abstract class ShortestPathsEngine<T> where T : IStation {
+        public double[,]? distances {get; set;}
+        public int[,]? predecessors {get; set;}
     }
 }

@@ -41,8 +41,8 @@ namespace LivingParisApp {
             // Logger.Log(map.ToString());
 
             Dijkstra<MetroStation> dijkstra = new Dijkstra<MetroStation>();
-            dijkstra.Init(map);
-            var (a,b) = dijkstra.GetPath(map.AdjacencyList.Keys.ToList()[0], map.AdjacencyList.Keys.ToList()[5]);
+            dijkstra.Init(map, map.AdjacencyList.Keys.ToList()[0]);
+            var (a,b) = dijkstra.GetPath(map.AdjacencyList.Keys.ToList()[5]);
 
             Logger.Log($"{a}, {b}");
 
