@@ -32,32 +32,15 @@ namespace LivingParisApp {
 
             MySQLManager mySQLManager = new MySQLManager(bools);
 
-            /*
-            //var karateFilePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "soc-karate.mtx");
-            //var graph = new Graph<int>(s => int.Parse(s), karateFilePath); // Populate with integer nodes
-            //Logger.Log(graph.DisplayAdjacencyMatrix());
             Logger.Log("generating the map...");
-
             Map<MetroStation> map = new Map<MetroStation>(
                 Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisNoeuds.csv"),
                 Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisArcs.csv")
             );
 
-            // Logger.Log(map.ToString());
+            Logger.Log(map.ToString());
 
-            try {
-                BellmanFord<MetroStation> bellmanFord = new BellmanFord<MetroStation>();
-                bellmanFord.Init(map, map.AdjacencyList.Keys.ToList()[0]);
-                var (a,b) = bellmanFord.GetPath(map.AdjacencyList.Keys.ToList()[5]);
-
-                Logger.Log($"{a}, {b}");
-            }
-            catch (Exception ex) {
-                Logger.Log(ex);
-            }
-            */
-
-            MainWindow window = new MainWindow(mySQLManager);
+            MainWindow window = new MainWindow(mySQLManager, map);
             window.Show();
         }
     }
