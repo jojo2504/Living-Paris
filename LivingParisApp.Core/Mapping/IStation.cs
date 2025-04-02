@@ -9,5 +9,7 @@ namespace LivingParisApp.Core.Mapping {
         public string CommuneCode { get; }
 
         static abstract T FromParts(string[] parts);
+        
+        public abstract double CalculateDistance(T other);
     }
 }
