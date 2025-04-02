@@ -1,13 +1,99 @@
 ﻿<Window x:Class="LivingParisApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:LivingParisApp"
-        mc:Ignorable="d"
-        Title="Graph Visualizer" Height="900" Width="1500"
-        Background="#1E1E1E">
+        Title="Living Paris Authentication" Height="600" Width="850">
     <Grid>
-        <Canvas Name="GraphCanvas" Background="#252526"/>
+        <TabControl>
+            <!-- Sign In Tab -->
+            <TabItem Header="Sign In">
+                <StackPanel Margin="20">
+                    <TextBlock Text="Sign In" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                    
+                    <TextBlock Text="Email:"/>
+                    <TextBox x:Name="txtSignInEmail" Margin="0,5,0,10"/>
+                    
+                    <TextBlock Text="Password:"/>
+                    <PasswordBox x:Name="pwdSignIn" Margin="0,5,0,20"/>
+                    
+                    <Button x:Name="btnSignIn" Content="Sign In" Width="100" HorizontalAlignment="Left"/>
+                    
+                    <TextBlock x:Name="txtSignInStatus" Margin="0,10,0,0"/>
+                </StackPanel>
+            </TabItem>
+            
+            <!-- Sign Up Tab -->
+            <TabItem Header="Sign Up">
+                <ScrollViewer>
+                    <StackPanel Margin="20">
+                        <TextBlock Text="Sign Up" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                        
+                        <TextBlock Text="First Name:"/>
+                        <TextBox x:Name="txtFirstName" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Last Name:"/>
+                        <TextBox x:Name="txtLastName" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Email:"/>
+                        <TextBox x:Name="txtEmail" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Password:"/>
+                        <PasswordBox x:Name="pwdSignUp" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Confirm Password:"/>
+                        <PasswordBox x:Name="pwdConfirm" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Phone Number:"/>
+                        <TextBox x:Name="txtPhone" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Street:"/>
+                        <TextBox x:Name="txtStreet" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Street Number:"/>
+                        <TextBox x:Name="txtStreetNumber" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Postcode:"/>
+                        <TextBox x:Name="txtPostcode" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="City:"/>
+                        <TextBox x:Name="txtCity" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="Closest Metro (Optional):"/>
+                        <TextBox x:Name="txtMetro" Margin="0,5,0,10"/>
+                        
+                        <TextBlock Text="User Type (Select One or Both):"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,20">
+                            <CheckBox x:Name="chkClient" Content="Client" Margin="0,0,20,0"/>
+                            <CheckBox x:Name="chkChef" Content="Chef"/>
+                        </StackPanel>
+                        
+                        <Button x:Name="btnSignUp" Content="Sign Up" Width="100" HorizontalAlignment="Left"/>
+                        
+                        <TextBlock x:Name="txtSignUpStatus" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            
+            <!-- User Account Tab (visible after login) -->
+            <TabItem Header="My Account" x:Name="tabAccount">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="My Account" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                    
+                    <StackPanel Grid.Row="1">
+                        <TextBlock x:Name="txtUserInfo" Text="Welcome, [User]"/>
+                        <TextBlock x:Name="txtUserRoles" Text="Roles: [Roles]" Margin="0,10,0,0"/>
+                        <TextBlock x:Name="txtUserEmail" Text="Email: [Email]" Margin="0,10,0,0"/>
+                        <!-- Additional user info can be added here -->
+                    </StackPanel>
+                    
+                    <Button Grid.Row="2" x:Name="btnSignOut" Content="Sign Out" Width="100" HorizontalAlignment="Left"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

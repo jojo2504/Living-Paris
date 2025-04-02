@@ -29,8 +29,10 @@ namespace LivingParisApp {
                     bools[i] = true;
                 }
             }
+
             MySQLManager mySQLManager = new MySQLManager(bools);
 
+            /*
             //var karateFilePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "soc-karate.mtx");
             //var graph = new Graph<int>(s => int.Parse(s), karateFilePath); // Populate with integer nodes
             //Logger.Log(graph.DisplayAdjacencyMatrix());
@@ -53,8 +55,9 @@ namespace LivingParisApp {
             catch (Exception ex) {
                 Logger.Log(ex);
             }
+            */
 
-            Window window = new Window();
+            MainWindow window = new MainWindow(mySQLManager);
             window.Show();
         }
     }

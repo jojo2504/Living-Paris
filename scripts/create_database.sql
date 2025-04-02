@@ -2,9 +2,9 @@ CREATE DATABASE IF NOT EXISTS LivingParis;
 
 USE LivingParis;
 
--- Persons TABLE IF NOT EXISTS (base TABLE IF NOT EXISTS, no dependencies)
-CREATE TABLE IF NOT EXISTS Persons (
-    PersonID INT AUTO_INCREMENT NOT NULL,
+-- Users TABLE IF NOT EXISTS (base TABLE IF NOT EXISTS, no dependencies)
+CREATE TABLE IF NOT EXISTS Users (
+    UserID INT AUTO_INCREMENT NOT NULL,
     LastName VARCHAR(255) NOT NULL,
     FirstName VARCHAR(255) NOT NULL,
     Street VARCHAR(255) NOT NULL,
@@ -13,24 +13,12 @@ CREATE TABLE IF NOT EXISTS Persons (
     City VARCHAR(255) NOT NULL,
     PhoneNumber VARCHAR(10) NOT NULL,
     Mail VARCHAR(255) NOT NULL UNIQUE,
-    ClosestMetro VARCHAR(255) NOT NULL,
-    PRIMARY KEY (PersonID),
-    CHECK (CHAR_LENGTH(PhoneNumber) = 10)
-);
-
--- Clients and Chefs depend on Persons
-CREATE TABLE IF NOT EXISTS Clients (
-    ClientID int AUTO_INCREMENT NOT NULL,
-    PersonID int NOT NULL,
-    PRIMARY KEY (ClientID),
-    FOREIGN KEY (PersonID) REFERENCES Persons(PersonID)
-);
-
-CREATE TABLE IF NOT EXISTS Chefs (
-    ChefID int AUTO_INCREMENT NOT NULL,
-    PersonID int NOT NULL,
-    PRIMARY KEY (ChefID),
-    FOREIGN KEY (PersonID) REFERENCES Persons(PersonID)
+    ClosestMetro VARCHAR(255),
+    Password VARCHAR(255) NOT NULL,
+    IsClient INT NOT NULL DEFAULT 0,
+    IsChef INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (UserID),
+    CHECK (CHAR_LENGTH(PhoneNumber) = 1)
 );
 
 -- Orders depends on Chefs and Clients and Dishes
@@ -40,8 +28,8 @@ CREATE TABLE IF NOT EXISTS Orders (
     ChefID INT NOT NULL,
     Address VARCHAR(255),
     PRIMARY KEY (OrderID),
-    FOREIGN KEY (ClientId) REFERENCES Clients(ClientID),
-    FOREIGN KEY (ChefId) REFERENCES Chefs(ChefID)
+    FOREIGN KEY (ClientId) REFERENCES Users(UserID),
+    FOREIGN KEY (ChefId) REFERENCES Users(UserID)
 );
 
 -- Dishes depends on Chefs
@@ -56,7 +44,7 @@ CREATE TABLE IF NOT EXISTS Dishes (
     Diet VARCHAR(255),
     Origin VARCHAR(255),
     PRIMARY KEY (DishID),
-    FOREIGN KEY (ChefID) REFERENCES Chefs(ChefID),
+    FOREIGN KEY (ChefID) REFERENCES Users(UserID),
     CHECK (Type IN ('entree', 'main dish', 'dessert')),
     CHECK (DishPrice >= 0)
 );
