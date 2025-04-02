@@ -2,6 +2,10 @@
 
 ---
 
+## Collaborators 
+- jojo2504 | Jonathan Tran
+- Bahamin | Benjamin Zilber
+
 ## Summary
 - [Living-Paris](#living-paris)
   - [Summary](#summary)
