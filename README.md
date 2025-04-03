@@ -3,11 +3,11 @@
 ---
 
 ## Code owner
-jojo2504 | Jonathan Tran
+- jojo2504 | Jonathan Tran
   
 ## Collaborators
-Bahamin | Benjamin Zilber
-Tibo-7 | Thilbault Thery
+- Bahamin | Benjamin Zilber
+- Tibo-7 | Thilbault Thery
 
 ## Summary
 - [Living-Paris](#living-paris)
