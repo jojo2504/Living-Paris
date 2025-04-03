@@ -3,6 +3,12 @@ using LivingParisApp.Core.Mapping;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths{
     public class Dijkstra<T> : ShortestPathsEngine<T> where T : IStation<T> {
+
+        ///<summary>
+        /// Initializes the Dijkstra algorithm by computing the shortest paths from a starting node to all other nodes in the graph.
+        /// </summary>
+        /// <param name="map">The graph represented as a Map<T>, containing nodes and their adjacency lists with weights.</param>
+        /// <param name="start">The starting node from which to compute the shortest paths.</param>
         public void Init(Map<T> map, Node<T> start) {
             if(start!=null){
                 _startVertice = start;
@@ -25,15 +31,12 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
 
                 HashSet<Node<T>> visited = new HashSet<Node<T>>();
 
-                while(priorityQueue.Count > 0)
-                {
+                while(priorityQueue.Count > 0){
                     Node<T> node = priorityQueue.Dequeue();
 
-                    if(!visited.Contains(node))
-                    {
+                    if(!visited.Contains(node)){
                         visited.Add(node);
-                        foreach (var (neighbor, weight) in map.AdjacencyList[node])
-                        {
+                        foreach (var (neighbor, weight) in map.AdjacencyList[node]){
                             if (visited.Contains(neighbor))
                                 continue;
 
@@ -49,7 +52,17 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
                 }
             }
         }
-    
+
+        /// <summary>
+        /// Retrieves the shortest path from the starting node to a target node, along with the total length of the path.
+        /// </summary>
+        /// <param name="to">The target node to which the shortest path is computed.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// - A LinkedList<Node<T>> representing the shortest path from the start node to the target node.
+        /// - A double representing the total length of the path.
+        /// If no path exists, returns an empty LinkedList and a total length of double.PositiveInfinity.
+        /// </returns>
         public (LinkedList<Node<T>> Path, double TotalLength) GetPath(Node<T> to) {
             if (_distances[to] == double.PositiveInfinity) {
                 return (new LinkedList<Node<T>>(), double.PositiveInfinity);
