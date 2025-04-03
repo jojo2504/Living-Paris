@@ -80,6 +80,7 @@ public class AdditionalShortestPathTests {
         var stationC = new Node<MetroStation>(new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003"));
 
         map.AddEdge(stationA.Object, stationB.Object, 10.0);
+        map.AddEdge(stationA.Object, stationC.Object, double.PositiveInfinity);
 
         var dijkstra = new Dijkstra<MetroStation>();
         dijkstra.Init(map, stationA);
