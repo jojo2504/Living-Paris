@@ -8,16 +8,24 @@ using static LivingParisApp.Services.EnvironmentSetup.Constants;
 namespace LivingParisApp.Services.MySQL {
     public class MySQLManager {
         private readonly string _connectionString;
-        private bool resetDatabase;
+        private readonly bool _resetDatabase;
+        private readonly bool _noLogSQLcommand;
 
-        public MySQLManager(string resetDatabase = "") {
-            Logger.Log("Initializing MySQLManager");
-            EnsureDatabaseExists(); // Check and create database if needed
-            _connectionString = GetConnectionString();
-            Logger.Log($"Connection string set: {_connectionString}");
+        public MySQLManager(bool[] args) {
+            try {
+                Logger.Log("Initializing MySQLManager");
+                EnsureDatabaseExists(); // Check and create database if needed
+                _connectionString = GetConnectionString();
+                Logger.Log($"Connection string set: {_connectionString}");
 
-            this.resetDatabase = resetDatabase == "--reset";
-            InitializeDatabase(); // Create tables if needed
+                _resetDatabase = args[0];
+                _noLogSQLcommand = args[1];
+
+                InitializeDatabase(); // Create tables if needed
+            }
+            catch (Exception ex) {
+                Logger.Fatal(ex);
+            }
         }
 
         private void EnsureDatabaseExists() {
@@ -70,13 +78,12 @@ namespace LivingParisApp.Services.MySQL {
                             }
                         }
                         command.ExecuteNonQuery();
-                        Logger.Log($"Executed non-query: {query}");
+                        if (_noLogSQLcommand) Logger.Log($"Executed non-query: {query}");
                     }
                 }
             }
             catch (Exception ex) {
                 Logger.Error($"Failed to execute query: {query}, Error: {ex}");
-                Logger.Error($"????????????????????????");
                 throw;
             }
         }
@@ -92,7 +99,7 @@ namespace LivingParisApp.Services.MySQL {
                             }
                         }
                         var result = command.ExecuteScalar();
-                        Logger.Log($"Executed scalar query: {query}, Result: {result}");
+                        if (_noLogSQLcommand) Logger.Log($"Executed scalar query: {query}, Result: {result}");
                         return result;
                     }
                 }
@@ -161,7 +168,7 @@ namespace LivingParisApp.Services.MySQL {
 
         public void InitializeDatabase() {
             try {
-                if (resetDatabase) {
+                if (_resetDatabase) {
                     // reset database
                     var resetTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "reset_database.sql");
                     var resetTableQuery = File.ReadAllText(resetTablePath);

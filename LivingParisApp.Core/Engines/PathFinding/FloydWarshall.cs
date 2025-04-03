@@ -1,64 +1,52 @@
 using LivingParisApp.Core.GraphStructure;
+using LivingParisApp.Core.Mapping;
 
-namespace LivingParisApp.Core.Engines.ShortestPaths{
-    public class FloydWarshall<T>
-    {
-        private double[,] distances;    // Distance matrix
-        private int[,] predecessors;    // Predecessor matrix
-        private int vertexCount;        // Number of vertices
-        private List<Node<T>> vertices; // List of vertices for indexing
+namespace LivingParisApp.Core.Engines.ShortestPaths {
+    public class FloydWarshall<T> : ShortestPathsEngine<T> where T : IStation<T> {
+        private int vertexCount;     
+        private List<Node<T>> vertices; 
 
         /// <summary>
-        /// Initializes a new instance of the Floyd-Warshall algorithm with a given graph.
+        /// Initializes the algorithm with a map and computes all shortest paths.
         /// </summary>
-        /// <param name="graph">Dictionary representing the graph with nodes and their weighted neighbors.</param>
-        public FloydWarshall(Dictionary<Node<T>, List<Tuple<Node<T>, double>>> graph)
-        {
-            vertices = graph.Keys.ToList();
+        /// <param name="map">The map containing nodes and their connections</param>
+        public void Init(Map<T> map) {
+
+            vertices = map.AdjacencyList.Keys.ToList();
             vertexCount = vertices.Count;
             distances = new double[vertexCount, vertexCount];
             predecessors = new int[vertexCount, vertexCount];
 
-            for (int i = 0; i < vertexCount; i++)
-            {
-                for (int j = 0; j < vertexCount; j++)
-                {
-                    if (i == j)
-                    {
+            for (int i = 0; i < vertexCount; i++) {
+                for (int j = 0; j < vertexCount; j++) {
+                    if (i == j) {
                         distances[i, j] = 0;
-                        predecessors[i, j] = -1; 
+                        predecessors[i, j] = -1;
                     }
-                    else
-                    {
+                    else {
                         distances[i, j] = double.PositiveInfinity;
-                        predecessors[i, j] = -1; 
+                        predecessors[i, j] = -1;
                     }
                 }
             }
 
-            foreach (var node in graph)
-            {
+            foreach (var node in map.AdjacencyList) {
                 int i = vertices.IndexOf(node.Key);
-                foreach (var neighbor in node.Value)
-                {
+                foreach (var neighbor in node.Value) {
                     int j = vertices.IndexOf(neighbor.Item1);
-                    distances[i, j] = neighbor.Item2; 
-                    predecessors[i, j] = i;           
+                    distances[i, j] = neighbor.Item2;
+                    predecessors[i, j] = i;
                 }
             }
 
-            for (int k = 0; k < vertexCount; k++)
-            {
-                for (int i = 0; i < vertexCount; i++)
-                {
-                    for (int j = 0; j < vertexCount; j++)
-                    {
-                        if (distances[i, k] != double.PositiveInfinity && 
-                            distances[k, j] != double.PositiveInfinity && 
-                            distances[i, k] + distances[k, j] < distances[i, j])
-                        {
+            for (int k = 0; k < vertexCount; k++) {
+                for (int i = 0; i < vertexCount; i++) {
+                    for (int j = 0; j < vertexCount; j++) {
+                        if (distances[i, k] != double.PositiveInfinity &&
+                            distances[k, j] != double.PositiveInfinity &&
+                            distances[i, k] + distances[k, j] < distances[i, j]) {
                             distances[i, j] = distances[i, k] + distances[k, j];
-                            predecessors[i, j] = predecessors[k, j]; 
+                            predecessors[i, j] = predecessors[k, j];
                         }
                     }
                 }
@@ -66,29 +54,30 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
         }
 
         /// <summary>
-        /// Reconstructs the shortest path between two nodes using the predecessor matrix.
+        /// Returns the shortest path between two nodes and its total length.
         /// </summary>
-        /// <param name="start">Starting node.</param>
-        /// <param name="end">Ending node.</param>
-        /// <returns>A list of nodes forming the shortest path from start to end, or an empty list if no path exists.</returns>
-        public List<Node<T>> GetPath(Node<T> start, Node<T> end)
-        {
-            int startIndex = vertices.IndexOf(start);
-            int endIndex = vertices.IndexOf(end);
+        /// <param name="from">The starting node</param>
+        /// <param name="to">The destination node</param>
+        /// <returns>A tuple containing the path (LinkedList) and total length</returns>
+        public (LinkedList<Node<T>> Path, double TotalLength) GetPath(Node<T> from, Node<T> to) {
+            int startIndex = vertices.IndexOf(from);
+            int endIndex = vertices.IndexOf(to);
 
-            if (distances[startIndex, endIndex] == double.PositiveInfinity) 
-                return new List<Node<T>>();
-
-            List<Node<T>> path = new List<Node<T>>();
-            path.Add(end); 
-
-            while (startIndex != endIndex)
-            {
-                endIndex = predecessors[startIndex, endIndex];
-                path.Insert(0, vertices[endIndex]); 
+            if (distances[startIndex, endIndex] == double.PositiveInfinity) {
+                return (new LinkedList<Node<T>>(), double.PositiveInfinity);
             }
 
-            return path;
+            List<Node<T>> pathList = new List<Node<T>>();
+            pathList.Add(to); 
+
+            while (startIndex != endIndex) {
+                endIndex = predecessors[startIndex, endIndex];
+                pathList.Insert(0, vertices[endIndex]); 
+            }
+
+            LinkedList<Node<T>> path = new LinkedList<Node<T>>(pathList);
+
+            return (path, distances[startIndex, vertices.IndexOf(to)]);
         }
     }
 }

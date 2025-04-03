@@ -98,10 +98,14 @@ Please generate the complete C# code for this application, including all classes
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
+
+        //cette region est pour le premier rendu, rien ne sera reutilise
+        #region 
+        /*
         private readonly IGraphVisualizer graphVisualizer;
 
         public MainWindow()
-            : this(new Graph<int>(s => int.Parse(s), null)) // Default to Graph<int> for soc-karate.mtx
+            : this(new Graph<int>(static s => int.Parse(s), null)) // Default to Graph<int> for soc-karate.mtx
         {
         }
 
@@ -1259,6 +1263,12 @@ namespace LivingParisApp {
             catch (Exception ex) {
                 Logger.Log(ex);
             }
+        }
+        */
+        #endregion
+    
+        public MainWindow() {
+            InitializeComponent();
         }
     }
 }

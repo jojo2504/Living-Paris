@@ -1,15 +1,17 @@
 using System.Text;
 using LivingParisApp.Services.FileHandling;
 using LivingParisApp.Services.Logging;
-using Mysqlx.Crud;
 
 namespace LivingParisApp.Core.GraphStructure {
-    public class Graph<T> {
-        private readonly List<Link<T>> _links;
+    public abstract class Graph<T> {
+        // private readonly List<Link<T>> _links;
         public Dictionary<Node<T>, int> nodeToIndexMap = [];
         public Dictionary<Node<T>, List<Tuple<Node<T>, double>>> AdjacencyList { get; private set; } = [];
         public int?[,] AdjacencyMatrix { get; private set; }
 
+        //cette region est pour le premier rendu, rien ne sera reutilise
+        #region 
+        /*
         /// <summary>
         /// Constructor accepting optional links for flexibility
         /// </summary>
@@ -191,5 +193,11 @@ namespace LivingParisApp.Core.GraphStructure {
             }
             return stringBuilder.ToString().TrimEnd();
         }
+        */
+        #endregion
+        public abstract void AddEdge(T from, T to, double weight);
+        public abstract void ParseNodes(string filePathNode);   
+        public abstract void ParseArcs(string filePathArcs);
+        public abstract override string ToString();
     }
 }
