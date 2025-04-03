@@ -6,7 +6,7 @@
 - jojo2504 | Jonathan Tran
   
 ## Collaborators
-- Bahamin | Benjamin Zilber
+- Bahyamin | Benjamin Zilber
 - Tibo-7 | Thilbault Thery
 
 ## Summary
