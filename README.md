@@ -5,8 +5,9 @@
 ## Code owner
 jojo2504 | Jonathan Tran
   
-## Thanks to collaborators
+## Collaborators
 Bahamin | Benjamin Zilber
+Tibo-7 | Thilbault Thery
 
 ## Summary
 - [Living-Paris](#living-paris)
