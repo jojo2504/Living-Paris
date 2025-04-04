@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS Users (
     City VARCHAR(255) NOT NULL,
     PhoneNumber VARCHAR(10) NOT NULL,
     Mail VARCHAR(255) NOT NULL UNIQUE,
-    ClosestMetro VARCHAR(255),
+    ClosestMetro VARCHAR(255) NOT NULL,
     Password VARCHAR(255) NOT NULL,
     IsClient INT NOT NULL DEFAULT 0,
     IsChef INT NOT NULL DEFAULT 0,
@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS Orders (
     ClientID INT NOT NULL,
     ChefID INT NOT NULL,
     Address VARCHAR(255),
+    OrderDate DATE,
+    OrderTotal DECIMAL(10,2),
     PRIMARY KEY (OrderID),
     FOREIGN KEY (ClientId) REFERENCES Users(UserID),
     FOREIGN KEY (ChefId) REFERENCES Users(UserID)
@@ -53,10 +55,10 @@ CREATE TABLE IF NOT EXISTS OrderDishes (
     DishID INT NOT NULL,
     OrderID INT NOT NULL,
     Quantity INT NOT NULL DEFAULT 1,
-    OrderPrice DECIMAL(10,2) NOT NULL,
+    OrderPrice DECIMAL(10,2) NOT NULL DEFAULT 0,
     PRIMARY KEY (DishID,OrderID),
-    FOREIGN KEY (DishID) REFERENCES Dishes(DishID),
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    FOREIGN KEY (DishID) REFERENCES Dishes(DishID) ON DELETE CASCADE,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
     CHECK (Quantity > 0)
 );
 
@@ -68,7 +70,7 @@ CREATE TABLE IF NOT EXISTS Ingredients (
 );
 
 -- DishIngredients depends on Dishes and Ingredients
-CREATE TABLE IF NOT EXISTS DishIngredients(
+CREATE TABLE IF NOT EXISTS DishIngredients (
     DishIngredientsID INT AUTO_INCREMENT NOT NULL,
     IngredientID INT NOT NULL,
     DishID INT NOT NULL,

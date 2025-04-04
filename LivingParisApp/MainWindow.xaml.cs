@@ -19,6 +19,8 @@ using System.Data;
 using LivingParisApp.Core.Mapping;
 using System.Collections.ObjectModel;
 using LivingParisApp.Core.Models.Food;
+using LivingParisApp.Core.Models.OrderInfo;
+using LivingParisApp.Core.Engines.ShortestPaths;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
@@ -52,8 +54,11 @@ namespace LivingParisApp {
         private readonly ScaleTransform _scaleTransform = new ScaleTransform();
         private readonly TransformGroup _transformGroup = new TransformGroup();
 
-        //dish variable
-        private ObservableCollection<Dish> _dishes = new();
+        // Observable Collections
+        private ObservableCollection<Dish> _availableDishes = new();  // Browse and Order tab
+        private ObservableCollection<CartItem> _cartItems = new();    // Shopping cart
+        private ObservableCollection<Dish> _myDishes = new();         // Manage My Dishes tab
+        private ObservableCollection<Order> _orders = new();          // My Orders tab
 
         public MainWindow(MySQLManager mySQLManager, Map<MetroStation> map) {
             InitializeComponent();
@@ -61,27 +66,48 @@ namespace LivingParisApp {
             _mySQLManager = mySQLManager;
             _map = map;
 
+            // Populate the Closest Metro ComboBox with station names
+            if (_map?.AdjacencyList != null) {
+                var stationNames = _map.AdjacencyList.Keys
+                    .Where(vertex => vertex?.Object?.LibelleStation != null)
+                    .Select(vertex => vertex.Object.LibelleStation)
+                    .Distinct() // Remove duplicates, if any
+                    .OrderBy(name => name); // Sort alphabetically for better usability
+                foreach (var stationName in stationNames) {
+                    cmbMetro.Items.Add(stationName);
+                }
+            }
+
             // Set up event handlers
             btnSignIn.Click += BtnSignIn_Click;
             btnSignUp.Click += BtnSignUp_Click;
             btnSignOut.Click += BtnSignOut_Click;
 
-            // Hide the tabs initially
+            // Initialize data bindings
+            dgDishes.ItemsSource = _availableDishes;
+            lbCart.ItemsSource = _cartItems;
+            dgMyDishes.ItemsSource = _myDishes;
+            dgOrders.ItemsSource = _orders;
+
+            // Hide tabs initially
             tabAccount.Visibility = Visibility.Collapsed;
             tabFoodServices.Visibility = Visibility.Collapsed;
             metroMap.Visibility = Visibility.Collapsed;
 
-            // Check if there's a saved session
             CheckForSavedSession();
             InitializeMapTransforms();
-            LoadDishes();
+            LoadInitialData();
 
-            dgMyDishes.ItemsSource = _dishes;
-
-            // Automatically draw the metro map when window loads
             this.Loaded += (sender, e) => DrawNodes();
         }
 
+        private void LoadInitialData() {
+            LoadAvailableDishes();
+            LoadMyDishes();
+            LoadOrders();
+        }
+
+        #region Authentification
         private void CheckForSavedSession() {
             // This method could check for a saved token or credentials in app settings
             // For now, we'll just assume no saved session
@@ -94,6 +120,9 @@ namespace LivingParisApp {
             tabSignUp.Visibility = Visibility.Collapsed;
             tabFoodServices.Visibility = Visibility.Visible;
             metroMap.Visibility = Visibility.Visible;
+
+            LoadMyDishes();
+            LoadOrders();
 
             //food services tab based on roles
             if (_currentUser.IsChef == 0) {
@@ -114,6 +143,7 @@ namespace LivingParisApp {
             // Update user information display
             txtUserInfo.Text = $"Welcome, {_currentUser.FirstName} {_currentUser.LastName}";
             txtUserEmail.Text = $"Email: {_currentUser.Mail}";
+            txtClosestMetro.Text = $"Closest Metro: {_currentUser.ClosestMetro}";
 
             // Update role checkboxes
             chkAccountClient.IsChecked = _currentUser.IsClient == 1;
@@ -216,10 +246,10 @@ namespace LivingParisApp {
                             IsChef = (int)userReader["IsChef"],
                             IsClient = (int)userReader["IsClient"]
                         };
+                        UpdateUIForLoggedInUser();
                     }
                 }
                 // Update UI for logged in user
-                UpdateUIForLoggedInUser();
             }
             catch (Exception ex) {
                 Logger.Error($"Login error: {ex}");
@@ -302,7 +332,7 @@ namespace LivingParisApp {
                 command.Parameters.AddWithValue("@City", txtCity.Text);
                 command.Parameters.AddWithValue("@PhoneNumber", txtPhone.Text);
                 command.Parameters.AddWithValue("@Mail", txtEmail.Text);
-                command.Parameters.AddWithValue("@ClosestMetro", string.IsNullOrWhiteSpace(txtMetro.Text) ? DBNull.Value : txtMetro.Text);
+                command.Parameters.AddWithValue("@ClosestMetro", string.IsNullOrWhiteSpace(cmbMetro.Text) ? DBNull.Value : cmbMetro.Text);
                 command.Parameters.AddWithValue("@Password", pwdSignUp.Password);
                 command.Parameters.AddWithValue("@IsClient", (bool)chkClient.IsChecked ? 1 : 0);
                 command.Parameters.AddWithValue("@IsChef", (bool)chkChef.IsChecked ? 1 : 0);
@@ -317,7 +347,9 @@ namespace LivingParisApp {
             }
         }
 
-        // Replace the existing InitializeMapTransforms method with this fixed version
+        #endregion
+
+        #region Map
         private void InitializeMapTransforms() {
             // Clear existing transforms
             _transformGroup.Children.Clear();
@@ -388,7 +420,7 @@ namespace LivingParisApp {
             }
         }
 
-        private void DrawNodes() {
+        private void DrawNodes(LinkedList<Node<MetroStation>> path = null) {
             try {
                 metroCanvas.Children.Clear();
 
@@ -432,6 +464,16 @@ namespace LivingParisApp {
                     Background = Brushes.Transparent
                 };
 
+                // Convert path to a list of edges (pairs of consecutive nodes)
+                var pathEdges = new List<(Node<MetroStation> Start, Node<MetroStation> End)>();
+                if (path != null && path.Count > 1) {
+                    var current = path.First;
+                    while (current != null && current.Next != null) {
+                        pathEdges.Add((current.Value, current.Next.Value));
+                        current = current.Next;
+                    }
+                }
+
                 // Draw connections first
                 foreach (var stationEntry in _map.AdjacencyList) {
                     if (stationEntry.Key?.Object == null) continue;
@@ -446,21 +488,26 @@ namespace LivingParisApp {
                         double x2 = ((neighborTuple.Item1.Object.Longitude - minLongitude) / longitudeRange) * 1000;
                         double y2 = 1000 - ((neighborTuple.Item1.Object.Latitude - minLatitude) / latitudeRange) * 1000;
 
-                        string line = stationEntry.Key.Object.LibelleLine ?? "default";
-                        Brush lineColor = LineColors.TryGetValue(line, out var color) ? color : Brushes.Gray;
+                        // Check if this edge is part of the path
+                        bool isPathEdge = pathEdges.Any(edge =>
+                            (edge.Start == stationEntry.Key && edge.End == neighborTuple.Item1) ||
+                            (edge.Start == neighborTuple.Item1 && edge.End == stationEntry.Key));
+
+                        // Use yellow for path edges, otherwise use the line color
+                        Brush edgeColor = isPathEdge ? Brushes.Yellow : (LineColors.TryGetValue(stationEntry.Key.Object.LibelleLine ?? "default", out var color) ? color : Brushes.Gray);
 
                         var connection = new Line {
                             X1 = x1,
                             Y1 = y1,
                             X2 = x2,
                             Y2 = y2,
-                            Stroke = lineColor,
-                            StrokeThickness = 3,
+                            Stroke = edgeColor,
+                            StrokeThickness = isPathEdge ? 5 : 3, // Thicker line for path edges
                             StrokeEndLineCap = PenLineCap.Round,
                             StrokeStartLineCap = PenLineCap.Round
                         };
                         contentCanvas.Children.Add(connection);
-                        Panel.SetZIndex(connection, -1);
+                        Panel.SetZIndex(connection, isPathEdge ? 1 : -1); // Ensure path edges are on top
                     }
                 }
 
@@ -472,10 +519,12 @@ namespace LivingParisApp {
                     double x = (stationEntry.Key.Object.Longitude - minLongitude) / longitudeRange * 1000;
                     double y = 1000 - (stationEntry.Key.Object.Latitude - minLatitude) / latitudeRange * 1000;
 
+                    // Highlight stations that are part of the path
+                    bool isPathStation = path != null && path.Contains(stationEntry.Key);
                     var node = new Ellipse {
                         Width = 12,
                         Height = 12,
-                        Fill = Brushes.White,
+                        Fill = isPathStation ? Brushes.Yellow : Brushes.White,
                         Stroke = Brushes.Black,
                         StrokeThickness = 2,
                         Cursor = Cursors.Hand,
@@ -501,14 +550,14 @@ namespace LivingParisApp {
                     };
                     node.MouseLeave += (s, e) => {
                         label.Visibility = Visibility.Hidden;
-                        ((Ellipse)s).Fill = Brushes.White;
+                        ((Ellipse)s).Fill = isPathStation ? Brushes.Yellow : Brushes.White;
                     };
 
                     contentCanvas.Children.Add(node);
                     contentCanvas.Children.Add(label);
                 }
 
-                // Apply the transform to the content canvas, not the main canvas
+                // Apply the transform to the content canvas
                 contentCanvas.RenderTransform = _transformGroup;
 
                 // Add the content canvas to the main canvas
@@ -519,7 +568,9 @@ namespace LivingParisApp {
             }
         }
 
-        //my account role logic
+        #endregion
+
+        #region my account role logic
         private void BtnEditRoles_Click(object sender, RoutedEventArgs e) {
             // Enable role checkboxes for editing
             chkAccountClient.IsEnabled = true;
@@ -578,77 +629,401 @@ namespace LivingParisApp {
             }
         }
 
-        /// food base integration
-        /// 
-        // Event handlers
-        public void DgDishes_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            Logger.Log("Dish selection changed");
-            // Handle dish selection logic
-        }
+        #endregion
 
-        public void BtnPlaceOrder_Click(object sender, RoutedEventArgs e) {
-            Logger.Log("Place order button clicked");
-            // Handle place order logic
-        }
-
-        public void BtnAddNewDish_Click(object sender, RoutedEventArgs e) {
-            Logger.Log("adding new dish");
-            var addWindow = new AddNewDishWindow(_mySQLManager, _currentUser);
-            if (addWindow.ShowDialog() == true) {
-                LoadDishes(); // Refresh the data after adding
-                dgMyDishes.Items.Refresh(); // Update the DataGrid
-            }
-        }
-
-        private void LoadDishes() {
+        #region Loader
+        private void LoadAvailableDishes() {
             try {
-                _dishes.Clear(); // Clear existing items
-                string query = "SELECT * FROM Dishes";
+                _availableDishes.Clear();
+
+                string query = @"
+                    SELECT d.*, u.FirstName, u.LastName
+                    FROM Dishes d 
+                    JOIN Users u ON d.ChefID = u.UserID 
+                    WHERE d.PeremptionDate > NOW()";
                 using (var reader = _mySQLManager.ExecuteReader(query)) {
                     while (reader.Read()) {
-                        var dish = new Dish {
+                        _availableDishes.Add(new Dish {
+                            DishID = reader.GetInt32("DishID"),
+                            ChefID = reader.GetInt32("ChefID"),
                             Name = reader.GetString("Name"),
                             Type = reader.GetString("Type"),
                             DishPrice = reader.GetDecimal("DishPrice"),
                             FabricationDate = reader.GetDateTime("FabricationDate"),
                             PeremptionDate = reader.GetDateTime("PeremptionDate"),
                             Diet = reader.IsDBNull(reader.GetOrdinal("Diet")) ? "" : reader.GetString("Diet"),
-                            Origin = reader.IsDBNull(reader.GetOrdinal("Origin")) ? "" : reader.GetString("Origin")
-                        };
-                        _dishes.Add(dish);
+                            Origin = reader.IsDBNull(reader.GetOrdinal("Origin")) ? "" : reader.GetString("Origin"),
+                            ChefName = $"{reader.GetString("FirstName")} {reader.GetString("LastName")}"
+                        });
                     }
                 }
-                Logger.Log($"Loaded {_dishes.Count} dishes from database");
+                Logger.Log($"Loaded {_availableDishes.Count} available dishes");
             }
             catch (Exception ex) {
-                Logger.Log($"Error loading dishes: {ex.Message}");
+                Logger.Log($"Error loading available dishes: {ex.Message}");
                 MessageBox.Show($"Error loading dishes: {ex.Message}");
             }
         }
 
-        public void DgOrders_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            Logger.Log("Order selection changed");
-            // Handle order selection logic
+        private void LoadMyDishes() {
+            try {
+                if (_currentUser == null || _currentUser.IsChef == 0) return;
+
+                _myDishes.Clear();
+                string query = "SELECT * FROM Dishes WHERE ChefID = @ChefID";
+                var command = new MySqlCommand(query);
+                command.Parameters.AddWithValue("@ChefID", _currentUser.UserID);
+
+                using (var reader = _mySQLManager.ExecuteReader(command)) {
+                    while (reader.Read()) {
+                        // Validate required fields
+                        string name = reader.GetString("Name");
+                        string type = reader.GetString("Type");
+                        DateTime fabricationDate = reader.IsDBNull(reader.GetOrdinal("FabricationDate")) ? DateTime.MinValue : reader.GetDateTime("FabricationDate");
+                        DateTime peremptionDate = reader.IsDBNull(reader.GetOrdinal("PeremptionDate")) ? DateTime.MinValue : reader.GetDateTime("PeremptionDate");
+
+                        // Skip rows with invalid data
+                        if (string.IsNullOrWhiteSpace(name) ||
+                            string.IsNullOrWhiteSpace(type) ||
+                            fabricationDate == DateTime.MinValue ||
+                            peremptionDate == DateTime.MinValue ||
+                            fabricationDate.Year < 2000 || // Ensure dates are reasonable
+                            peremptionDate.Year < 2000) {
+                            Logger.Log($"Skipping invalid dish with ID {reader.GetInt32("DishID")}: Name={name}, Type={type}, FabricationDate={fabricationDate}, PeremptionDate={peremptionDate}");
+                            continue;
+                        }
+
+                        _myDishes.Add(new Dish {
+                            DishID = reader.GetInt32("DishID"),
+                            ChefID = _currentUser.UserID,
+                            Name = name,
+                            Type = type,
+                            DishPrice = reader.GetDecimal("DishPrice"),
+                            FabricationDate = fabricationDate,
+                            PeremptionDate = peremptionDate,
+                            Diet = reader.IsDBNull(reader.GetOrdinal("Diet")) ? "" : reader.GetString("Diet"),
+                            Origin = reader.IsDBNull(reader.GetOrdinal("Origin")) ? "" : reader.GetString("Origin"),
+                        });
+                    }
+                }
+                Logger.Log($"Loaded {_myDishes.Count} chef dishes");
+            }
+            catch (Exception ex) {
+                Logger.Log($"Error loading my dishes: {ex.Message}");
+                MessageBox.Show($"Error loading my dishes: {ex.Message}");
+            }
         }
 
+        private void LoadOrders() {
+            try {
+                _orders.Clear();
+                string query = cmbOrderView.SelectedIndex == 0
+                    ? @"SELECT o.OrderID, o.ClientID, o.ChefID, o.Address, o.OrderDate, o.OrderTotal,
+                       uc.FirstName AS ClientFirst, uc.LastName AS ClientLast, 
+                       uch.FirstName AS ChefFirst, uch.LastName AS ChefLast
+                FROM Orders o
+                JOIN Users uc ON o.ClientID = uc.UserID
+                JOIN Users uch ON o.ChefID = uch.UserID
+                WHERE o.ClientID = @UserID"
+                    : @"SELECT o.OrderID, o.ClientID, o.ChefID, o.Address, o.OrderDate, o.OrderTotal,
+                       uc.FirstName AS ClientFirst, uc.LastName AS ClientLast, 
+                       uch.FirstName AS ChefFirst, uch.LastName AS ChefLast
+                FROM Orders o
+                JOIN Users uc ON o.ClientID = uc.UserID
+                JOIN Users uch ON o.ChefID = uch.UserID
+                WHERE o.ChefID = @UserID";
+
+                var command = new MySqlCommand(query);
+                command.Parameters.AddWithValue("@UserID", _currentUser?.UserID ?? 0);
+
+                using (var reader = _mySQLManager.ExecuteReader(command)) {
+                    while (reader.Read()) {
+                        _orders.Add(new Order {
+                            OrderID = reader.GetInt32("OrderID"),
+                            ClientID = reader.GetInt32("ClientID"),
+                            ChefID = reader.GetInt32("ChefID"),
+                            Address = reader.IsDBNull(reader.GetOrdinal("Address")) ? null : reader.GetString("Address"),
+                            OrderDate = reader.GetDateTime("OrderDate"),
+                            OrderTotal = reader.GetDecimal("OrderTotal"),
+                            ClientName = $"{reader.GetString("ClientFirst")} {reader.GetString("ClientLast")}",
+                            ChefName = $"{reader.GetString("ChefFirst")} {reader.GetString("ChefLast")}"
+                        });
+                    }
+                }
+                Logger.Log($"Loaded {_orders.Count} orders");
+            }
+            catch (Exception ex) {
+                Logger.Log($"Error loading orders: {ex.Message}");
+                MessageBox.Show($"Error loading orders: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region Click
+        public void BtnAddNewDish_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("adding new dish");
+            var addWindow = new AddNewDishWindow(_mySQLManager, _currentUser);
+            if (addWindow.ShowDialog() == true) {
+                LoadAvailableDishes(); // Refresh the data after adding
+                dgMyDishes.Items.Refresh(); // Update the DataGrid
+                LoadMyDishes();
+            }
+        }
+
+        public void BtnPlaceOrder_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("Place order button clicked");
+
+            // Check if the cart is empty
+            if (_cartItems.Count == 0) {
+                MessageBox.Show("Your cart is empty. Please add items to place an order.");
+                return;
+            }
+
+            try {
+                // Step 1: Determine the address
+                string orderAddress;
+                if (rbMyAddress.IsChecked == true) {
+                    // Use the user's registered address
+                    orderAddress = $"{_currentUser.Street} {_currentUser.StreetNumber}, {_currentUser.Postcode} {_currentUser.City}";
+                }
+                else {
+                    // Use the custom address
+                    if (string.IsNullOrWhiteSpace(txtOrderStreet.Text) ||
+                        string.IsNullOrWhiteSpace(txtOrderStreetNumber.Text) ||
+                        string.IsNullOrWhiteSpace(txtOrderPostcode.Text) ||
+                        string.IsNullOrWhiteSpace(txtOrderCity.Text)) {
+                        MessageBox.Show("Please fill in all custom address fields.");
+                        return;
+                    }
+                    orderAddress = $"{txtOrderStreet.Text} {txtOrderStreetNumber.Text}, {txtOrderPostcode.Text} {txtOrderCity.Text}";
+                }
+
+                // Step 2: Check if all items in the cart belong to the same chef
+                int chefId = _cartItems[0].Dish.ChefID;
+                if (_cartItems.Any(item => item.Dish.ChefID != chefId)) {
+                    MessageBox.Show("All items in the cart must be from the same chef. Please place separate orders for items from different chefs.");
+                    return;
+                }
+
+                // Step 3: Calculate the order total
+                decimal orderTotal = _cartItems.Sum(item => item.TotalPrice);
+
+                // Step 4: Insert the order into the Orders table
+                string insertOrderQuery = @"
+            INSERT INTO Orders (ClientID, ChefID, Address, OrderDate, OrderTotal)
+            VALUES (@ClientID, @ChefID, @Address, @OrderDate, @OrderTotal);
+            SELECT LAST_INSERT_ID();";
+                var orderCommand = new MySqlCommand(insertOrderQuery);
+                orderCommand.Parameters.AddWithValue("@ClientID", _currentUser.UserID);
+                orderCommand.Parameters.AddWithValue("@ChefID", chefId);
+                orderCommand.Parameters.AddWithValue("@Address", orderAddress);
+                orderCommand.Parameters.AddWithValue("@OrderDate", DateTime.Now);
+                orderCommand.Parameters.AddWithValue("@OrderTotal", orderTotal);
+
+                int orderId = Convert.ToInt32(_mySQLManager.ExecuteScalar(orderCommand));
+                Logger.Log($"Created order with OrderID: {orderId}");
+
+                // Step 5: Insert each cart item into the OrderDishes table
+                foreach (var cartItem in _cartItems) {
+                    string insertOrderDishQuery = @"
+                INSERT INTO OrderDishes (OrderID, DishID, Quantity)
+                VALUES (@OrderID, @DishID, @Quantity)";
+                    var orderDishCommand = new MySqlCommand(insertOrderDishQuery);
+                    orderDishCommand.Parameters.AddWithValue("@OrderID", orderId);
+                    orderDishCommand.Parameters.AddWithValue("@DishID", cartItem.Dish.DishID);
+                    orderDishCommand.Parameters.AddWithValue("@Quantity", cartItem.Quantity);
+
+                    _mySQLManager.ExecuteNonQuery(orderDishCommand);
+                    Logger.Log($"Added dish {cartItem.Dish.DishID} to OrderDishes with quantity {cartItem.Quantity}");
+                }
+
+                // Step 6: Remove the dishes from the Dishes table
+                foreach (var cartItem in _cartItems) {
+                    string deleteDishQuery = "DELETE FROM Dishes WHERE DishID = @DishID";
+                    var deleteCommand = new MySqlCommand(deleteDishQuery);
+                    deleteCommand.Parameters.AddWithValue("@DishID", cartItem.Dish.DishID);
+
+                    _mySQLManager.ExecuteNonQuery(deleteCommand);
+                    Logger.Log($"Removed dish {cartItem.Dish.DishID} from Dishes table");
+                }
+
+                // Step 7: Update the UI
+                _cartItems.Clear();
+                UpdateCartTotal();
+                LoadOrders();
+                LoadAvailableDishes(); // Refresh the available dishes list
+                MessageBox.Show("Order placed successfully!");
+            }
+            catch (Exception ex) {
+                Logger.Log($"Error placing order: {ex.Message}");
+                MessageBox.Show($"Error placing order: {ex.Message}");
+            }
+        }
         public void BtnAddToCart_Click(object sender, RoutedEventArgs e) {
             Logger.Log("Add to cart button clicked");
-            // Handle add to cart logic
+            if (sender is Button button && button.Tag is int dishId) {
+                var dish = _availableDishes.FirstOrDefault(d => d.DishID == dishId);
+                if (dish != null) {
+                    var existingItem = _cartItems.FirstOrDefault(i => i.Dish.DishID == dishId);
+                    if (existingItem != null) {
+                        existingItem.Quantity++;
+                    }
+                    else {
+                        _cartItems.Add(new CartItem { Dish = dish, Quantity = 1 });
+                    }
+                    UpdateCartTotal();
+                }
+            }
         }
 
         public void BtnEditDish_Click(object sender, RoutedEventArgs e) {
             Logger.Log("Edit dish button clicked");
-            // Handle edit dish logic
+            if (sender is Button button && button.Tag is int dishId) {
+                var dish = _myDishes.FirstOrDefault(d => d.DishID == dishId);
+                if (dish != null) {
+                    var editWindow = new AddNewDishWindow(_mySQLManager, _currentUser, dish);
+                    if (editWindow.ShowDialog() == true) {
+                        LoadMyDishes();
+                        LoadAvailableDishes();
+                    }
+                }
+            }
         }
 
         public void BtnDeleteDish_Click(object sender, RoutedEventArgs e) {
             Logger.Log("Delete dish button clicked");
-            // Handle delete dish logic
+            if (sender is Button button && button.Tag is int dishId) {
+                if (MessageBox.Show("Are you sure you want to delete this dish?",
+                    "Confirm Delete", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
+                    try {
+                        string query = "DELETE FROM Dishes WHERE DishID = @DishID";
+                        var command = new MySqlCommand(query);
+                        command.Parameters.AddWithValue("@DishID", dishId);
+                        _mySQLManager.ExecuteNonQuery(command);
+
+                        LoadMyDishes();
+                        LoadAvailableDishes();
+                        MessageBox.Show("Dish deleted successfully");
+                    }
+                    catch (Exception ex) {
+                        Logger.Log($"Error deleting dish: {ex.Message}");
+                        MessageBox.Show($"Error deleting dish: {ex.Message}");
+                    }
+                }
+            }
         }
 
         public void BtnViewOrderDetails_Click(object sender, RoutedEventArgs e) {
             Logger.Log("View order details button clicked");
-            // Handle view order details logic
+
+            if (sender is Button button && button.DataContext is Order selectedOrder) {
+                try {
+                    // Step 1: Retrieve the list of dishes in the order
+                    var orderDishes = new List<(string DishName, int Quantity, decimal Price)>();
+                    string query = @"
+                SELECT od.DishID, od.Quantity, d.Name, d.DishPrice
+                FROM OrderDishes od
+                JOIN Dishes d ON od.DishID = d.DishID
+                WHERE od.OrderID = @OrderID";
+                    var command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@OrderID", selectedOrder.OrderID);
+
+                    using (var reader = _mySQLManager.ExecuteReader(command)) {
+                        while (reader.Read()) {
+                            orderDishes.Add((
+                                DishName: reader.GetString("Name"),
+                                Quantity: reader.GetInt32("Quantity"),
+                                Price: reader.GetDecimal("DishPrice")
+                            ));
+                        }
+                    }
+
+                    // Step 2: Display order details
+                    string details = $"Order ID: {selectedOrder.OrderID}\n" +
+                                    $"Date: {selectedOrder.OrderDate:dd/MM/yyyy}\n" +
+                                    $"Client: {selectedOrder.ClientName}\n" +
+                                    $"Chef: {selectedOrder.ChefName}\n" +
+                                    $"Total: {selectedOrder.OrderTotal:C2}\n\n" +
+                                    "Dishes:\n";
+                    foreach (var dish in orderDishes) {
+                        details += $"- {dish.DishName} (x{dish.Quantity}) @ {dish.Price:C2} each\n";
+                    }
+
+                    MessageBox.Show(details, "Order Details");
+
+                    // Step 3: Get the closest metro stations for the client and chef
+                    string clientMetroQuery = "SELECT ClosestMetro FROM Users WHERE UserID = @UserID";
+                    var clientCommand = new MySqlCommand(clientMetroQuery);
+                    clientCommand.Parameters.AddWithValue("@UserID", selectedOrder.ClientID);
+                    string? clientMetro = _mySQLManager.ExecuteScalar(clientCommand)?.ToString();
+
+                    var chefCommand = new MySqlCommand(clientMetroQuery);
+                    chefCommand.Parameters.AddWithValue("@UserID", selectedOrder.ChefID);
+                    string? chefMetro = _mySQLManager.ExecuteScalar(chefCommand)?.ToString();
+
+                    if (string.IsNullOrWhiteSpace(clientMetro) || string.IsNullOrWhiteSpace(chefMetro)) {
+                        MessageBox.Show("Cannot display route: Client or Chef's closest metro station is not set.");
+                        return;
+                    }
+
+                    // Step 4: Find the vertices for the client's and chef's metro stations
+                    Node<MetroStation>? clientNode = _map.AdjacencyList.Keys
+                        .FirstOrDefault(v => v.Object?.LibelleStation == clientMetro);
+                    Node<MetroStation>? chefNode = _map.AdjacencyList.Keys
+                        .FirstOrDefault(v => v.Object?.LibelleStation == chefMetro);
+
+                    if (clientNode == null || chefNode == null) {
+                        MessageBox.Show("Cannot display route: Client or Chef's metro station not found in the map.");
+                        return;
+                    }
+
+                    // Step 5: Use A* to find the shortest path
+                    var aStar = new Astar<MetroStation>();
+                    var (path, totalLength) = aStar.Run(_map, chefNode, clientNode);
+
+                    if (path == null || path.Count == 0) {
+                        MessageBox.Show("No path found between the client's and chef's metro stations.");
+                        return;
+                    }
+
+                    // Step 6: Redraw the map with the path highlighted
+                    DrawNodes(path);
+
+                    // Step 7: Switch to the Map tab to show the path
+                    if (metroMap.Parent is TabControl tabControl) {
+                        tabControl.SelectedItem = metroMap;
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.Log($"Error viewing order details: {ex.Message}");
+                    MessageBox.Show($"Error viewing order details: {ex.Message}");
+                }
+            }
+        }
+
+        #endregion
+
+        #region SelectionChanged
+        public void DgOrders_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            Logger.Log("Order selection changed");
+            if (dgOrders.SelectedItem is Order selectedOrder) {
+                Logger.Log($"Selected order: {selectedOrder.OrderID}");
+            }
+        }
+
+        public void DgDishes_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            Logger.Log("Dish selection changed");
+            if (dgDishes.SelectedItem is Dish selectedDish) {
+                // Could show additional details if needed
+                Logger.Log($"Selected dish: {selectedDish.Name}");
+            }
+        }
+        #endregion
+
+        private void UpdateCartTotal() {
+            decimal total = _cartItems.Sum(i => i.TotalPrice);
+            txtCartTotal.Text = total.ToString("C2");
         }
     }
 }

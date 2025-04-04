@@ -1,5 +1,4 @@
-// AddNewDishWindow.xaml.cs
-using System;
+using System.Collections.ObjectModel;
 using System.Windows;
 using LivingParisApp.Core.Models.Food;
 using LivingParisApp.Core.Models.Human;
@@ -11,18 +10,37 @@ namespace LivingParisApp {
     public partial class AddNewDishWindow : Window {
         private readonly MySQLManager _mySQLManager;
         private readonly User _currentUser;
+        private readonly Dish _dishToEdit;  // null if adding new dish
+        private ObservableCollection<DishIngredient> _ingredients;
 
-        public AddNewDishWindow(MySQLManager mySQLManager, User currentUser) {
+        public AddNewDishWindow(MySQLManager mySQLManager, User currentUser, Dish dishToEdit = null) {
             InitializeComponent();
             _mySQLManager = mySQLManager;
             _currentUser = currentUser;
+            _dishToEdit = dishToEdit;
+            _ingredients = new ObservableCollection<DishIngredient>();
+            //lstIngredients.ItemsSource = _ingredients;
+            //LoadAvailableIngredients();
+            if (_dishToEdit != null) {
+                LoadDishForEditing();
+            }
+        }
+
+        private void LoadDishForEditing() {
+            txtName.Text = _dishToEdit.Name;
+            cmbType.Text = _dishToEdit.Type;
+            txtPrice.Text = _dishToEdit.DishPrice.ToString();
+            txtDiet.Text = _dishToEdit.Diet;
+            txtOrigin.Text = _dishToEdit.Origin;
+
+            //load ingredients
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e) {
             try {
                 // Validate inputs
                 if (string.IsNullOrEmpty(txtName.Text) ||
-                    string.IsNullOrEmpty(txtType.Text) ||
+                    string.IsNullOrEmpty(cmbType.Text) ||
                     string.IsNullOrEmpty(txtPrice.Text)) {
                     MessageBox.Show("Please fill in all required fields (Name, Type, Price)",
                                   "Validation Error",
@@ -42,7 +60,7 @@ namespace LivingParisApp {
                 // Create new dish object
                 var newDish = new Dish {
                     Name = txtName.Text,
-                    Type = txtType.Text,
+                    Type = cmbType.Text,
                     DishPrice = price,
                     FabricationDate = DateTime.Now,
                     PeremptionDate = DateTime.Now.AddMonths(1), // Default expiration 1 month from now

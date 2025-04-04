@@ -16,13 +16,11 @@ namespace LivingParisApp.Core.Models.OrderInfo {
         [StringLength(255)]
         public string? Address { get; set; }
 
-        [ForeignKey("ClientID")]
-        public virtual User Client { get; set; }
+        public DateTime OrderDate { get; set; } // Add this to match the database schema
+        public decimal OrderTotal { get; set; } // Add this to match the database schema
 
-        [ForeignKey("ChefID")]
-        public virtual User Chef { get; set; }
-
-        // Navigation property
-        public virtual ICollection<OrderDish> OrderDishes { get; set; } = new List<OrderDish>();
+        // Properties for display purposes (populated manually)
+        public string ClientName { get; set; }
+        public string ChefName { get; set; }
     }
 }

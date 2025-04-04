@@ -35,11 +35,6 @@ namespace LivingParisApp.Core.Models.Food {
         [StringLength(255)]
         public string? Origin { get; set; }
 
-        [ForeignKey("ChefID")]
-        public virtual User Chef { get; set; }
-
-        // Navigation properties
-        public virtual ICollection<OrderDish> OrderDishes { get; set; } = new List<OrderDish>();
-        public virtual ICollection<DishIngredient> DishIngredients { get; set; } = new List<DishIngredient>();
+        public virtual string ChefName { get; set; }
     }
 }

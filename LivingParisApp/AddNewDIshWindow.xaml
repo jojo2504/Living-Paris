@@ -25,7 +25,11 @@
         <TextBox x:Name="txtName" Grid.Row="1" Margin="0,0,0,10"/>
 
         <Label Content="Type:" Grid.Row="2"/>
-        <TextBox x:Name="txtType" Grid.Row="3" Margin="0,0,0,10"/>
+        <ComboBox x:Name="cmbType" Grid.Row="3" Margin="0,0,0,10" Width="120">
+            <ComboBoxItem Content="entree" />
+            <ComboBoxItem Content="main dish" />
+            <ComboBoxItem Content="dessert" />
+        </ComboBox>
 
         <Label Content="Price:" Grid.Row="4"/>
         <TextBox x:Name="txtPrice" Grid.Row="5" Margin="0,0,0,10"/>
