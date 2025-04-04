@@ -17,6 +17,8 @@ using MySql.Data.MySqlClient;
 using LivingParisApp.Services.MySQL;
 using System.Data;
 using LivingParisApp.Core.Mapping;
+using System.Collections.ObjectModel;
+using LivingParisApp.Core.Models.Food;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
@@ -50,22 +52,31 @@ namespace LivingParisApp {
         private readonly ScaleTransform _scaleTransform = new ScaleTransform();
         private readonly TransformGroup _transformGroup = new TransformGroup();
 
+        //dish variable
+        private ObservableCollection<Dish> _dishes = new();
+
         public MainWindow(MySQLManager mySQLManager, Map<MetroStation> map) {
             InitializeComponent();
 
             _mySQLManager = mySQLManager;
             _map = map;
+
             // Set up event handlers
             btnSignIn.Click += BtnSignIn_Click;
             btnSignUp.Click += BtnSignUp_Click;
             btnSignOut.Click += BtnSignOut_Click;
 
-            // Hide the account tab initially
+            // Hide the tabs initially
             tabAccount.Visibility = Visibility.Collapsed;
+            tabFoodServices.Visibility = Visibility.Collapsed;
+            metroMap.Visibility = Visibility.Collapsed;
 
             // Check if there's a saved session
             CheckForSavedSession();
             InitializeMapTransforms();
+            LoadDishes();
+
+            dgMyDishes.ItemsSource = _dishes;
 
             // Automatically draw the metro map when window loads
             this.Loaded += (sender, e) => DrawNodes();
@@ -79,23 +90,57 @@ namespace LivingParisApp {
         private void UpdateUIForLoggedInUser() {
             // Show account tab
             tabAccount.Visibility = Visibility.Visible;
+            tabSignIn.Visibility = Visibility.Collapsed;
+            tabSignUp.Visibility = Visibility.Collapsed;
+            tabFoodServices.Visibility = Visibility.Visible;
+            metroMap.Visibility = Visibility.Visible;
+
+            //food services tab based on roles
+            if (_currentUser.IsChef == 0) {
+                tabManageDishes.Visibility = Visibility.Collapsed;
+            }
+            else {
+                tabManageDishes.Visibility = Visibility.Visible;
+            }
+
+            //food services tab based on roles
+            if (_currentUser.IsClient == 0) {
+                tabBrowseOrder.Visibility = Visibility.Collapsed;
+            }
+            else {
+                tabBrowseOrder.Visibility = Visibility.Visible;
+            }
 
             // Update user information display
             txtUserInfo.Text = $"Welcome, {_currentUser.FirstName} {_currentUser.LastName}";
-
-            // Build roles text
-            List<string> roles = new List<string>();
-            if (_currentUser.IsClient == 1) roles.Add("Client");
-            if (_currentUser.IsChef == 1) roles.Add("Chef");
-            txtUserRoles.Text = $"Roles: {string.Join(", ", roles)}";
-
-            // Update email display
             txtUserEmail.Text = $"Email: {_currentUser.Mail}";
+
+            // Update role checkboxes
+            chkAccountClient.IsChecked = _currentUser.IsClient == 1;
+            chkAccountChef.IsChecked = _currentUser.IsChef == 1;
+
+            // Ensure controls are in default state
+            chkAccountClient.IsEnabled = false;
+            chkAccountChef.IsEnabled = false;
+            btnEditRoles.Visibility = Visibility.Visible;
+            btnSaveRoles.Visibility = Visibility.Collapsed;
+            txtRoleUpdateStatus.Text = "";
+
+            // Switch to the Sign In tab (assuming TabControl is the main control)
+            // Get the parent TabControl
+            if (tabAccount.Parent is TabControl tabControl) {
+                // Select the first order food tab
+                tabControl.SelectedIndex = 4;
+            }
         }
 
         private void UpdateUIForLoggedOutUser() {
             // Hide account tab
             tabAccount.Visibility = Visibility.Collapsed;
+            tabSignIn.Visibility = Visibility.Visible;
+            tabSignUp.Visibility = Visibility.Visible;
+            tabFoodServices.Visibility = Visibility.Collapsed;
+            metroMap.Visibility = Visibility.Collapsed;
 
             // Clear sign in fields
             txtSignInEmail.Text = string.Empty;
@@ -472,6 +517,138 @@ namespace LivingParisApp {
             catch (Exception ex) {
                 MessageBox.Show($"Error drawing map: {ex.Message}");
             }
+        }
+
+        //my account role logic
+        private void BtnEditRoles_Click(object sender, RoutedEventArgs e) {
+            // Enable role checkboxes for editing
+            chkAccountClient.IsEnabled = true;
+            chkAccountChef.IsEnabled = true;
+
+            // Show save button, hide edit button
+            btnSaveRoles.Visibility = Visibility.Visible;
+            btnEditRoles.Visibility = Visibility.Collapsed;
+
+            txtRoleUpdateStatus.Text = "Modify your roles and click Save";
+            txtRoleUpdateStatus.Foreground = Brushes.Black;
+        }
+
+        private void BtnSaveRoles_Click(object sender, RoutedEventArgs e) {
+            try {
+                if (!chkAccountClient.IsChecked.Value && !chkAccountChef.IsChecked.Value) {
+                    txtRoleUpdateStatus.Text = "Error updating roles. Please choose at least one.";
+                    txtRoleUpdateStatus.Foreground = Brushes.Red;
+                    return;
+                }
+                // Update user roles in database
+                string updateQuery = @"
+            UPDATE Users 
+            SET IsClient = @IsClient, IsChef = @IsChef 
+            WHERE UserID = @UserID";
+
+                var command = new MySqlCommand(updateQuery);
+                command.Parameters.AddWithValue("@IsClient", chkAccountClient.IsChecked.Value ? 1 : 0);
+                command.Parameters.AddWithValue("@IsChef", chkAccountChef.IsChecked.Value ? 1 : 0);
+                command.Parameters.AddWithValue("@UserID", _currentUser.UserID);
+
+                _mySQLManager.ExecuteNonQuery(command);
+
+                // Update current user object
+                _currentUser.IsClient = chkAccountClient.IsChecked.Value ? 1 : 0;
+                _currentUser.IsChef = chkAccountChef.IsChecked.Value ? 1 : 0;
+
+                // Disable editing
+                chkAccountClient.IsEnabled = false;
+                chkAccountChef.IsEnabled = false;
+
+                // Show edit button, hide save button
+                btnEditRoles.Visibility = Visibility.Visible;
+                btnSaveRoles.Visibility = Visibility.Collapsed;
+
+                // Update UI
+                UpdateUIForLoggedInUser();
+
+                txtRoleUpdateStatus.Text = "Roles updated successfully";
+                txtRoleUpdateStatus.Foreground = Brushes.Green;
+            }
+            catch (Exception ex) {
+                Logger.Error($"Error updating roles: {ex.Message}");
+                txtRoleUpdateStatus.Text = "Error updating roles. Please try again.";
+                txtRoleUpdateStatus.Foreground = Brushes.Red;
+            }
+        }
+
+        /// food base integration
+        /// 
+        // Event handlers
+        public void DgDishes_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            Logger.Log("Dish selection changed");
+            // Handle dish selection logic
+        }
+
+        public void BtnPlaceOrder_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("Place order button clicked");
+            // Handle place order logic
+        }
+
+        public void BtnAddNewDish_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("adding new dish");
+            var addWindow = new AddNewDishWindow(_mySQLManager, _currentUser);
+            if (addWindow.ShowDialog() == true) {
+                LoadDishes(); // Refresh the data after adding
+                dgMyDishes.Items.Refresh(); // Update the DataGrid
+            }
+        }
+
+        private void LoadDishes() {
+            try {
+                _dishes.Clear(); // Clear existing items
+                string query = "SELECT * FROM Dishes";
+                using (var reader = _mySQLManager.ExecuteReader(query)) {
+                    while (reader.Read()) {
+                        var dish = new Dish {
+                            Name = reader.GetString("Name"),
+                            Type = reader.GetString("Type"),
+                            DishPrice = reader.GetDecimal("DishPrice"),
+                            FabricationDate = reader.GetDateTime("FabricationDate"),
+                            PeremptionDate = reader.GetDateTime("PeremptionDate"),
+                            Diet = reader.IsDBNull(reader.GetOrdinal("Diet")) ? "" : reader.GetString("Diet"),
+                            Origin = reader.IsDBNull(reader.GetOrdinal("Origin")) ? "" : reader.GetString("Origin")
+                        };
+                        _dishes.Add(dish);
+                    }
+                }
+                Logger.Log($"Loaded {_dishes.Count} dishes from database");
+            }
+            catch (Exception ex) {
+                Logger.Log($"Error loading dishes: {ex.Message}");
+                MessageBox.Show($"Error loading dishes: {ex.Message}");
+            }
+        }
+
+        public void DgOrders_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            Logger.Log("Order selection changed");
+            // Handle order selection logic
+        }
+
+        public void BtnAddToCart_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("Add to cart button clicked");
+            // Handle add to cart logic
+        }
+
+        public void BtnEditDish_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("Edit dish button clicked");
+            // Handle edit dish logic
+        }
+
+        public void BtnDeleteDish_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("Delete dish button clicked");
+            // Handle delete dish logic
+        }
+
+        public void BtnViewOrderDetails_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("View order details button clicked");
+            // Handle view order details logic
         }
     }
 }

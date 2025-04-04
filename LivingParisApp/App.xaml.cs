@@ -38,10 +38,15 @@ namespace LivingParisApp {
                 Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisArcs.csv")
             );
 
-            Logger.Log(map.ToString());
+            //Logger.Log(map.ToString());
 
-            MainWindow window = new MainWindow(mySQLManager, map);
-            window.Show();
+            try {
+                MainWindow window = new MainWindow(mySQLManager, map);
+                window.Show();
+            }
+            catch (Exception ex) {
+                Logger.Fatal(ex);
+            }
         }
     }
 }

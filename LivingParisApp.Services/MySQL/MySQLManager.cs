@@ -131,12 +131,10 @@ namespace LivingParisApp.Services.MySQL {
 
         public MySqlDataReader ExecuteReader(string commandText) {
             try {
-                using (var connection = new MySqlConnection(_connectionString)) {
-                    connection.Open();
-                    using (var command = new MySqlCommand(commandText, connection)) {
-                        return command.ExecuteReader();
-                    }
-                }
+                var connection = new MySqlConnection(_connectionString);
+                connection.Open();
+                var command = new MySqlCommand(commandText, connection);
+                return command.ExecuteReader(CommandBehavior.CloseConnection);
             }
             catch (Exception ex) {
                 Logger.Error($"Failed to execute query: {commandText}, Error: {ex.Message}");
