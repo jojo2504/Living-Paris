@@ -67,101 +67,90 @@ namespace LivingParisApp.Services.MySQL {
             }
         }
 
-        public void ExecuteNonQuery(string query, Dictionary<string, object>? parameters = null) {
+        public void ExecuteNonQuery(MySqlCommand command) {
             try {
                 using (var connection = new MySqlConnection(_connectionString)) {
                     connection.Open();
-                    using (var command = new MySqlCommand(query, connection)) {
-                        if (parameters != null) {
-                            foreach (var param in parameters) {
-                                command.Parameters.AddWithValue($"@{param.Key}", param.Value ?? DBNull.Value);
-                            }
-                        }
+                    command.Connection = connection;
+                    command.ExecuteNonQuery();
+                    if (_noLogSQLcommand) Logger.Log($"Executed non-query: {command.CommandText}");
+                }
+            }
+            catch (Exception ex) {
+                Logger.Error($"Failed to execute query: {command.CommandText}, Error: {ex}");
+                throw;
+            }
+        }
+        public void ExecuteNonQuery(string commandText) {
+            try {
+                using (var connection = new MySqlConnection(_connectionString)) {
+                    connection.Open();
+                    using (var command = new MySqlCommand(commandText, connection)) {
                         command.ExecuteNonQuery();
-                        if (_noLogSQLcommand) Logger.Log($"Executed non-query: {query}");
+                        if (_noLogSQLcommand) Logger.Log($"Executed non-query: {commandText}");
                     }
                 }
             }
             catch (Exception ex) {
-                Logger.Error($"Failed to execute query: {query}, Error: {ex}");
+                Logger.Error($"Failed to execute query: {commandText}, Error: {ex}");
                 throw;
             }
         }
 
-        public object ExecuteScalar(string query, Dictionary<string, object>? parameters = null) {
+        public object ExecuteScalar(MySqlCommand command) {
             try {
                 using (var connection = new MySqlConnection(_connectionString)) {
                     connection.Open();
-                    using (var command = new MySqlCommand(query, connection)) {
-                        if (parameters != null) {
-                            foreach (var param in parameters) {
-                                command.Parameters.AddWithValue($"@{param.Key}", param.Value ?? DBNull.Value);
-                            }
-                        }
+                    command.Connection = connection;
+                    if (!_noLogSQLcommand) Logger.Log($"Executing scalar query: {command.CommandText}");
+                    var result = command.ExecuteScalar();
+                    return result;
+                }
+            }
+            catch (Exception ex) {
+                Logger.Error($"Failed to execute scalar query: {command.CommandText}, Error: {ex}");
+                throw;
+            }
+        }
+        public object ExecuteScalar(string commandText) {
+            try {
+                using (var connection = new MySqlConnection(_connectionString)) {
+                    connection.Open();
+                    using (var command = new MySqlCommand(commandText, connection)) {
                         var result = command.ExecuteScalar();
-                        if (_noLogSQLcommand) Logger.Log($"Executed scalar query: {query}, Result: {result}");
+                        if (_noLogSQLcommand) Logger.Log($"Executed non-query: {commandText}");
                         return result;
                     }
                 }
             }
             catch (Exception ex) {
-                Logger.Error($"Failed to execute scalar query: {query}, Error: {ex.Message}");
+                Logger.Error($"Failed to execute scalar query: {commandText}, Error: {ex}");
                 throw;
             }
         }
 
-        public List<DataTable> ExecuteQuery(string query, Dictionary<string, object>? parameters = null) {
+        public MySqlDataReader ExecuteReader(string commandText) {
             try {
-                using (var connection = new MySqlConnection(_connectionString)) {
-                    connection.Open();
-                    using (var command = new MySqlCommand(query, connection)) {
-                        if (parameters != null) {
-                            foreach (var param in parameters) {
-                                command.Parameters.AddWithValue($"@{param.Key}", param.Value ?? DBNull.Value);
-                            }
-                        }
-
-                        using (var reader = command.ExecuteReader()) {
-                            var resultSets = new List<DataTable>();
-                            int resultSetIndex = 0;
-
-                            do {
-                                // Skip non-result-set statements (e.g., INSERTs)
-                                if (!reader.HasRows && resultSetIndex < 4) // Skip the 4 INSERT/USE statements
-                                {
-                                    resultSetIndex++;
-                                    continue;
-                                }
-
-                                var dataTable = new DataTable();
-                                // Define columns based on the current result set
-                                for (int i = 0; i < reader.FieldCount; i++) {
-                                    dataTable.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-                                }
-
-                                // Read rows
-                                while (reader.Read()) {
-                                    var row = dataTable.NewRow();
-                                    for (int i = 0; i < reader.FieldCount; i++) {
-                                        row[i] = reader.GetValue(i);
-                                    }
-                                    dataTable.Rows.Add(row);
-                                }
-
-                                resultSets.Add(dataTable);
-                                Logger.Log($"Result set {resultSets.Count} returned: {dataTable.Rows.Count} rows");
-                                resultSetIndex++;
-
-                            } while (reader.NextResult());
-
-                            Logger.Log($"Executed query: {query}, Total result sets: {resultSets.Count}");
-                            return resultSets;
-                        }
-                    }
-                }
+                var connection = new MySqlConnection(_connectionString);
+                connection.Open();
+                var command = new MySqlCommand(commandText, connection);
+                return command.ExecuteReader(CommandBehavior.CloseConnection);
             }
             catch (Exception ex) {
-                Logger.Error($"Failed to execute query: {query}, Error: {ex.Message}");
+                Logger.Error($"Failed to execute query: {commandText}, Error: {ex.Message}");
+                throw;
+            }
+        }
+
+        public MySqlDataReader ExecuteReader(MySqlCommand command) {
+            try {
+                var connection = new MySqlConnection(_connectionString);
+                connection.Open();
+                command.Connection = connection;
+                return command.ExecuteReader(CommandBehavior.CloseConnection);
+            }
+            catch (Exception ex) {
+                Logger.Error($"Failed to execute query: {command.CommandText}, Error: {ex.Message}");
                 throw;
             }
         }
