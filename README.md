@@ -15,7 +15,7 @@
   - [Introduction](#introduction)
   - [Features (On-Progress)](#features-on-progress)
   - [Getting Started (For Custom Building)](#getting-started-for-custom-building)
-  - [Entity-Relationship Diagram](#entity-relationship-diagram)
+  - [Entity-Relationship Diagram](#entity-relationship-diagram-outdated)
 
 ## Introduction
 Living Paris is an application that facilitates meal sharing between neighbors within Paris. The platform allows individuals or local businesses to order homemade meals prepared by registered cooks. Users can register as either a cook or a client—or both simultaneously—by providing their personal details such as name, address, phone number, and email.
@@ -30,7 +30,6 @@ This project aims to explore graphs and their functionality, particularly in opt
 
 - XML Representation of Graphs: The graph data is stored and represented using XML for better visualization and management.
 
-
 ## Getting Started (For Custom Building)
 1. Clone the repository to your local machine or download the latest release.
 2. Make sure your .NET version is `9.0`.
@@ -41,7 +40,21 @@ This project aims to explore graphs and their functionality, particularly in opt
 4. To run the tests :
     - go to `Living-Paris/`,
     - use in terminal `dotnet test`.
-
-## Entity-Relationship Diagram
+     
+## Entity-Relationship Diagram (Outdated)
 ![Entity Association Diagram](/markdownassets/Image/Entity_Association_Diagram.png)
 This diagram will evolve in the future as we add more functionalities to the app.
+
+## Known Issues
+- An item in the cart will not be deleted even if the chef has deleted his dish from the marketplace.
+- The map has a rotation issue.
+- No QoL buttons has been implemented yet.
+- User can't modify more than their role.
+- user can't cancel an order or remove an item from the cart.
+- User can't change their address.
+- QoL navigation has not been implemented proprely yet.
+- No preview times or cost.
+- Cost is suppository for now.
+- Not every information in the marketplace has been implemented yet.
+- Marketplace doesn't support dish info view yet.
+- Sign up infos are not erased after sign up completion.
