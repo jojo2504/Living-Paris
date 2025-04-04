@@ -430,7 +430,7 @@ namespace LivingParisApp {
 
                 // Get all valid coordinates first
                 var validNodes = _map.AdjacencyList.Keys
-                    .Where(node => node?.Object != null)
+                    .Where(node => node?.Object != null && node.Object.Longitude != 0 && node.Object.Latitude != 0)
                     .Select(node => new {
                         Node = node,
                         Longitude = node.Object.Longitude,
@@ -474,19 +474,41 @@ namespace LivingParisApp {
                     }
                 }
 
+                // Create a dictionary to store calculated coordinates to avoid recalculating
+                var nodeCoordinates = new Dictionary<Node<MetroStation>, (double X, double Y)>();
+
+                // Pre-calculate coordinates for all nodes - corrected mapping
+                foreach (var node in _map.AdjacencyList.Keys) {
+                    if (node?.Object == null || node.Object.Longitude == 0 || node.Object.Latitude == 0) continue;
+
+                    // Fix the coordinate mapping - longitude maps to X, latitude to Y
+                    // For Paris metro map, we need to properly orient it
+                    double x = ((node.Object.Longitude - minLongitude) / longitudeRange) * 1000;
+                    double y = ((maxLatitude - node.Object.Latitude) / latitudeRange) * 1000;
+
+                    // Ensure coordinates are within canvas bounds
+                    x = Math.Max(6, Math.Min(994, x));
+                    y = Math.Max(6, Math.Min(994, y));
+
+                    nodeCoordinates[node] = (x, y);
+                }
+
                 // Draw connections first
                 foreach (var stationEntry in _map.AdjacencyList) {
                     if (stationEntry.Key?.Object == null) continue;
 
-                    // Normalize coordinates with padding
-                    double x1 = ((stationEntry.Key.Object.Longitude - minLongitude) / longitudeRange) * 1000;
-                    double y1 = 1000 - ((stationEntry.Key.Object.Latitude - minLatitude) / latitudeRange) * 1000;
+                    // Skip if we don't have coordinates for this node
+                    if (!nodeCoordinates.TryGetValue(stationEntry.Key, out var coords1)) continue;
+                    double x1 = coords1.X;
+                    double y1 = coords1.Y;
 
                     foreach (var neighborTuple in stationEntry.Value) {
                         if (neighborTuple?.Item1?.Object == null) continue;
 
-                        double x2 = ((neighborTuple.Item1.Object.Longitude - minLongitude) / longitudeRange) * 1000;
-                        double y2 = 1000 - ((neighborTuple.Item1.Object.Latitude - minLatitude) / latitudeRange) * 1000;
+                        // Skip if we don't have coordinates for neighbor node
+                        if (!nodeCoordinates.TryGetValue(neighborTuple.Item1, out var coords2)) continue;
+                        double x2 = coords2.X;
+                        double y2 = coords2.Y;
 
                         // Check if this edge is part of the path
                         bool isPathEdge = pathEdges.Any(edge =>
@@ -515,9 +537,10 @@ namespace LivingParisApp {
                 foreach (var stationEntry in _map.AdjacencyList) {
                     if (stationEntry.Key?.Object == null) continue;
 
-                    // Normalize coordinates with padding
-                    double x = (stationEntry.Key.Object.Longitude - minLongitude) / longitudeRange * 1000;
-                    double y = 1000 - (stationEntry.Key.Object.Latitude - minLatitude) / latitudeRange * 1000;
+                    // Skip if we don't have coordinates for this node
+                    if (!nodeCoordinates.TryGetValue(stationEntry.Key, out var coords)) continue;
+                    double x = coords.X;
+                    double y = coords.Y;
 
                     // Highlight stations that are part of the path
                     bool isPathStation = path != null && path.Contains(stationEntry.Key);
@@ -978,12 +1001,29 @@ namespace LivingParisApp {
                         return;
                     }
 
-                    // Step 5: Use A* to find the shortest path
+                    // Get all adjacent station names for chefNode
+                    var adjacentStationNames = _map.AdjacencyList[chefNode]
+                        .Select(tuple => tuple.Item1?.Object?.LibelleStation ?? "null")
+                        .ToList();
+
+                    Logger.Log($"chefNode ({chefNode.Object.LibelleStation}) neighbours: {string.Join(", ", adjacentStationNames)}");
+
+                    // Get all adjacent station names for chefNode
+                    var adjacentStationNames2 = _map.AdjacencyList[clientNode]
+                        .Select(tuple => tuple.Item1?.Object?.LibelleStation ?? "null")
+                        .ToList();
+
+                    Logger.Log($"clientNode ({clientNode.Object.LibelleStation}) neighbours: {string.Join(", ", adjacentStationNames2)}");
+                    /*// Step 5: Use A* to find the shortest path
                     var aStar = new Astar<MetroStation>();
                     var (path, totalLength) = aStar.Run(_map, chefNode, clientNode);
+                    */
+                    var dijkstra = new Dijkstra<MetroStation>();
+                    dijkstra.Init(_map, chefNode);
+                    var (path, totalLength) = dijkstra.GetPath(clientNode);
 
                     if (path == null || path.Count == 0) {
-                        MessageBox.Show("No path found between the client's and chef's metro stations.");
+                        MessageBox.Show($"No path found between the client's ({clientNode.Object.LibelleStation}) and chef's ({chefNode.Object.LibelleStation}) metro stations.");
                         return;
                     }
 
