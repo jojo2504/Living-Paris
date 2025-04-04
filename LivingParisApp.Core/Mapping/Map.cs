@@ -14,7 +14,7 @@ namespace LivingParisApp.Core.Mapping {
             ParseArcs(filePathArcs);
         }
 
-        public override void AddEdge(T from, T to, double weight) {
+        public override void AddEdge(T from, T to, double weight = 0) {
             var fromNode = new Node<T>(from);
             var toNode = new Node<T>(to);
 

@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 
-namespace LivingParisApp.Core.Engines.ShortestPaths{
+namespace LivingParisApp.Core.Engines.ShortestPaths {
     public class BellmanFord<T> : ShortestPathsEngine<T> where T : IStation<T> {
 
         /// <summary>
@@ -10,40 +13,43 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
         /// <param name="map">The map containing nodes and their connections</param>
         /// <param name="start">The starting node for path calculations</param>
         public void Init(Map<T> map, Node<T> start) {
-
-            if(start != null){
+            if (start != null) {
                 _startVertice = start;
-                _distances = new Dictionary<Node<T>,double>();
+                _distances = new Dictionary<Node<T>, double>();
                 _predecessors = new Dictionary<Node<T>, Node<T>>();
 
-                foreach (var node in map.AdjacencyList)
-                {
-                    if(node.Key.Object.ID == _startVertice.Object.ID)
-                    {
+                foreach (var node in map.AdjacencyList) {
+                    if (node.Key.Object.ID == _startVertice.Object.ID) {
                         _distances[node.Key] = 0;
                     }
-                    else
-                    {
+                    else {
                         _distances[node.Key] = double.PositiveInfinity;
-                        _predecessors[node.Key] = null;
                     }
+                    _predecessors[node.Key] = null;
                 }
 
-                int iteration = 1;
-                bool noChange = false;
-                while(iteration <= map.AdjacencyList.Keys.Count() - 1 && !noChange){
-                    noChange = true;
-                    foreach (var node in map.AdjacencyList){
-                        foreach (var neighbor in node.Value){
-                            if(_distances[node.Key] != double.PositiveInfinity && 
-                            _distances[neighbor.Item1] > _distances[node.Key]+neighbor.Item2){
-                                _distances[neighbor.Item1] = _distances[node.Key]+neighbor.Item2;
+                // Relax all edges |V| - 1 times
+                int vertexCount = map.AdjacencyList.Keys.Count();
+                for (int i = 1; i <= vertexCount - 1; i++) {
+                    foreach (var node in map.AdjacencyList) {
+                        foreach (var neighbor in node.Value) {
+                            if (_distances[node.Key] != double.PositiveInfinity &&
+                                _distances[neighbor.Item1] > _distances[node.Key] + neighbor.Item2) {
+                                _distances[neighbor.Item1] = _distances[node.Key] + neighbor.Item2;
                                 _predecessors[neighbor.Item1] = node.Key;
-                                noChange = false;
                             }
                         }
                     }
-                    iteration++;
+                }
+
+                // Check for negative-weight cycles
+                foreach (var node in map.AdjacencyList) {
+                    foreach (var neighbor in node.Value) {
+                        if (_distances[node.Key] != double.PositiveInfinity &&
+                            _distances[neighbor.Item1] > _distances[node.Key] + neighbor.Item2) {
+                            throw new InvalidOperationException("Graph contains a negative-weight cycle");
+                        }
+                    }
                 }
             }
         }
@@ -54,25 +60,24 @@ namespace LivingParisApp.Core.Engines.ShortestPaths{
         /// <param name="to">The destination node</param>
         /// <returns>A tuple containing the path (LinkedList) and total length</returns>
         public (LinkedList<Node<T>> Path, double TotalLength) GetPath(Node<T> to) {
-            
             if (_distances[to] == double.PositiveInfinity) {
                 return (new LinkedList<Node<T>>(), double.PositiveInfinity);
             }
 
             double totalLength = _distances[to];
             List<Node<T>> pathList = new List<Node<T>>();
-            pathList.Add(to); 
+            pathList.Add(to);
 
-            while (_startVertice.Object.ID != to.Object.ID){
-                if (_predecessors[to] == null){
-                    return (new LinkedList<Node<T>>(), double.PositiveInfinity); 
+            while (_startVertice.Object.ID != to.Object.ID) {
+                if (_predecessors[to] == null) {
+                    return (new LinkedList<Node<T>>(), double.PositiveInfinity);
                 }
                 to = _predecessors[to];
-                pathList.Insert(0, to); 
+                pathList.Insert(0, to);
             }
             LinkedList<Node<T>> path = new LinkedList<Node<T>>(pathList);
 
-            return (path,totalLength);
+            return (path, totalLength);
         }
     }
 }

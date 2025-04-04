@@ -2,6 +2,13 @@
 
 ---
 
+## Code owner
+- jojo2504 | Jonathan Tran
+  
+## Collaborators
+- Bahyamin | Benjamin Zilber
+- Tibo-7 | Thilbault Thery
+
 ## Summary
 - [Living-Paris](#living-paris)
   - [Summary](#summary)
@@ -11,7 +18,7 @@
   - [Entity-Relationship Diagram](#entity-relationship-diagram)
 
 ## Introduction
-Liv`in Paris is an application that facilitates meal sharing between neighbors within Paris. The platform allows individuals or local businesses to order homemade meals prepared by registered cooks. Users can register as either a cook or a client—or both simultaneously—by providing their personal details such as name, address, phone number, and email.
+Living Paris is an application that facilitates meal sharing between neighbors within Paris. The platform allows individuals or local businesses to order homemade meals prepared by registered cooks. Users can register as either a cook or a client—or both simultaneously—by providing their personal details such as name, address, phone number, and email.
 
 This project aims to explore graphs and their functionality, particularly in optimizing delivery routes and analyzing user interactions.
 **This repository is a project for A2/S4 students in computer sciences.**
@@ -29,9 +36,10 @@ This project aims to explore graphs and their functionality, particularly in opt
 2. Make sure your .NET version is `9.0`.
 3. To run the project : 
     - go to `LivingParisApp/`,
-    - use in terminal `dotnet run` or `dotnet run --reset`.
+    - use in terminal `dotnet run` \
+      Current arguments list : [`--reset`, `--noLogSQL`]
 4. To run the tests :
-    - go to `Living-Paris`,
+    - go to `Living-Paris/`,
     - use in terminal `dotnet test`.
 
 ## Entity-Relationship Diagram
