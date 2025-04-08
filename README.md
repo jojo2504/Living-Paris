@@ -1,6 +1,9 @@
 # Living-Paris
 
 ---
+## IMPORTANT
+**LE NUMERO D'UN COMPTE POUR LA CREATION EST DE LONGUEUR 1 POUR L'INSTANT !!** \
+**ALLER VOIR LE FICHIER `script/create_database.sql` S'IL Y A DES SOUCIS DE CREATION D'OBJETS**
 
 ## Code owner
 - jojo2504 | Jonathan Tran
@@ -13,7 +16,6 @@
 - [Living-Paris](#living-paris)
   - [Summary](#summary)
   - [Introduction](#introduction)
-  - [Features (On-Progress)](#features-on-progress)
   - [Getting Started (For Custom Building)](#getting-started-for-custom-building)
   - [Entity-Relationship Diagram](#entity-relationship-diagram-outdated)
 
@@ -22,13 +24,6 @@ Living Paris is an application that facilitates meal sharing between neighbors w
 
 This project aims to explore graphs and their functionality, particularly in optimizing delivery routes and analyzing user interactions.
 **This repository is a project for A2/S4 students in computer sciences.**
-
-## Features (On-Progress)
-- Graph Creation: The system models user interactions and delivery routes using graph structures.
-
-- Graph Traversal Algorithms: The application implements Breadth-First Search (BFS) and Depth-First Search (DFS) to analyze and optimize delivery paths.
-
-- XML Representation of Graphs: The graph data is stored and represented using XML for better visualization and management.
 
 ## Getting Started (For Custom Building)
 1. Clone the repository to your local machine or download the latest release.
