@@ -3,7 +3,7 @@
 ---
 ## IMPORTANT
 **LE NUMERO D'UN COMPTE POUR LA CREATION EST DE LONGUEUR 1 POUR L'INSTANT !!** \
-**ALLER VOIR LE FICHIER `script/create_database.sql` S'IL Y A DES SOUCIS DE CREATION D'OBJETS**
+**ALLER VOIR LE FICHIER `scripts/create_database.sql` S'IL Y A DES SOUCIS DE CREATION D'OBJETS**
 
 ## Code owner
 - jojo2504 | Jonathan Tran
