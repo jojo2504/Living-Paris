@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS LivingParis;
 
 USE LivingParis;
 
--- Users TABLE IF NOT EXISTS (base TABLE IF NOT EXISTS, no dependencies)
+-- Users TABLE (base TABLE, no dependencies)
 CREATE TABLE IF NOT EXISTS Users (
     UserID INT AUTO_INCREMENT NOT NULL,
     LastName VARCHAR(255) NOT NULL,
@@ -18,17 +18,18 @@ CREATE TABLE IF NOT EXISTS Users (
     IsClient INT NOT NULL DEFAULT 0,
     IsChef INT NOT NULL DEFAULT 0,
     PRIMARY KEY (UserID),
-    CHECK (CHAR_LENGTH(PhoneNumber) = 1)
+    CHECK (CHAR_LENGTH(PhoneNumber) = 1) -- NEED TO CHANGE TO 10 IN THE FUTURE, SET TO ONE FOR EASY NEW ACCOUNT CREATION
 );
 
 -- Orders depends on Chefs and Clients and Dishes
 CREATE TABLE IF NOT EXISTS Orders (
-	OrderID INT AUTO_INCREMENT NOT NULL,
+    OrderID INT AUTO_INCREMENT NOT NULL,
     ClientID INT NOT NULL,
     ChefID INT NOT NULL,
     Address VARCHAR(255),
     OrderDate DATE,
     OrderTotal DECIMAL(10,2),
+    Status ENUM('Pending', 'Completed', 'Cancelled') DEFAULT 'Pending' NOT NULL,
     PRIMARY KEY (OrderID),
     FOREIGN KEY (ClientId) REFERENCES Users(UserID),
     FOREIGN KEY (ChefId) REFERENCES Users(UserID)
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS OrderDishes (
     CHECK (Quantity > 0)
 );
 
--- Ingredients (base TABLE IF NOT EXISTS, no dependencies)
+-- Ingredients (base TABLE, no dependencies)
 CREATE TABLE IF NOT EXISTS Ingredients (
     IngredientID INT AUTO_INCREMENT NOT NULL,
     Name VARCHAR(255) NOT NULL UNIQUE,
@@ -76,10 +77,9 @@ CREATE TABLE IF NOT EXISTS DishIngredients (
     DishID INT NOT NULL,
     Gramme INT DEFAULT NULL,
     Pieces INT DEFAULT NULL,
-    PRIMARY KEY (DishIngredientsID, DishID),
+    PRIMARY KEY (DishIngredientsID),
     FOREIGN KEY (IngredientID) REFERENCES Ingredients(IngredientID),
-    FOREIGN KEY (DishID) REFERENCES Dishes(DishID),
-
+    FOREIGN KEY (DishID) REFERENCES Dishes(DishID) ON DELETE CASCADE,
     CHECK (
         (Gramme IS NOT NULL AND Pieces IS NULL) OR
         (Pieces IS NOT NULL AND Gramme IS NULL)

@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Living Paris"
-        Height="600"
-        Width="850">
+        Height="670"
+        Width="980">
     <Grid>
         <TabControl>
             <!-- Sign In Tab -->
@@ -16,10 +16,12 @@
                                Margin="0,0,0,20" />
                     <TextBlock Text="Email:" />
                     <TextBox x:Name="txtSignInEmail"
-                             Margin="0,5,0,10" />
+                             Margin="0,5,0,10"
+                             KeyDown="txtSignIn_KeyDown" />
                     <TextBlock Text="Password:" />
                     <PasswordBox x:Name="pwdSignIn"
-                                 Margin="0,5,0,20" />
+                                 Margin="0,5,0,20"
+                                 KeyDown="txtSignIn_KeyDown" />
                     <Button x:Name="btnSignIn"
                             Content="Sign In"
                             Width="100"
@@ -70,7 +72,7 @@
                         <TextBlock Text="Closest Metro (Optional):" />
                         <ComboBox x:Name="cmbMetro"
                                   Margin="0,5,0,10"
-                                  Width="200"/>
+                                  Width="200" />
                         <TextBlock Text="User Type (Select One or Both):" />
                         <StackPanel Orientation="Horizontal"
                                     Margin="0,5,0,20">
@@ -104,39 +106,76 @@
                                FontWeight="Bold"
                                Margin="0,0,0,20" />
                     <StackPanel Grid.Row="1">
-                        <TextBlock x:Name="txtUserInfo"
-                                   Text="Welcome, [User]" />
-                        <TextBlock x:Name="txtUserEmail"
-                                   Text="Email: [Email]" />
-                        <TextBlock x:Name="txtClosestMetro"
-                                   Text="ClosestMetro: [ClosestMetro]" />
-                        <TextBlock Text="Roles:"
-                                   Margin="0,10,0,5" />
-                        <StackPanel Orientation="Horizontal"
-                                    Margin="0,0,0,10">
-                            <CheckBox x:Name="chkAccountClient"
-                                      Content="Client"
-                                      Margin="0,0,20,0"
-                                      IsEnabled="False" />
-                            <CheckBox x:Name="chkAccountChef"
-                                      Content="Chef"
-                                      IsEnabled="False" />
+                        <!-- View Mode -->
+                        <StackPanel x:Name="viewModePanel">
+                            <TextBlock x:Name="txtUserInfo"
+                                       Text="Welcome, [User]" />
+                            <TextBlock x:Name="txtUserEmail"
+                                       Text="Email: [Email]" />
+                            <TextBlock x:Name="txtClosestMetro"
+                                       Text="ClosestMetro: [ClosestMetro]" />
+                            <TextBlock Text="Roles:"
+                                       Margin="0,10,0,5" />
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,10">
+                                <CheckBox x:Name="chkAccountClient"
+                                          Content="Client"
+                                          Margin="0,0,20,0"
+                                          IsEnabled="False" />
+                                <CheckBox x:Name="chkAccountChef"
+                                          Content="Chef"
+                                          IsEnabled="False" />
+                            </StackPanel>
+                            <Button x:Name="btnEditAccount"
+                                    Content="Edit Account"
+                                    Width="120"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,10,0,0"
+                                    Click="BtnEditAccount_Click" />
                         </StackPanel>
-                        <Button x:Name="btnEditRoles"
-                                Content="Edit Roles"
-                                Width="100"
-                                HorizontalAlignment="Left"
-                                Click="BtnEditRoles_Click" />
-                        <Button x:Name="btnSaveRoles"
-                                Content="Save Roles"
-                                Width="100"
-                                HorizontalAlignment="Left"
-                                Margin="0,10,0,0"
-                                Visibility="Collapsed"
-                                Click="BtnSaveRoles_Click" />
-                        <TextBlock x:Name="txtRoleUpdateStatus"
-                                   Margin="0,10,0,0"
-                                   Foreground="Green" />
+                        <!-- Edit Mode -->
+                        <StackPanel x:Name="editModePanel"
+                                    Visibility="Collapsed">
+                            <TextBlock Text="Name:"
+                                       Margin="0,5,0,0" />
+                            <TextBox x:Name="txtEditName"
+                                     Margin="0,0,0,10" />
+                            <TextBlock Text="Email:"
+                                       Margin="0,5,0,0" />
+                            <TextBox x:Name="txtEditEmail"
+                                     Margin="0,0,0,10" />
+                            <TextBlock Text="Closest Metro:"
+                                       Margin="0,5,0,0" />
+                            <ComboBox x:Name="cmbEditClosestMetro"
+                                      Margin="0,0,0,10" />
+                            <TextBlock Text="Roles:"
+                                       Margin="0,10,0,5" />
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,10">
+                                <CheckBox x:Name="chkEditClient"
+                                          Content="Client"
+                                          Margin="0,0,20,0" />
+                                <CheckBox x:Name="chkEditChef"
+                                          Content="Chef" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,10,0,0">
+                                <Button x:Name="btnSaveAccount"
+                                        Content="Save Changes"
+                                        Width="120"
+                                        HorizontalAlignment="Left"
+                                        Click="BtnSaveAccount_Click" />
+                                <Button x:Name="btnCancelEdit"
+                                        Content="Cancel"
+                                        Width="80"
+                                        HorizontalAlignment="Left"
+                                        Margin="10,0,0,0"
+                                        Click="BtnCancelEdit_Click" />
+                            </StackPanel>
+                            <TextBlock x:Name="txtUpdateStatus"
+                                       Margin="0,10,0,0"
+                                       Foreground="Green" />
+                        </StackPanel>
                     </StackPanel>
                     <Button Grid.Row="2"
                             x:Name="btnSignOut"
@@ -205,12 +244,8 @@
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,5,0" />
                                             <ComboBox x:Name="cmbDishType"
-                                                      Width="120">
-                                                <ComboBoxItem Content="All Types"
-                                                              IsSelected="True" />
-                                                <ComboBoxItem Content="entree" />
-                                                <ComboBoxItem Content="main dish" />
-                                                <ComboBoxItem Content="dessert" />
+                                                      Width="120"
+                                                      SelectedIndex="0">
                                             </ComboBox>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal"
@@ -219,12 +254,8 @@
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,5,0" />
                                             <ComboBox x:Name="cmbDiet"
-                                                      Width="120">
-                                                <ComboBoxItem Content="All"
-                                                              IsSelected="True" />
-                                                <ComboBoxItem Content="Vegetarian" />
-                                                <ComboBoxItem Content="Vegan" />
-                                                <ComboBoxItem Content="Gluten-Free" />
+                                                      Width="120"
+                                                      SelectedIndex="0">
                                             </ComboBox>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal"
@@ -233,18 +264,14 @@
                                                        VerticalAlignment="Center"
                                                        Margin="0,0,5,0" />
                                             <ComboBox x:Name="cmbOrigin"
-                                                      Width="120">
-                                                <ComboBoxItem Content="All"
-                                                              IsSelected="True" />
-                                                <ComboBoxItem Content="French" />
-                                                <ComboBoxItem Content="Italian" />
-                                                <ComboBoxItem Content="Asian" />
-                                                <ComboBoxItem Content="Other" />
+                                                      Width="120"
+                                                      SelectedIndex="0">
                                             </ComboBox>
                                         </StackPanel>
-                                        <Button x:Name="btnApplyFilters"
+                                        <Button x:Name="ApplyFiltersDishes"
                                                 Content="Apply Filters"
-                                                Padding="10,3" />
+                                                Padding="10,3"
+                                                Click="BtnApplyFiltersDishes"/>
                                     </WrapPanel>
                                 </StackPanel>
                                 <!-- Dish List -->
@@ -263,16 +290,22 @@
                                                             Width="*" />
                                         <DataGridTextColumn Header="Type"
                                                             Binding="{Binding Type}"
-                                                            Width="100" />
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Diet"
+                                                            Binding="{Binding Diet}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Origin"
+                                                            Binding="{Binding Origin}"
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Chef"
                                                             Binding="{Binding ChefName}"
-                                                            Width="150" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Price"
                                                             Binding="{Binding DishPrice, StringFormat={}{0:C2}}"
-                                                            Width="80" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Available Until"
                                                             Binding="{Binding PeremptionDate, StringFormat={}{0:d}}"
-                                                            Width="120" />
+                                                            Width="*" />
                                         <DataGridTemplateColumn Header="Add"
                                                                 Width="60">
                                             <DataGridTemplateColumn.CellTemplate>
@@ -311,6 +344,7 @@
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="Auto" />
                                                         <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Text="{Binding Name}"
                                                                Grid.Column="0" />
@@ -318,7 +352,15 @@
                                                                Grid.Column="1"
                                                                Margin="5,0" />
                                                     <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:C2}}"
-                                                               Grid.Column="2" />
+                                                               Grid.Column="2"
+                                                               Margin="5,0" />
+                                                    <Button Content="X"
+                                                            Grid.Column="3"
+                                                            Width="25"
+                                                            Height="25"
+                                                            Margin="5,0,0,0"
+                                                            Click="RemoveFromCart_Click"
+                                                            CommandParameter="{Binding}" />
                                                 </Grid>
                                             </DataTemplate>
                                         </ListBox.ItemTemplate>
@@ -471,7 +513,7 @@
                                         <ComboBoxItem Content="Orders I Received" />
                                     </ComboBox>
                                 </StackPanel>
-                                <!-- Orders List -->
+                                <!-- Orders List -->    
                                 <DataGrid x:Name="dgOrders"
                                           Grid.Row="1"
                                           AutoGenerateColumns="False"
@@ -501,6 +543,281 @@
                                                 <DataTemplate>
                                                     <Button Content="View"
                                                             Click="BtnViewOrderDetails_Click"
+                                                            Padding="5,0"
+                                                            Margin="2"
+                                                            Tag="{Binding OrderID}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Cancel Order"
+                                                                Width="80">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="X"
+                                                            Click="BtnCancelOrder_Click"
+                                                            Padding="5,0"
+                                                            Margin="2"
+                                                            Tag="{Binding OrderID}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Admin Tab"
+                     x:Name="adminTab">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0"
+                               Text="Admin Dashboard"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Margin="0,0,0,20" />
+                    <TabControl Grid.Row="1">
+                        <!-- User Management -->
+                        <TabItem Header="Manage Users">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0"
+                                            Margin="0,0,0,10">
+                                    <TextBlock Text="User Management"
+                                               FontSize="16"
+                                               FontWeight="Bold" />
+                                    <WrapPanel Margin="0,10,0,0">
+                                        <TextBlock Text="Search by Email:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,5,0" />
+                                        <TextBox x:Name="txtSearchUser"
+                                                 Width="200"
+                                                 Margin="0,0,10,0"
+                                                 KeyDown="TxtSearchUser_KeyDown" />
+                                        <Button x:Name="btnSearchUser"
+                                                Content="Search"
+                                                Padding="10,3"
+                                                Click="BtnSearchUser_Click" />
+                                    </WrapPanel>
+                                </StackPanel>
+                                <DataGrid x:Name="dgUsers"
+                                          Grid.Row="1"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Email"
+                                                            Binding="{Binding Mail}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Password"
+                                                            Binding="{Binding Password}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Name"
+                                                            Binding="{Binding FullName}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Phone Number"
+                                                            Binding="{Binding PhoneNumber}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="City"
+                                                            Binding="{Binding City}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Role"
+                                                            Binding="{Binding Roles}"
+                                                            Width="*" />
+                                        <DataGridTemplateColumn Header="Actions"
+                                                                Width="120">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Button Content="Edit"
+                                                                Click="BtnEditUser_Click"
+                                                                Padding="5,0"
+                                                                Margin="2"
+                                                                Tag="{Binding UserID}" />
+                                                        <Button Content="Delete"
+                                                                Click="BtnDeleteUser_Click"
+                                                                Padding="5,0"
+                                                                Margin="2"
+                                                                Tag="{Binding UserID}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <StackPanel Grid.Row="2"
+                                            Margin="0,10,0,0">
+                                    <Button x:Name="btnAddUser"
+                                            Content="Add New User"
+                                            Width="120"
+                                            HorizontalAlignment="Left"
+                                            Padding="10,3"
+                                            Click="BtnAddUser_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="Manage Dishes">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0"
+                                            Margin="0,0,0,10">
+                                    <TextBlock Text="Dish Management"
+                                               FontSize="16"
+                                               FontWeight="Bold" />
+                                    <WrapPanel Margin="0,10,0,0">
+                                        <TextBlock Text="Search by Name:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,5,0" />
+                                        <TextBox x:Name="txtSearchDish"
+                                                 Width="200"
+                                                 Margin="0,0,10,0"
+                                                 KeyDown="TxtSearchDish_KeyDown" />
+                                        <TextBlock Text="Filter by Chef:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,5,0" />
+                                        <ComboBox x:Name="cmbFilterChef"
+                                                  Width="150"
+                                                  Margin="0,0,10,0">
+                                            <ComboBoxItem Content="All Chefs"
+                                                          IsSelected="True" />
+                                        </ComboBox>
+                                        <Button x:Name="btnSearchDish"
+                                                Content="Search"
+                                                Padding="10,3"
+                                                Click="BtnSearchDish_Click" />
+                                    </WrapPanel>
+                                </StackPanel>
+                                <DataGrid x:Name="dgAdminDishes"
+                                          Grid.Row="1"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ID"
+                                                            Binding="{Binding DishID}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Name"
+                                                            Binding="{Binding Name}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Type"
+                                                            Binding="{Binding Type}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Chef"
+                                                            Binding="{Binding ChefName}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Price"
+                                                            Binding="{Binding DishPrice, StringFormat={}{0:C2}}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Created"
+                                                            Binding="{Binding FabricationDate, StringFormat={}{0:d}}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Expires"
+                                                            Binding="{Binding PeremptionDate, StringFormat={}{0:d}}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Diet"
+                                                            Binding="{Binding Diet}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Origin"
+                                                            Binding="{Binding Origin}"
+                                                            Width="100" />
+                                        <DataGridTemplateColumn Header="Actions"
+                                                                Width="120">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Button Content="Edit"
+                                                                Click="BtnEditAdminDish_Click"
+                                                                Padding="5,0"
+                                                                Margin="2"
+                                                                Tag="{Binding DishID}" />
+                                                        <Button Content="Delete"
+                                                                Click="BtnDeleteAdminDish_Click"
+                                                                Padding="5,0"
+                                                                Margin="2"
+                                                                Tag="{Binding DishID}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </TabItem>
+                        <!-- Order Management -->
+                        <TabItem Header="Manage Orders">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0"
+                                            Margin="0,0,0,10">
+                                    <TextBlock Text="Order Management"
+                                               FontSize="16"
+                                               FontWeight="Bold" />
+                                    <WrapPanel Margin="0,10,0,0">
+                                        <TextBlock Text="Filter by Status:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,5,0" />
+                                        <ComboBox x:Name="cmbOrderStatus"
+                                                  Width="150"
+                                                  SelectedIndex="0">
+                                            <ComboBoxItem Content="All" />
+                                            <ComboBoxItem Content="Pending" />
+                                            <ComboBoxItem Content="Completed" />
+                                            <ComboBoxItem Content="Cancelled" />
+                                        </ComboBox>
+                                        <Button x:Name="btnFilterOrders"
+                                                Content="Apply Filter"
+                                                Padding="10,3"
+                                                Margin="10,0,0,0"
+                                                Click="BtnFilterOrders_Click" />
+                                    </WrapPanel>
+                                </StackPanel>
+                                <DataGrid x:Name="dgAdminOrders"
+                                          Grid.Row="1"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Order ID"
+                                                            Binding="{Binding OrderID}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Date"
+                                                            Binding="{Binding OrderDate, StringFormat={}{0:d}}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Client"
+                                                            Binding="{Binding ClientName}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Chef"
+                                                            Binding="{Binding ChefName}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Status"
+                                                            Binding="{Binding Status}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Total"
+                                                            Binding="{Binding OrderTotal, StringFormat={}{0:C2}}"
+                                                            Width="*" />
+                                        <DataGridTemplateColumn Header="Actions"
+                                                                Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View"
+                                                            Click="BtnViewAdminOrder_Click"
                                                             Padding="5,0"
                                                             Margin="2"
                                                             Tag="{Binding OrderID}" />

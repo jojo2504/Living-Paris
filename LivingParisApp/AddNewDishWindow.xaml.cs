@@ -32,8 +32,6 @@ namespace LivingParisApp {
             txtPrice.Text = _dishToEdit.DishPrice.ToString();
             txtDiet.Text = _dishToEdit.Diet;
             txtOrigin.Text = _dishToEdit.Origin;
-
-            //load ingredients
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e) {

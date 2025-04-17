@@ -49,5 +49,18 @@ namespace LivingParisApp.Core.Models.Human {
 
         [Required]
         public int IsChef { get; set; }
+
+        // Computed property for FullName
+        public string FullName => $"{FirstName} {LastName}".Trim();
+
+        // Computed property for Roles
+        public string Roles {
+            get {
+                var roles = new List<string>();
+                if (IsClient == 1) roles.Add("Client");
+                if (IsChef == 1) roles.Add("Chef");
+                return string.Join(", ", roles);
+            }
+        }
     }
 }
