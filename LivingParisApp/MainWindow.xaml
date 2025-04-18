@@ -282,8 +282,7 @@
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
                                           SelectionMode="Single"
-                                          HeadersVisibility="Column"
-                                          SelectionChanged="DgDishes_SelectionChanged">
+                                          HeadersVisibility="Column">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Name"
                                                             Binding="{Binding Name}"
@@ -519,8 +518,7 @@
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
                                           SelectionMode="Single"
-                                          HeadersVisibility="Column"
-                                          SelectionChanged="DgOrders_SelectionChanged">
+                                          HeadersVisibility="Column">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Order ID"
                                                             Binding="{Binding OrderID}"

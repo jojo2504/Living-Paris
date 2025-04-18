@@ -13,6 +13,9 @@ namespace LivingParisApp {
         private readonly Dish _dishToEdit;  // null if adding new dish
         private ObservableCollection<DishIngredient> _ingredients;
 
+        // Property to store the created dish
+        public Dish CreatedDish { get; private set; }
+
         public AddNewDishWindow(MySQLManager mySQLManager, User currentUser, Dish dishToEdit = null) {
             InitializeComponent();
             _mySQLManager = mySQLManager;
@@ -39,8 +42,10 @@ namespace LivingParisApp {
                 // Validate inputs
                 if (string.IsNullOrEmpty(txtName.Text) ||
                     string.IsNullOrEmpty(cmbType.Text) ||
-                    string.IsNullOrEmpty(txtPrice.Text)) {
-                    MessageBox.Show("Please fill in all required fields (Name, Type, Price)",
+                    string.IsNullOrEmpty(txtPrice.Text) ||
+                    string.IsNullOrEmpty(txtDiet.Text) ||
+                    string.IsNullOrEmpty(txtOrigin.Text)) {
+                    MessageBox.Show("Please fill in all required fields (Name, Type, Price, Diet, Origin)",
                                   "Validation Error",
                                   MessageBoxButton.OK,
                                   MessageBoxImage.Warning);
@@ -55,55 +60,73 @@ namespace LivingParisApp {
                     return;
                 }
 
-                // Create new dish object
-                var newDish = new Dish {
-                    Name = txtName.Text,
-                    Type = cmbType.Text,
-                    DishPrice = price,
-                    FabricationDate = DateTime.Now,
-                    PeremptionDate = DateTime.Now.AddMonths(1), // Default expiration 1 month from now
-                    Diet = txtDiet.Text,
-                    Origin = txtOrigin.Text
-                };
-
                 string query;
                 if (_dishToEdit is null) {
                     // Insert into database
-                    query = @"INSERT INTO Dishes (ChefID, Name, Type, DishPrice, FabricationDate, 
-                PeremptionDate, Diet, Origin) 
-                VALUES (@ChefID, @Name, @Type, @DishPrice, @FabricationDate, 
-                @PeremptionDate, @Diet, @Origin)";
+                    query = @"INSERT INTO Dishes (ChefID, Name, Type, DishPrice, FabricationDate, PeremptionDate, Diet, Origin) 
+                            VALUES (@ChefID, @Name, @Type, @DishPrice, @FabricationDate, @PeremptionDate, @Diet, @Origin);
+                            SELECT LAST_INSERT_ID();";
                 }
                 else {
                     // Update existing dish
                     query = @"UPDATE Dishes 
-              SET ChefID = @ChefID, 
-                  Name = @Name, 
-                  Type = @Type, 
-                  DishPrice = @DishPrice, 
-                  FabricationDate = @FabricationDate, 
-                  PeremptionDate = @PeremptionDate, 
-                  Diet = @Diet, 
-                  Origin = @Origin 
-              WHERE DishID = @DishID";
+                        SET ChefID = @ChefID, 
+                            Name = @Name, 
+                            Type = @Type, 
+                            DishPrice = @DishPrice, 
+                            FabricationDate = @FabricationDate, 
+                            PeremptionDate = @PeremptionDate, 
+                            Diet = @Diet, 
+                            Origin = @Origin 
+                        WHERE DishID = @DishID";
                 }
 
                 var command = new MySqlCommand(query);
-                if (_dishToEdit is not null) {
+                if (_dishToEdit is not null) { // editing
                     command.Parameters.AddWithValue("@DishID", _dishToEdit.DishID);
                 }
                 command.Parameters.AddWithValue("@ChefID", _currentUser.UserID);
-                command.Parameters.AddWithValue("@Name", newDish.Name);
-                command.Parameters.AddWithValue("@Type", newDish.Type);
-                command.Parameters.AddWithValue("@DishPrice", newDish.DishPrice);
-                command.Parameters.AddWithValue("@FabricationDate", newDish.FabricationDate);
-                command.Parameters.AddWithValue("@PeremptionDate", newDish.PeremptionDate);
-                command.Parameters.AddWithValue("@Diet", newDish.Diet);
-                command.Parameters.AddWithValue("@Origin", newDish.Origin);
+                command.Parameters.AddWithValue("@Name", txtName.Text);
+                command.Parameters.AddWithValue("@Type", cmbType.Text);
+                command.Parameters.AddWithValue("@DishPrice", price);
+                command.Parameters.AddWithValue("@FabricationDate", DateTime.Now);
+                command.Parameters.AddWithValue("@PeremptionDate", DateTime.Now.AddMonths(1));
+                command.Parameters.AddWithValue("@Diet", txtDiet.Text);
+                command.Parameters.AddWithValue("@Origin", txtOrigin.Text);
 
-                _mySQLManager.ExecuteNonQuery(command);
 
-                Logger.Log($"New dish added: {newDish.Name}");
+                // now create / update the objects to the collections
+                if (_dishToEdit is not null){ // editing
+                    _mySQLManager.ExecuteNonQuery(command);
+
+                    _dishToEdit.Name = txtName.Text;
+                    _dishToEdit.Type = cmbType.Text;
+                    _dishToEdit.DishPrice = price;
+                    _dishToEdit.FabricationDate = DateTime.Now;
+                    _dishToEdit.PeremptionDate = DateTime.Now.AddMonths(1);
+                    _dishToEdit.Diet = txtDiet.Text;    
+                    _dishToEdit.Origin = txtOrigin.Text;
+
+                    Logger.Log("Edited the dish");
+                }
+                else {
+                    var dishId = _mySQLManager.ExecuteScalar(command);
+                    // Create new dish object
+                    var newDish = new Dish {
+                        DishID = Convert.ToInt32(dishId),
+                        Name = txtName.Text,
+                        Type = cmbType.Text,
+                        DishPrice = price,
+                        FabricationDate = DateTime.Now,
+                        PeremptionDate = DateTime.Now.AddMonths(1), // Default expiration 1 month from now
+                        Diet = txtDiet.Text,
+                        Origin = txtOrigin.Text,
+                        ChefName = _currentUser.FullName
+                    };
+                    Logger.Log($"New dish added: {newDish.Name}");
+                    CreatedDish = newDish;
+                }
+
                 DialogResult = true; // Indicate success
                 Close();
             }

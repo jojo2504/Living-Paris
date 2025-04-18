@@ -62,10 +62,10 @@ namespace LivingParisApp {
 
         // Observable Collections
         private ObservableCollection<string> _allMetroName = new();
-        private ObservableCollection<Dish> _allDishes = new();
-        private ObservableCollection<Dish> _filteredAvailableDishes = new();  // Browse and Order tab
-        private ObservableCollection<Dish> _myDishes = new();         // Manage My Dishes tab
-        private ObservableCollection<Dish> _filteredDishes = new(); // admin view
+        private ObservableCollection<Dish> _allDishes = new();                  // All Dishes
+        private ObservableCollection<Dish> _myDishes = new();                   // Manage My Dishes tab
+        private ObservableCollection<Dish> _filteredAvailableDishes = new();    // Browse and Order tab || Marketplace
+        private ObservableCollection<Dish> _filteredDishes = new();             // Admin view -> All Dishes but filtered
         private ObservableCollection<CartItem> _cartItems = new();    // Shopping cart
         private ObservableCollection<Order> _allOrders = new();
         private ObservableCollection<Order> _myOrders = new();          // My Orders tab
@@ -1147,14 +1147,9 @@ namespace LivingParisApp {
             Logger.Log("adding new dish");
             var addWindow = new AddNewDishWindow(_mySQLManager, _currentUser);
             if (addWindow.ShowDialog() == true) {
-                LoadMyDishes();
-
-                // for now, we are reloading the whole observable collection after updating the database. 
-                // A better solution would be to change the element we are working on directly from the observable collection
-                // to minimize the number of operations required.
-
-                //TODO : We should import the new dish / changed dish to all observable collections
-                // For now, it only updates de MyDishes collection
+                Dish dish = addWindow.CreatedDish;
+                AddDishInCollections(dish);
+                // if we are only creating a new dish, add it to the collections
             }
         }
 
@@ -1164,10 +1159,8 @@ namespace LivingParisApp {
                 var dish = _myDishes.FirstOrDefault(d => d.DishID == dishId);
                 if (dish != null) {
                     var editWindow = new AddNewDishWindow(_mySQLManager, _currentUser, dish);
-                    if (editWindow.ShowDialog() == true) {
-                        LoadMyDishes();
-                        // LoadAllDishes(); should we allow exception of second reload ?
-                    }
+                    // we already have implemented changed propretiy notifications, so there is nothing to do here anymore
+                    // any update has already been done in the AddNewDish Window.
                 }
             }
         }
@@ -1184,7 +1177,7 @@ namespace LivingParisApp {
                         command.Parameters.AddWithValue("@DishID", dishId);
                         _mySQLManager.ExecuteNonQuery(command);
 
-                        RemoveDish(dishId); // removing dish from all observable collections
+                        RemoveDishFromCollections(dishId); // removing dish from all observable collections
 
                         Logger.Log("Deleted the targeted dish.");
                     }
@@ -1345,23 +1338,6 @@ namespace LivingParisApp {
         }
         #endregion
 
-        #region SelectionChanged
-        public void DgOrders_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            Logger.Log("Order selection changed");
-            if (dgOrders.SelectedItem is Order selectedOrder) {
-                Logger.Log($"Selected order: {selectedOrder.OrderID}");
-            }
-        }
-
-        public void DgDishes_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            Logger.Log("Dish selection changed");
-            if (dgDishes.SelectedItem is Dish selectedDish) {
-                // Could show additional details if needed
-                Logger.Log($"Selected dish: {selectedDish.Name}");
-            }
-        }
-        #endregion
-
         #region Admin
         // Admin Tab - User Management
         private void TxtSearchUser_KeyDown(object sender, KeyEventArgs e) {
@@ -1499,7 +1475,7 @@ namespace LivingParisApp {
         private void BtnFilterOrders_Click(object sender = null, RoutedEventArgs e = null) {
             // Implement filter orders logic
             string selectedStatus = (cmbOrderStatus.SelectedItem as ComboBoxItem)?.Content.ToString();
-            Logger.Log(selectedStatus);
+            Logger.Log($"Order filter status in admin dashboard : {selectedStatus}");
 
             _filteredOrders.Clear();
 
@@ -1530,6 +1506,9 @@ namespace LivingParisApp {
             // Show message if no results found
             if (!filteredOrders.Any()) {
                 MessageBox.Show("No orders found matching the search criteria.", "Search Results", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else {
+                Logger.Log($"Loaded {_filteredOrders.Count} orders after filter");
             }
         }
 
@@ -1569,17 +1548,17 @@ namespace LivingParisApp {
 
         #region Actions
 
-        private void RemoveDish(int dishId) {
-            // Remove the dish from _myDishes
-            var dishToRemoveMyDishes = _myDishes.FirstOrDefault(d => d.DishID == dishId);
-            if (dishToRemoveMyDishes != null) {
-                _myDishes.Remove(dishToRemoveMyDishes);
-            }
-
+        private void RemoveDishFromCollections(int dishId) {
             // Remove the dish from _allDishes
             var dishToRemoveAllDishes = _allDishes.FirstOrDefault(d => d.DishID == dishId);
             if (dishToRemoveAllDishes != null) {
                 _allDishes.Remove(dishToRemoveAllDishes);
+            }
+
+            // Remove the dish from _myDishes
+            var dishToRemoveMyDishes = _myDishes.FirstOrDefault(d => d.DishID == dishId);
+            if (dishToRemoveMyDishes != null) {
+                _myDishes.Remove(dishToRemoveMyDishes);
             }
 
             // Remove the dish from _filteredDishes // admin view
@@ -1587,6 +1566,19 @@ namespace LivingParisApp {
             if (dishToRemoveFilteredDishes != null) {
                 _filteredDishes.Remove(dishToRemoveFilteredDishes);
             }
+
+            // Remove the dish from _filteredDishes // admin view
+            var dishToRemoveFilteredAvailableDishes = _filteredAvailableDishes.FirstOrDefault(d => d.DishID == dishId);
+            if (dishToRemoveFilteredAvailableDishes != null) {
+                _filteredAvailableDishes.Remove(dishToRemoveFilteredAvailableDishes);
+            }
+        }
+
+        private void AddDishInCollections(Dish dish) {
+            _myDishes.Add(dish);
+            _allDishes.Add(dish);
+            _filteredDishes.Add(dish);
+            _filteredAvailableDishes.Add(dish);
         }
 
         private void UpdateCartTotal() {
