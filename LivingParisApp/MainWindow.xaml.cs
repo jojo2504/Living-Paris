@@ -1159,6 +1159,8 @@ namespace LivingParisApp {
                 var dish = _myDishes.FirstOrDefault(d => d.DishID == dishId);
                 if (dish != null) {
                     var editWindow = new AddNewDishWindow(_mySQLManager, _currentUser, dish);
+                    editWindow.Owner = this; // Set the owner to the current window
+                    bool? result = editWindow.ShowDialog(); // Actually show the dialog
                     // we already have implemented changed propretiy notifications, so there is nothing to do here anymore
                     // any update has already been done in the AddNewDish Window.
                 }
@@ -1464,11 +1466,26 @@ namespace LivingParisApp {
         }
 
         private void BtnEditAdminDish_Click(object sender, RoutedEventArgs e) {
-            MessageBox.Show("Not Implemented Yet");
+            Logger.Log("Edit dish Admin button clicked");
+            if (sender is Button button && button.Tag is int dishId) {
+                Logger.Log(dishId);
+                Logger.Log(button);
+                var dish = _allDishes.FirstOrDefault(d => d.DishID == dishId); // this line differs from the other edit, as the collection targeted is different
+                if (dish != null) {
+                    var editWindow = new AddNewDishWindow(_mySQLManager, _currentUser, dish);
+                    editWindow.Owner = this; // Set the owner to the current window
+                    bool? result = editWindow.ShowDialog(); // Actually show the dialog
+                    // we already have implemented changed propretiy notifications, so there is nothing to do here anymore
+                    // any update has already been done in the AddNewDish Window.
+                }
+                else {
+                    Logger.Log(string.Join(", ", _filteredDishes.Select(d => d.DishID)));
+                }
+            }
         }
 
         private void BtnDeleteAdminDish_Click(object sender, RoutedEventArgs e) {
-            MessageBox.Show("Not Implemented Yet");
+            BtnDeleteDish_Click(sender, e); //reusing user delete dish method, which already target the right collection
         }
 
         // Admin Tab - Order Management
@@ -1517,6 +1534,7 @@ namespace LivingParisApp {
                 string orderId = button.Tag.ToString();
                 // Implement view order details logic
                 // Possibly open a dialog showing order details
+                MessageBox.Show("Not Implemented Yet");
             }
         }
         #endregion
