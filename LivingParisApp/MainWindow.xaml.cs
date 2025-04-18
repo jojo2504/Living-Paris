@@ -1348,6 +1348,7 @@ namespace LivingParisApp {
                 BtnSearchUser_Click(sender, e);
             }
         }
+
         private void BtnSearchUser_Click(object sender = null, RoutedEventArgs e = null) {
             string searchEmail = txtSearchUser.Text.Trim().ToLower();
             _filteredUsers.Clear();
@@ -1387,35 +1388,54 @@ namespace LivingParisApp {
             }
         }
 
-        private void BtnAddUser_Click(object sender, RoutedEventArgs e) {
-            // Implement add new user logic
-            // Possibly open a dialog or navigate to a form for user creation
-            MessageBox.Show("Not Implemented Yet");
-        }
-
         private void BtnEditUser_Click(object sender, RoutedEventArgs e) {
             if (sender is Button button && button.Tag != null) {
                 string userId = button.Tag.ToString();
                 // Implement edit user logic
                 // Possibly open a dialog with user details for editing
-                MessageBox.Show("Not Implemented Yet");
+                User userToEdit = _allUsers.FirstOrDefault(u => u.UserID.ToString() == userId);
+
+                if (userToEdit != null) {
+                    var editWindow = new EditUserWindow(_mySQLManager, userToEdit);
+                    editWindow.Owner = this; // Set the owner to keep window management clean
+
+                    if (editWindow.ShowDialog() == true) {
+                        // User was updated, refresh your UI if needed
+                        // For example, if this is a list, refresh the list
+                        // usersListView.Items.Refresh();
+
+                        MessageBox.Show($"User {userToEdit.FullName} was updated successfully",
+                                      "Success",
+                                      MessageBoxButton.OK,
+                                      MessageBoxImage.Information);
+                    }
+                }
+                else {
+                    MessageBox.Show("User not found", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
         private void BtnDeleteUser_Click(object sender, RoutedEventArgs e) {
-            if (sender is Button button && button.Tag != null) {
-                string userId = button.Tag.ToString();
-                // Implement delete user logic
-                // Show confirmation dialog before deletion
-                MessageBoxResult result = MessageBox.Show(
-                    "Are you sure you want to delete this user?",
-                    "Confirm Deletion",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-
-                if (result == MessageBoxResult.Yes) {
+            if (sender is Button button && button.Tag is int userId) {
+                if (MessageBox.Show("Are you sure you want to delete this user?",
+                    "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) {
                     // Proceed with deletion
-                    MessageBox.Show("Not Implemented Yet");
+                    try {
+                        Logger.Log("Deleting the targeted user...");
+                        string query = "DELETE FROM Users WHERE UserID = @UserID";
+                        var command = new MySqlCommand(query);
+                        command.Parameters.AddWithValue("@UserID", userId);
+                        _mySQLManager.ExecuteNonQuery(command);
+
+                        RemoveUserFromCollections(userId); // removing user from all observable collections
+
+                        Logger.Log("Deleted the targeted user.");
+                    }
+                    catch (Exception ex) {
+                        Logger.Log($"Error deleting user: {ex.Message}");
+                        MessageBox.Show($"Error deleting user: {ex.Message}");
+                    }
                 }
             }
         }
@@ -1565,6 +1585,17 @@ namespace LivingParisApp {
         #endregion
 
         #region Actions
+
+        private void RemoveUserFromCollections(int userId) {
+            var userToRemoveAllUsers = _allUsers.FirstOrDefault(d => d.UserID == userId);
+            if (userToRemoveAllUsers != null) {
+                _allUsers.Remove(userToRemoveAllUsers);
+            }
+            var userToRemoveFilteredUsers = _filteredUsers.FirstOrDefault(d => d.UserID == userId);
+            if (userToRemoveFilteredUsers != null) {
+                _filteredUsers.Remove(userToRemoveFilteredUsers);
+            }
+        }
 
         private void RemoveDishFromCollections(int dishId) {
             // Remove the dish from _allDishes
