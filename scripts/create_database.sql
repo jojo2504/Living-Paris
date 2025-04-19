@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS Users (
     Mail VARCHAR(255) NOT NULL UNIQUE,
     ClosestMetro VARCHAR(255) NOT NULL,
     Password VARCHAR(255) NOT NULL,
+    TotalMoneySpent DECIMAL(10,2) DEFAULT 0 NOT NULL,
     IsClient INT NOT NULL DEFAULT 0,
     IsChef INT NOT NULL DEFAULT 0,
     PRIMARY KEY (UserID),
@@ -29,7 +30,7 @@ CREATE TABLE IF NOT EXISTS Orders (
     Address VARCHAR(255),
     OrderDate DATE,
     OrderTotal DECIMAL(10,2),
-    Status ENUM('Pending', 'Completed', 'Cancelled') DEFAULT 'Pending' NOT NULL,
+    Status ENUM('Pending', 'Completed', 'Cancelled', 'Refused') DEFAULT 'Pending' NOT NULL,
     PRIMARY KEY (OrderID),
     FOREIGN KEY (ClientId) REFERENCES Users(UserID) ON DELETE CASCADE,
     FOREIGN KEY (ChefId) REFERENCES Users(UserID) ON DELETE CASCADE

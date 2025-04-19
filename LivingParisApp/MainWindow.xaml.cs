@@ -68,7 +68,8 @@ namespace LivingParisApp {
         private ObservableCollection<Dish> _filteredDishes = new();             // Admin view -> All Dishes but filtered
         private ObservableCollection<CartItem> _cartItems = new();    // Shopping cart
         private ObservableCollection<Order> _allOrders = new();
-        private ObservableCollection<Order> _myOrders = new();          // My Orders tab
+        private ObservableCollection<Order> _placedOrders = new();          // My Orders tab
+        private ObservableCollection<Order> _recievedOrders = new();          // My Orders tab
         private ObservableCollection<Order> _filteredOrders = new();     // Orders tab in admin view
         private ObservableCollection<User> _allUsers = new();
         private ObservableCollection<User> _filteredUsers = new(); // Store all users for filtering
@@ -103,12 +104,12 @@ namespace LivingParisApp {
 
             // Initialize data bindings
             cmbMetro.ItemsSource = _allMetroName;
-            cmbEditClosestMetro.ItemsSource = _allMetroName;
 
             dgDishes.ItemsSource = _filteredAvailableDishes; // market place
             lbCart.ItemsSource = _cartItems;
             dgMyDishes.ItemsSource = _myDishes;
-            dgOrders.ItemsSource = _myOrders;
+            dgOrdersPlaced.ItemsSource = _placedOrders;
+            dgOrdersReceived.ItemsSource = _recievedOrders;
             dgAdminOrders.ItemsSource = _filteredOrders;
             dgUsers.ItemsSource = _filteredUsers;
             dgAdminDishes.ItemsSource = _filteredDishes; // admin view of all dishes
@@ -212,8 +213,8 @@ namespace LivingParisApp {
             // Switch to the Sign In tab (assuming TabControl is the main control)
             // Get the parent TabControl
             if (tabAccount.Parent is TabControl tabControl) {
-                // Select the first order food tab
-                tabControl.SelectedIndex = 4;
+                // Select the account tab
+                tabControl.SelectedIndex = 2;
             }
         }
 
@@ -230,13 +231,6 @@ namespace LivingParisApp {
             txtSignInEmail.Text = string.Empty;
             pwdSignIn.Password = string.Empty;
             txtSignInStatus.Text = string.Empty;
-
-            // Switch to the Sign In tab (assuming TabControl is the main control)
-            // Get the parent TabControl
-            if (tabAccount.Parent is TabControl tabControl) {
-                // Select the first tab (Sign In tab)
-                tabControl.SelectedIndex = 0;
-            }
         }
 
         private void txtSignIn_KeyDown(object sender, KeyEventArgs e) {
@@ -259,7 +253,7 @@ namespace LivingParisApp {
                 // Query to get the user ID using the email
                 string userQuery = @"
                     SELECT p.UserID, p.FirstName, p.LastName, p.Mail, p.Street, p.StreetNumber, 
-                           p.Postcode, p.City, p.PhoneNumber, p.ClosestMetro, p.IsClient, p.IsChef
+                           p.Postcode, p.City, p.PhoneNumber, p.ClosestMetro, p.TotalMoneySpent, p.IsClient, p.IsChef
                     FROM Users p
                     WHERE p.Mail = @Email";
 
@@ -302,6 +296,7 @@ namespace LivingParisApp {
                             City = (string)userReader["City"],
                             PhoneNumber = (string)userReader["PhoneNumber"],
                             Password = (string)passwordResult,
+                            TotalMoneySpent = (decimal)userReader["TotalMoneySpent"],
                             ClosestMetro = userReader["ClosestMetro"] == DBNull.Value ? "" : (string)userReader["ClosestMetro"],
                             IsChef = (int)userReader["IsChef"],
                             IsClient = (int)userReader["IsClient"]
@@ -309,7 +304,13 @@ namespace LivingParisApp {
                         UpdateUIForLoggedInUser();
                     }
                 }
-                // Update UI for logged in user
+                            
+                // Switch to the Sign In tab (assuming TabControl is the main control)
+                // Get the parent TabControl
+                if (tabAccount.Parent is TabControl tabControl) {
+                    // Select the first tab (Sign In tab)
+                    tabControl.SelectedIndex = 4;
+                }
             }
             catch (Exception ex) {
                 Logger.Error($"Login error: {ex}");
@@ -649,64 +650,21 @@ namespace LivingParisApp {
 
         #region my account logic
 
-        private void BtnEditAccount_Click(object sender, RoutedEventArgs e) {
-            // Fill edit fields with current values
-            txtEditName.Text = txtUserInfo.Text.Replace("Welcome, ", "");
-            txtEditEmail.Text = txtUserEmail.Text.Replace("Email: ", "");
-            cmbEditClosestMetro.Text = txtClosestMetro.Text.Replace("ClosestMetro: ", "");
+        public void BtnEditAccount_Click(object sender, RoutedEventArgs e) {
+            Logger.Log("Clicked on Edit Account button");
+            var editWindow = new EditUserWindow(_mySQLManager, _currentUser);
+            editWindow.Owner = this; // Set the owner to keep window management clean
 
-            // Set checkboxes to match current roles
-            chkEditClient.IsChecked = chkAccountClient.IsChecked;
-            chkEditChef.IsChecked = chkAccountChef.IsChecked;
+            if (editWindow.ShowDialog() == true) {
+                // Update UI elements (e.g., tab visibility) based on updated user roles
+                UpdateUIForLoggedInUser();
 
-            // Switch to edit mode
-            viewModePanel.Visibility = Visibility.Collapsed;
-            editModePanel.Visibility = Visibility.Visible;
-        }
-
-        private void BtnSaveAccount_Click(object sender, RoutedEventArgs e) {
-            // Update user information with edited values
-            txtUserInfo.Text = "Welcome, " + txtEditName.Text;
-            txtUserEmail.Text = "Email: " + txtEditEmail.Text;
-            txtClosestMetro.Text = "ClosestMetro: " + cmbEditClosestMetro.Text;
-
-            // Update role checkboxes
-            chkAccountClient.IsChecked = chkEditClient.IsChecked;
-            chkAccountChef.IsChecked = chkEditChef.IsChecked;
-
-            // Save changes to database or backend
-            SaveUserChangesToDatabase();
-
-            // Display success message
-            txtUpdateStatus.Text = "Account details updated successfully!";
-
-            // Switch back to view mode
-            viewModePanel.Visibility = Visibility.Visible;
-            editModePanel.Visibility = Visibility.Collapsed;
-        }
-
-        private void BtnCancelEdit_Click(object sender, RoutedEventArgs e) {
-            // Clear any status messages
-            txtUpdateStatus.Text = "";
-
-            // Switch back to view mode without saving changes
-            viewModePanel.Visibility = Visibility.Visible;
-            editModePanel.Visibility = Visibility.Collapsed;
-        }
-
-        // Helper method to save changes to your database
-        private void SaveUserChangesToDatabase() {
-            // Implement your database update logic here
-            // This will depend on how your application stores user data
-
-            // Example:
-            // var currentUser = GetCurrentUser();
-            // currentUser.Name = txtEditName.Text;
-            // currentUser.Email = txtEditEmail.Text;
-            // currentUser.ClosestMetro = txtEditClosestMetro.Text;
-            // currentUser.IsClient = chkEditClient.IsChecked ?? false;
-            // currentUser.IsChef = chkEditChef.IsChecked ?? false;
-            // _userRepository.UpdateUser(currentUser);
+                // User was updated
+                MessageBox.Show($"User {_currentUser.FullName} was updated successfully",
+                                "Success",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
         }
 
         #endregion
@@ -717,7 +675,8 @@ namespace LivingParisApp {
             /// <summary>
             /// This load dishes method is used to load the chef view mode of all of his dishes
             /// It should only be called ONCE at the start of the program
-            /// </summary>
+            /// </summary>  
+
             Logger.Log("Loading all current user's dishes...");
             try {
                 if (_currentUser == null || _currentUser.IsChef == 0) return;
@@ -767,14 +726,20 @@ namespace LivingParisApp {
             }
         }
 
+        // Method to load orders placed by the current user
         private void LoadMyOrders() {
+            LoadPlacedOrders();
+            LoadReceivedOrders();
+        }
+
+        private void LoadPlacedOrders() {
             /// <summary>
             /// This load orders method is used to load the client view mode of all of his orders
             /// It should only be called ONCE at the start of the program
             /// </summary>
             Logger.Log("Loading all current user's order...");
             try {
-                _myOrders.Clear();
+                _placedOrders.Clear();
                 var query = cmbOrderView.SelectedIndex == 0
                     ? @"SELECT o.OrderID, o.ClientID, o.ChefID, o.Address, o.OrderDate, o.OrderTotal, o.Status,
                     uc.FirstName AS ClientFirst, uc.LastName AS ClientLast, 
@@ -782,21 +747,21 @@ namespace LivingParisApp {
                 FROM Orders o
                 JOIN Users uc ON o.ClientID = uc.UserID
                 JOIN Users uch ON o.ChefID = uch.UserID
-                WHERE o.ClientID = @UserID AND o.Status = 'Pending'"
+                WHERE o.ClientID = @UserID"
                     : @"SELECT o.OrderID, o.ClientID, o.ChefID, o.Address, o.OrderDate, o.OrderTotal, o.Status,
                     uc.FirstName AS ClientFirst, uc.LastName AS ClientLast, 
                     uch.FirstName AS ChefFirst, uch.LastName AS ChefLast
                 FROM Orders o
                 JOIN Users uc ON o.ClientID = uc.UserID
                 JOIN Users uch ON o.ChefID = uch.UserID
-                WHERE o.ChefID = @UserID AND o.Status = 'Pending'";
+                WHERE o.ChefID = @UserID";
 
                 var command = new MySqlCommand(query);
                 command.Parameters.AddWithValue("@UserID", _currentUser?.UserID ?? 0);
 
                 using (var reader = _mySQLManager.ExecuteReader(command)) {
                     while (reader.Read()) {
-                        _myOrders.Add(new Order {
+                        _placedOrders.Add(new Order {
                             OrderID = reader.GetInt32("OrderID"),
                             ClientID = reader.GetInt32("ClientID"),
                             ChefID = reader.GetInt32("ChefID"),
@@ -809,11 +774,54 @@ namespace LivingParisApp {
                         });
                     }
                 }
-                Logger.Log($"Loaded {_myOrders.Count} orders from current user");
+                Logger.Log($"Loaded {_placedOrders.Count} orders from current user");
             }
             catch (Exception ex) {
                 Logger.Log($"Error loading orders: {ex.Message}");
                 MessageBox.Show($"Error loading orders: {ex.Message}");
+            }
+        }
+
+        // Method to load orders received by the current user (for chefs)
+        private void LoadReceivedOrders() {
+            /// <summary>
+            /// This load orders method is used to load the chef view mode of all orders received
+            /// It should only be called when switching to the "Orders I Received" view
+            /// </summary>
+            Logger.Log("Loading all orders received by current user...");
+            try {
+                _recievedOrders.Clear();
+                var query = @"SELECT o.OrderID, o.ClientID, o.ChefID, o.Address, o.OrderDate, o.OrderTotal, o.Status,
+                    uc.FirstName AS ClientFirst, uc.LastName AS ClientLast, 
+                    uch.FirstName AS ChefFirst, uch.LastName AS ChefLast
+                FROM Orders o
+                JOIN Users uc ON o.ClientID = uc.UserID
+                JOIN Users uch ON o.ChefID = uch.UserID
+                WHERE o.ChefID = @UserID";
+
+                var command = new MySqlCommand(query);
+                command.Parameters.AddWithValue("@UserID", _currentUser?.UserID ?? 0);
+
+                using (var reader = _mySQLManager.ExecuteReader(command)) {
+                    while (reader.Read()) {
+                        _recievedOrders.Add(new Order {
+                            OrderID = reader.GetInt32("OrderID"),
+                            ClientID = reader.GetInt32("ClientID"),
+                            ChefID = reader.GetInt32("ChefID"),
+                            Address = reader.IsDBNull(reader.GetOrdinal("Address")) ? null : reader.GetString("Address"),
+                            OrderDate = reader.GetDateTime("OrderDate"),
+                            OrderTotal = reader.GetDecimal("OrderTotal"),
+                            Status = reader.GetString("Status"),
+                            ClientName = $"{reader.GetString("ClientFirst")} {reader.GetString("ClientLast")}",
+                            ChefName = $"{reader.GetString("ChefFirst")} {reader.GetString("ChefLast")}"
+                        });
+                    }
+                }
+                Logger.Log($"Loaded {_recievedOrders.Count} orders received by current user");
+            }
+            catch (Exception ex) {
+                Logger.Log($"Error loading received orders: {ex.Message}");
+                MessageBox.Show($"Error loading received orders: {ex.Message}");
             }
         }
 
@@ -841,6 +849,7 @@ namespace LivingParisApp {
                             Mail = reader.GetString("Mail"),
                             ClosestMetro = reader.GetString("ClosestMetro"),
                             Password = reader.GetString("Password"),
+                            TotalMoneySpent = reader.GetDecimal("TotalMoneySpent"),
                             IsClient = reader.GetInt32("IsClient"),
                             IsChef = reader.GetInt32("IsChef"),
                         });
@@ -932,6 +941,7 @@ namespace LivingParisApp {
                 Logger.Log($"Error loading dishes: {ex.Message}");
             }
         }
+
         #endregion
 
         #region Click
@@ -1015,7 +1025,7 @@ namespace LivingParisApp {
                     };
                     // Adding new order to the observable collections
                     _allOrders.Add(newOrder);
-                    _myOrders.Add(newOrder);
+                    _placedOrders.Add(newOrder);
                     _filteredOrders.Add(newOrder);
                     createdOrderIds.Add(orderId);
 
@@ -1050,6 +1060,27 @@ namespace LivingParisApp {
                         cartItem.Dish.Status = "Sold Out";
 
                         _filteredAvailableDishes.Remove(cartItem.Dish); // just remove it visually from the market place
+
+                        // update total money spent by the user
+                        _currentUser.TotalMoneySpent += cartItem.Dish.DishPrice;
+                    }
+
+                    Logger.Log($"TotalMoneySpent before: {_currentUser.TotalMoneySpent}");
+
+                    string updateTotalMOneySpentQuery = @"UPDATE Users 
+                        SET TotalMoneySpent = @TotalMoneySpent 
+                        WHERE UserID = @UserID;";
+                    var updateTotalMOneySpentCommand = new MySqlCommand(updateTotalMOneySpentQuery);
+                    updateTotalMOneySpentCommand.Parameters.AddWithValue("TotalMoneySpent", _currentUser.TotalMoneySpent);
+                    updateTotalMOneySpentCommand.Parameters.AddWithValue("UserID", _currentUser.UserID);
+
+                    _mySQLManager.ExecuteNonQuery(updateTotalMOneySpentCommand);
+                    Logger.Log($"Updated total user money spent. Now: {_currentUser.TotalMoneySpent}");
+
+                    // now update the proprety in the collection
+                    var userToUpdateAllUser = _allUsers.FirstOrDefault(u => u.UserID == _currentUser.UserID);
+                    if (userToUpdateAllUser != null) {
+                        userToUpdateAllUser.TotalMoneySpent = _currentUser.TotalMoneySpent;
                     }
                 }
 
@@ -1072,32 +1103,45 @@ namespace LivingParisApp {
         }
 
         public void BtnCancelOrder_Click(object sender, EventArgs e) {
-            try {
-                var button = sender as Button;
-                if (button?.Tag is int orderId) {
-                    var order = dgOrders.Items.OfType<Order>().FirstOrDefault(o => o.OrderID == orderId);
-                    if (order != null) {
-                        var query = $@"UPDATE Orders
-                                    SET Status = 'Cancelled'
-                                    WHERE {orderId} = OrderID";
-                        var command = new MySqlCommand(query);
-                        _mySQLManager.ExecuteNonQuery(command);
-                        _myOrders.Remove(order); // remove the order from the view of the client
+            if (sender is Button button && button.DataContext is Order selectedOrder) {
+                if (selectedOrder != null) {
+                    var query = $@"UPDATE Orders SET Status = 'Cancelled' WHERE OrderID = @OrderID";
+                    var command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@OrderID", selectedOrder.OrderID);
+                    _mySQLManager.ExecuteNonQuery(command);
 
-                        var orderToCancelAllOrder = _allOrders.FirstOrDefault(d => d.OrderID == orderId);
-                        if (orderToCancelAllOrder != null) {
-                            orderToCancelAllOrder.Status = "Cancelled";
-                        }
-
-                        var orderToCancelFilteredOrders = _filteredOrders.FirstOrDefault(d => d.OrderID == orderId);
-                        if (orderToCancelFilteredOrders != null) {
-                            orderToCancelFilteredOrders.Status = "Cancelled";
-                        }
-                    }
+                    // change the propriety in the api
+                    UpdateOrderStatusInCollections("Cancelled", selectedOrder);
                 }
             }
-            catch (Exception ex) {
-                Logger.Error(ex);
+        }
+
+        public void BtnCompleteOrder_Click(object sender, EventArgs e) {
+            if (sender is Button button && button.DataContext is Order selectedOrder) {
+                if (selectedOrder != null) {
+                    string query = @"UPDATE Orders SET Status = 'Completed' WHERE OrderID = @OrderID";
+                    var command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@OrderID", selectedOrder.OrderID);
+                    _mySQLManager.ExecuteNonQuery(command);
+
+                    // change the propriety in the api
+                    UpdateOrderStatusInCollections("Completed", selectedOrder);
+                }
+            }
+        }
+
+        public void BtnRefuseOrder_Click(object sender, EventArgs e) {
+            if (sender is Button button && button.DataContext is Order selectedOrder) {
+                    if (selectedOrder != null) {
+                    string query = @"
+                            UPDATE Orders SET Status = 'Refused' WHERE OrderID = @OrderID";
+                    var command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@OrderID", selectedOrder.OrderID);
+                    _mySQLManager.ExecuteNonQuery(command);
+
+                    // change the propriety in the api
+                    UpdateOrderStatusInCollections("Refused", selectedOrder);
+                }
             }
         }
 
@@ -1171,7 +1215,6 @@ namespace LivingParisApp {
         }
 
         public void BtnDeleteDish_Click(object sender, RoutedEventArgs e) {
-            Logger.Log("Delete dish button clicked");
             if (sender is Button button && button.Tag is int dishId) {
                 if (MessageBox.Show("Are you sure you want to delete this dish?",
                     "Confirm Delete", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
@@ -1305,7 +1348,7 @@ namespace LivingParisApp {
             /// </summary>
             /// <param name="sender"></param>
             /// <param name="e"></param>
-            
+
             _filteredAvailableDishes.Clear();
 
             // Start with full set
@@ -1410,10 +1453,10 @@ namespace LivingParisApp {
                     editWindow.Owner = this; // Set the owner to keep window management clean
 
                     if (editWindow.ShowDialog() == true) {
-                        // User was updated, refresh your UI if needed
-                        // For example, if this is a list, refresh the list
-                        // usersListView.Items.Refresh();
-
+                        if (userToEdit.UserID == _currentUser.UserID) {
+                            _currentUser = userToEdit;
+                            UpdateUIForLoggedInUser();
+                        }
                         MessageBox.Show($"User {userToEdit.FullName} was updated successfully",
                                       "Success",
                                       MessageBoxButton.OK,
@@ -1591,6 +1634,38 @@ namespace LivingParisApp {
         }
         #endregion
 
+        #region SelectionChange
+
+        private void CmbOrderView_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            try {
+                if (cmbOrderView == null || dgOrdersPlaced == null || dgOrdersReceived == null) return;
+
+                if (cmbOrderView.SelectedIndex == 0) { // Orders I Placed 
+                    dgOrdersPlaced.Visibility = Visibility.Visible;
+                    dgOrdersReceived.Visibility = Visibility.Collapsed;
+
+                    // Load "Orders I Placed" data
+                    LoadPlacedOrders();
+
+                    Logger.Log("Viewing placed orders");
+                }
+                else { // Orders I Received            
+                    dgOrdersPlaced.Visibility = Visibility.Collapsed;
+                    dgOrdersReceived.Visibility = Visibility.Visible;
+
+                    // Load "Orders I Received" data
+                    LoadReceivedOrders();
+
+                    Logger.Log("Viewing recieved orders");
+                }
+            }
+            catch (Exception ex) {
+                Logger.Log(ex);
+            }
+        }
+
+        #endregion
+
         #region Actions
 
         private void RemoveUserFromCollections(int userId) {
@@ -1635,6 +1710,32 @@ namespace LivingParisApp {
             _allDishes.Add(dish);
             _filteredDishes.Add(dish);
             _filteredAvailableDishes.Add(dish);
+        }
+
+        private void UpdateOrderStatusInCollections(string newStatus, Order order) {
+            // Remove the dish from _allDishes
+            var a = _allOrders.FirstOrDefault(o => o.OrderID == order.OrderID);
+            if (a != null) {
+                a.Status = newStatus;
+            }
+
+            // Remove the dish from _myDishes
+            var b = _placedOrders.FirstOrDefault(o => o.OrderID == order.OrderID);
+            if (b != null) {
+                b.Status = newStatus;
+            }
+
+            // Remove the dish from _filteredDishes // admin view
+            var c = _recievedOrders.FirstOrDefault(o => o.OrderID == order.OrderID);
+            if (c != null) {
+                c.Status = newStatus;
+            }
+
+            // Remove the dish from _filteredDishes // admin view
+            var d = _filteredOrders.FirstOrDefault(o => o.OrderID == order.OrderID);
+            if (d != null) {
+                d.Status = newStatus;
+            }
         }
 
         private void UpdateCartTotal() {

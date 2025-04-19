@@ -90,6 +90,7 @@ namespace LivingParisApp.Services.MySQL {
                 throw;
             }
         }
+        
         public void ExecuteNonQuery(string commandText) {
             try {
                 using (var connection = new MySqlConnection(_connectionString)) {

@@ -133,49 +133,6 @@
                                     Margin="0,10,0,0"
                                     Click="BtnEditAccount_Click" />
                         </StackPanel>
-                        <!-- Edit Mode -->
-                        <StackPanel x:Name="editModePanel"
-                                    Visibility="Collapsed">
-                            <TextBlock Text="Name:"
-                                       Margin="0,5,0,0" />
-                            <TextBox x:Name="txtEditName"
-                                     Margin="0,0,0,10" />
-                            <TextBlock Text="Email:"
-                                       Margin="0,5,0,0" />
-                            <TextBox x:Name="txtEditEmail"
-                                     Margin="0,0,0,10" />
-                            <TextBlock Text="Closest Metro:"
-                                       Margin="0,5,0,0" />
-                            <ComboBox x:Name="cmbEditClosestMetro"
-                                      Margin="0,0,0,10" />
-                            <TextBlock Text="Roles:"
-                                       Margin="0,10,0,5" />
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,0,0,10">
-                                <CheckBox x:Name="chkEditClient"
-                                          Content="Client"
-                                          Margin="0,0,20,0" />
-                                <CheckBox x:Name="chkEditChef"
-                                          Content="Chef" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,10,0,0">
-                                <Button x:Name="btnSaveAccount"
-                                        Content="Save Changes"
-                                        Width="120"
-                                        HorizontalAlignment="Left"
-                                        Click="BtnSaveAccount_Click" />
-                                <Button x:Name="btnCancelEdit"
-                                        Content="Cancel"
-                                        Width="80"
-                                        HorizontalAlignment="Left"
-                                        Margin="10,0,0,0"
-                                        Click="BtnCancelEdit_Click" />
-                            </StackPanel>
-                            <TextBlock x:Name="txtUpdateStatus"
-                                       Margin="0,10,0,0"
-                                       Foreground="Green" />
-                        </StackPanel>
                     </StackPanel>
                     <Button Grid.Row="2"
                             x:Name="btnSignOut"
@@ -245,8 +202,7 @@
                                                        Margin="0,0,5,0" />
                                             <ComboBox x:Name="cmbDishType"
                                                       Width="120"
-                                                      SelectedIndex="0">
-                                            </ComboBox>
+                                                      SelectedIndex="0" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,0,15,0">
@@ -255,8 +211,7 @@
                                                        Margin="0,0,5,0" />
                                             <ComboBox x:Name="cmbDiet"
                                                       Width="120"
-                                                      SelectedIndex="0">
-                                            </ComboBox>
+                                                      SelectedIndex="0" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal"
                                                     Margin="0,0,15,0">
@@ -265,13 +220,12 @@
                                                        Margin="0,0,5,0" />
                                             <ComboBox x:Name="cmbOrigin"
                                                       Width="120"
-                                                      SelectedIndex="0">
-                                            </ComboBox>
+                                                      SelectedIndex="0" />
                                         </StackPanel>
                                         <Button x:Name="ApplyFiltersDishes"
                                                 Content="Apply Filters"
                                                 Padding="10,3"
-                                                Click="BtnApplyFiltersDishes"/>
+                                                Click="BtnApplyFiltersDishes" />
                                     </WrapPanel>
                                 </StackPanel>
                                 <!-- Dish List -->
@@ -467,7 +421,7 @@
                                                             Binding="{Binding Origin}"
                                                             Width="*" />
                                         <DataGridTemplateColumn Header="Actions"
-                                                            Width="*">
+                                                                Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">
@@ -506,35 +460,40 @@
                                     <ComboBox x:Name="cmbOrderView"
                                               Width="200"
                                               HorizontalAlignment="Left"
-                                              Margin="0,0,0,10">
+                                              Margin="0,0,0,10"
+                                              SelectionChanged="CmbOrderView_SelectionChanged">
                                         <ComboBoxItem Content="Orders I Placed"
                                                       IsSelected="True" />
                                         <ComboBoxItem Content="Orders I Received" />
                                     </ComboBox>
                                 </StackPanel>
-                                <!-- Orders List -->    
-                                <DataGrid x:Name="dgOrders"
+                                <!-- Orders I Placed DataGrid -->
+                                <DataGrid x:Name="dgOrdersPlaced"
                                           Grid.Row="1"
                                           AutoGenerateColumns="False"
                                           IsReadOnly="True"
                                           SelectionMode="Single"
-                                          HeadersVisibility="Column">
+                                          HeadersVisibility="Column"
+                                          Visibility="Visible">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Order ID"
                                                             Binding="{Binding OrderID}"
-                                                            Width="80" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Date"
                                                             Binding="{Binding OrderDate, StringFormat={}{0:d}}"
-                                                            Width="100" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Client"
                                                             Binding="{Binding ClientName}"
-                                                            Width="150" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Chef"
                                                             Binding="{Binding ChefName}"
-                                                            Width="150" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Total"
                                                             Binding="{Binding OrderTotal, StringFormat={}{0:C2}}"
-                                                            Width="100" />
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Status"
+                                                            Binding="{Binding Status}"
+                                                            Width="*" />
                                         <DataGridTemplateColumn Header="Details"
                                                                 Width="80">
                                             <DataGridTemplateColumn.CellTemplate>
@@ -556,6 +515,66 @@
                                                             Padding="5,0"
                                                             Margin="2"
                                                             Tag="{Binding OrderID}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <!-- Orders I Received DataGrid -->
+                                <DataGrid x:Name="dgOrdersReceived"
+                                          Grid.Row="1"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionMode="Single"
+                                          HeadersVisibility="Column"
+                                          Visibility="Collapsed">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Order ID"
+                                                            Binding="{Binding OrderID}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Date"
+                                                            Binding="{Binding OrderDate, StringFormat={}{0:d}}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Client Name"
+                                                            Binding="{Binding ClientName}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Address"
+                                                            Binding="{Binding Address}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Total"
+                                                            Binding="{Binding OrderTotal, StringFormat={}{0:C2}}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Status"
+                                                            Binding="{Binding Status}"
+                                                            Width="*" />
+                                        <DataGridTemplateColumn Header="Details"
+                                                                Width="80">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View"
+                                                            Click="BtnViewOrderDetails_Click"
+                                                            Padding="5,0"
+                                                            Margin="2"
+                                                            Tag="{Binding OrderID}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Actions"
+                                                                Width="Auto">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Button Content="Complete"
+                                                                Click="BtnCompleteOrder_Click"
+                                                                Padding="5,0"
+                                                                Margin="2"
+                                                                Tag="{Binding OrderID}" />
+                                                        <Button Content="Refuse"
+                                                                Click="BtnRefuseOrder_Click"
+                                                                Padding="5,0"
+                                                                Margin="2"
+                                                                Tag="{Binding OrderID}" />
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -633,6 +652,9 @@
                                                             Width="*" />
                                         <DataGridTextColumn Header="Role"
                                                             Binding="{Binding Roles}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Total Money Spent"
+                                                            Binding="{Binding TotalMoneySpent}"
                                                             Width="*" />
                                         <DataGridTemplateColumn Header="Actions"
                                                                 Width="120">
