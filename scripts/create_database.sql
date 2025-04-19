@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS Orders (
     OrderTotal DECIMAL(10,2),
     Status ENUM('Pending', 'Completed', 'Cancelled') DEFAULT 'Pending' NOT NULL,
     PRIMARY KEY (OrderID),
-    FOREIGN KEY (ClientId) REFERENCES Users(UserID),
-    FOREIGN KEY (ChefId) REFERENCES Users(UserID)
+    FOREIGN KEY (ClientId) REFERENCES Users(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (ChefId) REFERENCES Users(UserID) ON DELETE CASCADE
 );
 
 -- Dishes depends on Chefs
@@ -46,8 +46,9 @@ CREATE TABLE IF NOT EXISTS Dishes (
     PeremptionDate DATETIME NOT NULL,
     Diet VARCHAR(255),
     Origin VARCHAR(255),
+    Status ENUM('Available', 'Sold Out') DEFAULT 'Available' NOT NULL,
     PRIMARY KEY (DishID),
-    FOREIGN KEY (ChefID) REFERENCES Users(UserID),
+    FOREIGN KEY (ChefID) REFERENCES Users(UserID) ON DELETE CASCADE,
     CHECK (Type IN ('entree', 'main dish', 'dessert')),
     CHECK (DishPrice >= 0)
 );
@@ -78,7 +79,7 @@ CREATE TABLE IF NOT EXISTS DishIngredients (
     Gramme INT DEFAULT NULL,
     Pieces INT DEFAULT NULL,
     PRIMARY KEY (DishIngredientsID),
-    FOREIGN KEY (IngredientID) REFERENCES Ingredients(IngredientID),
+    FOREIGN KEY (IngredientID) REFERENCES Ingredients(IngredientID) ON DELETE CASCADE,
     FOREIGN KEY (DishID) REFERENCES Dishes(DishID) ON DELETE CASCADE,
     CHECK (
         (Gramme IS NOT NULL AND Pieces IS NULL) OR

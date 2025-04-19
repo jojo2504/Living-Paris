@@ -450,24 +450,24 @@
                                                             Width="*" />
                                         <DataGridTextColumn Header="Type"
                                                             Binding="{Binding Type}"
-                                                            Width="100" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Price"
                                                             Binding="{Binding DishPrice, StringFormat={}{0:C2}}"
-                                                            Width="80" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Created"
                                                             Binding="{Binding FabricationDate, StringFormat={}{0:d}}"
-                                                            Width="100" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Expires"
                                                             Binding="{Binding PeremptionDate, StringFormat={}{0:d}}"
-                                                            Width="100" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Diet"
                                                             Binding="{Binding Diet}"
-                                                            Width="100" />
+                                                            Width="*" />
                                         <DataGridTextColumn Header="Origin"
                                                             Binding="{Binding Origin}"
-                                                            Width="100" />
+                                                            Width="*" />
                                         <DataGridTemplateColumn Header="Actions"
-                                                                Width="120">
+                                                            Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">
@@ -657,6 +657,7 @@
                                 </DataGrid>
                             </Grid>
                         </TabItem>
+                        <!-- Dishes Management -->
                         <TabItem Header="Manage Dishes">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -724,9 +725,12 @@
                                                             Width="*" />
                                         <DataGridTextColumn Header="Origin"
                                                             Binding="{Binding Origin}"
-                                                            Width="100" />
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Status"
+                                                            Binding="{Binding Status}"
+                                                            Width="*" />
                                         <DataGridTemplateColumn Header="Actions"
-                                                                Width="120">
+                                                                Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">

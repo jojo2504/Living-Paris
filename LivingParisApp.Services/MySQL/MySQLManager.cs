@@ -81,8 +81,8 @@ namespace LivingParisApp.Services.MySQL {
                 using (var connection = new MySqlConnection(_connectionString)) {
                     connection.Open();
                     command.Connection = connection;
+                    if (!_noLogSQLcommand) Logger.Log($"Executing non-query: {command.CommandText}");
                     command.ExecuteNonQuery();
-                    if (_noLogSQLcommand) Logger.Log($"Executed non-query: {command.CommandText}");
                 }
             }
             catch (Exception ex) {
@@ -95,13 +95,38 @@ namespace LivingParisApp.Services.MySQL {
                 using (var connection = new MySqlConnection(_connectionString)) {
                     connection.Open();
                     using (var command = new MySqlCommand(commandText, connection)) {
+                        if (!_noLogSQLcommand) Logger.Log($"Executing non-query: {command.CommandText}");
                         command.ExecuteNonQuery();
-                        if (_noLogSQLcommand) Logger.Log($"Executed non-query: {commandText}");
                     }
                 }
             }
             catch (Exception ex) {
                 Logger.Error($"Failed to execute query: {commandText}, Error: {ex}");
+                throw;
+            }
+        }
+
+        public int ExecuteNonQuery(MySqlCommand command, MySqlTransaction transaction = null) {
+            try {
+                using (var connection = new MySqlConnection(_connectionString)) {
+                    connection.Open();
+                    command.Connection = connection;
+                    
+                    if (!_noLogSQLcommand)
+                        Logger.Log($"Executing query: {command.CommandText} with parameters: {string.Join(", ", command.Parameters.Cast<MySqlParameter>().Select(p => $"{p.ParameterName}={p.Value}"))}");
+
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    Logger.Log($"Query affected {rowsAffected} rows");
+                    return rowsAffected;
+                }
+            }
+            catch (MySqlException ex) {
+                Logger.Error($"Failed to execute query: {command.CommandText}, Error: {ex.Message}, Error Code: {ex.Number}");
+                throw;
+            }
+            catch (Exception ex) {
+                Logger.Error($"Unexpected error in ExecuteNonQuery: {command.CommandText}, Error: {ex.Message}");
                 throw;
             }
         }
@@ -185,14 +210,14 @@ namespace LivingParisApp.Services.MySQL {
             }
         }
 
-        public void InitializeMockDatabase(){
+        public void InitializeMockDatabase() {
             try {
                 // reset database
                 var resetTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "reset_database.sql");
                 var resetTableQuery = File.ReadAllText(resetTablePath);
                 ExecuteNonQuery(resetTableQuery);
                 Logger.Success("Database resetted successfully");
-                
+
                 // Add your table creation queries here
                 var createTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "create_database.sql");
                 var createTableQuery = File.ReadAllText(createTablePath);

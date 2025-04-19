@@ -11,6 +11,7 @@ namespace LivingParisApp.Core.Models.Food {
         private decimal _dishPrice;
         private string _diet;
         private string _origin;
+        private string _status;
 
         [Key]
         public int DishID { get; set; }
@@ -82,7 +83,19 @@ namespace LivingParisApp.Core.Models.Food {
             }
         }
 
+        [StringLength(255)]
+        public string Status {
+            get => _status;
+            set {
+                if (_status != value) {
+                    _status = value;
+                    OnPropertyChanged(nameof(Status));
+                }
+            }
+        }
+
         public virtual string ChefName { get; set; }
+        public object Logger { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

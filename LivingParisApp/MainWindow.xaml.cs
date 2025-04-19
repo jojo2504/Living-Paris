@@ -111,7 +111,7 @@ namespace LivingParisApp {
             dgOrders.ItemsSource = _myOrders;
             dgAdminOrders.ItemsSource = _filteredOrders;
             dgUsers.ItemsSource = _filteredUsers;
-            dgAdminDishes.ItemsSource = _filteredDishes;
+            dgAdminDishes.ItemsSource = _filteredDishes; // admin view of all dishes
 
             // Hide tabs initially
             tabAccount.Visibility = Visibility.Collapsed;
@@ -723,7 +723,7 @@ namespace LivingParisApp {
                 if (_currentUser == null || _currentUser.IsChef == 0) return;
 
                 _myDishes.Clear();
-                string query = "SELECT * FROM Dishes WHERE ChefID = @ChefID";
+                string query = "SELECT * FROM Dishes d WHERE ChefID = @ChefID";
                 var command = new MySqlCommand(query);
                 command.Parameters.AddWithValue("@ChefID", _currentUser.UserID);
 
@@ -921,7 +921,8 @@ namespace LivingParisApp {
                             PeremptionDate = reader.GetDateTime("PeremptionDate"),
                             Diet = reader.GetString("Diet"),
                             Origin = reader.GetString("Origin"),
-                            ChefName = reader.GetString("ChefName"),
+                            Status = reader.GetString("Status"),
+                            ChefName = reader.GetString("ChefName")
                         });
                     }
                 }
@@ -1023,12 +1024,13 @@ namespace LivingParisApp {
                     // Insert each cart item into the OrderDishes table
                     foreach (var cartItem in chefItems) {
                         string insertOrderDishQuery = @"
-                            INSERT INTO OrderDishes (OrderID, DishID, Quantity)
-                            VALUES (@OrderID, @DishID, @Quantity)";
+                            INSERT INTO OrderDishes (OrderID, DishID, Quantity, OrderPrice)
+                            VALUES (@OrderID, @DishID, @Quantity, @OrderPrice)";
                         var orderDishCommand = new MySqlCommand(insertOrderDishQuery);
                         orderDishCommand.Parameters.AddWithValue("@OrderID", orderId);
                         orderDishCommand.Parameters.AddWithValue("@DishID", cartItem.Dish.DishID);
                         orderDishCommand.Parameters.AddWithValue("@Quantity", cartItem.Quantity);
+                        orderDishCommand.Parameters.AddWithValue("@OrderPrice", cartItem.Dish.DishPrice);
 
                         _mySQLManager.ExecuteNonQuery(orderDishCommand);
                         Logger.Log($"Added dish {cartItem.Dish.DishID} to OrderDishes with quantity {cartItem.Quantity}");
@@ -1036,17 +1038,18 @@ namespace LivingParisApp {
                         processedItems.Add(cartItem);
                     }
 
-                    // removing dish from the market place
+                    // update dish's status from the market place
                     foreach (var cartItem in processedItems) {
-                        string deleteDishQuery = "DELETE FROM Dishes WHERE DishID = @DishID";
-                        var deleteCommand = new MySqlCommand(deleteDishQuery);
-                        deleteCommand.Parameters.AddWithValue("@DishID", cartItem.Dish.DishID);
+                        string updateDishQuery = "UPDATE Dishes SET Status = 'Sold Out' WHERE DishID = @DishID"; // set status to sold out
+                        var updateCommand = new MySqlCommand(updateDishQuery);
+                        updateCommand.Parameters.AddWithValue("@DishID", cartItem.Dish.DishID);
+                        int numberOfRowsAffected = _mySQLManager.ExecuteNonQuery(updateCommand, null);
+                        Logger.Log($"Marked dish {cartItem.Dish.DishID} as Sold Out, number of rows affected : {numberOfRowsAffected}");
 
-                        _mySQLManager.ExecuteNonQuery(deleteCommand);
-                        Logger.Log($"Removed dish {cartItem.Dish.DishID} from Dishes table");
+                        //now updating the dish in all collections
+                        cartItem.Dish.Status = "Sold Out";
 
-                        _allDishes.Remove(cartItem.Dish);
-                        _filteredAvailableDishes.Remove(cartItem.Dish);
+                        _filteredAvailableDishes.Remove(cartItem.Dish); // just remove it visually from the market place
                     }
                 }
 
@@ -1191,7 +1194,7 @@ namespace LivingParisApp {
             }
         }
 
-        public void BtnViewOrderDetails_Click(object sender, RoutedEventArgs e) {
+        public void BtnViewOrderDetails_Click(object sender = null, RoutedEventArgs e = null) {
             Logger.Log("View order details button clicked");
 
             if (sender is Button button && button.DataContext is Order selectedOrder) {
@@ -1199,10 +1202,10 @@ namespace LivingParisApp {
                     // Step 1: Retrieve the list of dishes in the order
                     var orderDishes = new List<(string DishName, int Quantity, decimal Price)>();
                     string query = @"
-                SELECT od.DishID, od.Quantity, d.Name, d.DishPrice
-                FROM OrderDishes od
-                JOIN Dishes d ON od.DishID = d.DishID
-                WHERE od.OrderID = @OrderID";
+                        SELECT od.DishID, od.Quantity, d.Name, d.DishPrice
+                        FROM OrderDishes od
+                        JOIN Dishes d ON od.DishID = d.DishID
+                        WHERE od.OrderID = @OrderID";
                     var command = new MySqlCommand(query);
                     command.Parameters.AddWithValue("@OrderID", selectedOrder.OrderID);
 
@@ -1297,6 +1300,12 @@ namespace LivingParisApp {
         }
 
         public void BtnApplyFiltersDishes(object sender = null, RoutedEventArgs e = null) {
+            /// <summary>
+            /// This applies the filter on all available dishes IN the MARKETPLACE
+            /// </summary>
+            /// <param name="sender"></param>
+            /// <param name="e"></param>
+            
             _filteredAvailableDishes.Clear();
 
             // Start with full set
@@ -1327,6 +1336,7 @@ namespace LivingParisApp {
             }
 
             // Remove duplicates that might have matched multiple criteria
+            filteredAvailableDishes = filteredAvailableDishes.Where(d => d.Status == "Available");
             filteredAvailableDishes = filteredAvailableDishes.Distinct();
 
             foreach (Dish dish in filteredAvailableDishes) {
@@ -1550,12 +1560,9 @@ namespace LivingParisApp {
         }
 
         private void BtnViewAdminOrder_Click(object sender, RoutedEventArgs e) {
-            if (sender is Button button && button.Tag != null) {
-                string orderId = button.Tag.ToString();
-                // Implement view order details logic
-                // Possibly open a dialog showing order details
-                MessageBox.Show("Not Implemented Yet");
-            }
+            // Implement view order details logic
+            // Possibly open a dialog showing order details
+            BtnViewOrderDetails_Click(sender, e);
         }
         #endregion
 
