@@ -17,6 +17,7 @@ namespace LivingParisApp.Core.Models.Human {
         private string _closestMetro;
         private string _password;
         private decimal _totalMoneySpent;
+        private double _totalOrderCompleted;
         private int _isClient;
         private int _isChef;
 
@@ -159,6 +160,16 @@ namespace LivingParisApp.Core.Models.Human {
                 if (_totalMoneySpent != value) {
                     _totalMoneySpent = value;
                     OnPropertyChanged(nameof(TotalMoneySpent));
+                }
+            }
+        }
+        [Required]
+        public double TotalOrderCompleted {
+            get => _totalOrderCompleted;
+            set {
+                if (_totalOrderCompleted != value) {
+                    _totalOrderCompleted = value;
+                    OnPropertyChanged(nameof(TotalOrderCompleted));
                 }
             }
         }

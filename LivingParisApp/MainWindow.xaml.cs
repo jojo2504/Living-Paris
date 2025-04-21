@@ -135,7 +135,7 @@ namespace LivingParisApp {
             LoadAllDishes(); // Marketplace / admin view
 
             InitializeFiltersData(); // should be before applying filters data to avoid conflicts and missing initialization
-            BtnApplyFiltersDishes(); // apply view after loading every dishes from the database
+            BtnApplyFiltersDishes_Click(); // apply view after loading every dishes from the database
         }
 
         private void InitializeFiltersData() {
@@ -304,7 +304,7 @@ namespace LivingParisApp {
                         UpdateUIForLoggedInUser();
                     }
                 }
-                            
+
                 // Switch to the Sign In tab (assuming TabControl is the main control)
                 // Get the parent TabControl
                 if (tabAccount.Parent is TabControl tabControl) {
@@ -652,7 +652,7 @@ namespace LivingParisApp {
 
         public void BtnEditAccount_Click(object sender, RoutedEventArgs e) {
             Logger.Log("Clicked on Edit Account button");
-            var editWindow = new EditUserWindow(_mySQLManager, _currentUser);
+            var editWindow = new EditUserWindow(_mySQLManager, _currentUser, _allMetroName);
             editWindow.Owner = this; // Set the owner to keep window management clean
 
             if (editWindow.ShowDialog() == true) {
@@ -850,6 +850,7 @@ namespace LivingParisApp {
                             ClosestMetro = reader.GetString("ClosestMetro"),
                             Password = reader.GetString("Password"),
                             TotalMoneySpent = reader.GetDecimal("TotalMoneySpent"),
+                            TotalOrderCompleted = reader.GetDouble("TotalOrderCompleted"),
                             IsClient = reader.GetInt32("IsClient"),
                             IsChef = reader.GetInt32("IsChef"),
                         });
@@ -1125,14 +1126,24 @@ namespace LivingParisApp {
                     _mySQLManager.ExecuteNonQuery(command);
 
                     // change the propriety in the api
+                    var CurrentUserToEdit = _allUsers.FirstOrDefault(u => u.UserID == _currentUser.UserID);
+                    if (CurrentUserToEdit != null) {
+                        CurrentUserToEdit.TotalOrderCompleted += 1;
+                    }
                     UpdateOrderStatusInCollections("Completed", selectedOrder);
+
+                    //save in the database
+                    query = @$"UPDATE Users SET TotalOrderCompleted = {CurrentUserToEdit.TotalOrderCompleted} WHERE UserID = @UserID";
+                    command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@UserID", CurrentUserToEdit.UserID);
+                    _mySQLManager.ExecuteNonQuery(command);
                 }
             }
         }
 
         public void BtnRefuseOrder_Click(object sender, EventArgs e) {
             if (sender is Button button && button.DataContext is Order selectedOrder) {
-                    if (selectedOrder != null) {
+                if (selectedOrder != null) {
                     string query = @"
                             UPDATE Orders SET Status = 'Refused' WHERE OrderID = @OrderID";
                     var command = new MySqlCommand(query);
@@ -1342,7 +1353,7 @@ namespace LivingParisApp {
             }
         }
 
-        public void BtnApplyFiltersDishes(object sender = null, RoutedEventArgs e = null) {
+        public void BtnApplyFiltersDishes_Click(object sender = null, RoutedEventArgs e = null) {
             /// <summary>
             /// This applies the filter on all available dishes IN the MARKETPLACE
             /// </summary>
@@ -1388,8 +1399,16 @@ namespace LivingParisApp {
 
             // Show message if no results found
             if (!_filteredAvailableDishes.Any()) {
-                MessageBox.Show("No dishes found matching the search criteria.", "Search Results", MessageBoxButton.OK, MessageBoxImage.Information);
+                Logger.Warning("No dishes found with these filters");
             }
+        }
+        public void BtnClearFiltersDishes_Click(object sender, RoutedEventArgs e) {
+            cmbDishType.SelectedIndex = 0;
+            cmbDiet.SelectedIndex = 0;
+            cmbOrigin.SelectedIndex = 0;
+
+            // apply default filters
+            BtnApplyFiltersDishes_Click();
         }
         #endregion
 
@@ -1449,7 +1468,7 @@ namespace LivingParisApp {
                 User userToEdit = _allUsers.FirstOrDefault(u => u.UserID.ToString() == userId);
 
                 if (userToEdit != null) {
-                    var editWindow = new EditUserWindow(_mySQLManager, userToEdit);
+                    var editWindow = new EditUserWindow(_mySQLManager, userToEdit, _allMetroName);
                     editWindow.Owner = this; // Set the owner to keep window management clean
 
                     if (editWindow.ShowDialog() == true) {
@@ -1588,6 +1607,17 @@ namespace LivingParisApp {
                     .Select(x => x.Order);
             }
 
+            // Apply date range filter if dates are selected
+            if (dpFromDate.SelectedDate.HasValue) {
+                DateTime fromDate = dpFromDate.SelectedDate.Value.Date;
+                filteredOrders = filteredOrders.Where(o => o.OrderDate.Date >= fromDate);
+            }
+
+            if (dpToDate.SelectedDate.HasValue) {
+                DateTime toDate = dpToDate.SelectedDate.Value.Date.AddDays(1).AddSeconds(-1);
+                filteredOrders = filteredOrders.Where(o => o.OrderDate.Date <= toDate);
+            }
+
             // Update ObservableCollection
             foreach (var order in filteredOrders) {
                 _filteredOrders.Add(order);
@@ -1600,6 +1630,16 @@ namespace LivingParisApp {
             else {
                 Logger.Log($"Loaded {_filteredOrders.Count} orders after filter");
             }
+        }
+
+        private void BtnClearFiltersOrders_Click(object sender, RoutedEventArgs e) {
+            // Reset filters
+            cmbOrderStatus.SelectedIndex = 0;
+            dpFromDate.SelectedDate = null;
+            dpToDate.SelectedDate = null;
+
+            // Reload all orders with the default filter
+            BtnFilterOrders_Click();
         }
 
         private void BtnViewAdminOrder_Click(object sender, RoutedEventArgs e) {

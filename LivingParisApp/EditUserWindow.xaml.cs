@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Windows;
 using LivingParisApp.Core.Models.Human;
 using LivingParisApp.Services.Logging;
@@ -9,14 +10,18 @@ namespace LivingParisApp {
     public partial class EditUserWindow : Window {
         private readonly MySQLManager _mySQLManager;
         private readonly User _userToEdit;
-
+        
         // Property to store the edited user
         public User EditedUser { get; private set; }
 
-        public EditUserWindow(MySQLManager mySQLManager, User userToEdit) {
+        public EditUserWindow(MySQLManager mySQLManager, User userToEdit, ObservableCollection<string> _allMetroName) {
             InitializeComponent();
             _mySQLManager = mySQLManager;
             _userToEdit = userToEdit;
+
+            if (cmbClosestMetro.ItemsSource == null) {
+                cmbClosestMetro.ItemsSource = _allMetroName;
+            }
             
             if (_userToEdit != null) {
                 LoadUserForEditing();
@@ -32,7 +37,7 @@ namespace LivingParisApp {
             txtCity.Text = _userToEdit.City;
             txtPhoneNumber.Text = _userToEdit.PhoneNumber;
             txtMail.Text = _userToEdit.Mail;
-            txtClosestMetro.Text = _userToEdit.ClosestMetro;
+            cmbClosestMetro.Text = _userToEdit.ClosestMetro;
             // Password box doesn't show the actual password for security reasons
             // We'll only update password if the user enters a new one
             
@@ -54,7 +59,7 @@ namespace LivingParisApp {
                     string.IsNullOrEmpty(txtCity.Text) ||
                     string.IsNullOrEmpty(txtPhoneNumber.Text) ||
                     string.IsNullOrEmpty(txtMail.Text) ||
-                    string.IsNullOrEmpty(txtClosestMetro.Text)) {
+                    string.IsNullOrEmpty(cmbClosestMetro.Text)) {
                     MessageBox.Show("Please fill in all required fields",
                                   "Validation Error",
                                   MessageBoxButton.OK,
@@ -122,7 +127,7 @@ namespace LivingParisApp {
                 command.Parameters.AddWithValue("@City", txtCity.Text);
                 command.Parameters.AddWithValue("@PhoneNumber", txtPhoneNumber.Text);
                 command.Parameters.AddWithValue("@Mail", txtMail.Text);
-                command.Parameters.AddWithValue("@ClosestMetro", txtClosestMetro.Text);
+                command.Parameters.AddWithValue("@ClosestMetro", cmbClosestMetro.Text);
                 command.Parameters.AddWithValue("@IsClient", chkIsClient.IsChecked == true ? 1 : 0);
                 command.Parameters.AddWithValue("@IsChef", chkIsChef.IsChecked == true ? 1 : 0);
 
@@ -138,7 +143,7 @@ namespace LivingParisApp {
                 _userToEdit.City = txtCity.Text;
                 _userToEdit.PhoneNumber = txtPhoneNumber.Text;
                 _userToEdit.Mail = txtMail.Text;
-                _userToEdit.ClosestMetro = txtClosestMetro.Text;
+                _userToEdit.ClosestMetro = cmbClosestMetro.Text;
                 _userToEdit.IsClient = chkIsClient.IsChecked == true ? 1 : 0;
                 _userToEdit.IsChef = chkIsChef.IsChecked == true ? 1 : 0;
 

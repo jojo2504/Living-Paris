@@ -225,7 +225,12 @@
                                         <Button x:Name="ApplyFiltersDishes"
                                                 Content="Apply Filters"
                                                 Padding="10,3"
-                                                Click="BtnApplyFiltersDishes" />
+                                                Click="BtnApplyFiltersDishes_Click" />
+                                        <Button x:Name="btnClearFiltersDishes"
+                                                Content="Clear Filters"
+                                                Padding="10,3"
+                                                Margin="5,0,0,0"
+                                                Click="BtnClearFiltersDishes_Click" />
                                     </WrapPanel>
                                 </StackPanel>
                                 <!-- Dish List -->
@@ -329,7 +334,8 @@
                                                      Margin="0,0,0,5" />
                                         <RadioButton x:Name="rbCustomAddress"
                                                      Content="Use different address"
-                                                     Margin="0,0,0,5" />
+                                                     Margin="0,0,0,5"
+                                                     IsEnabled="False" />
                                         <StackPanel x:Name="pnlCustomAddress"
                                                     Visibility="Collapsed"
                                                     Margin="20,5,0,10">
@@ -514,7 +520,22 @@
                                                             Click="BtnCancelOrder_Click"
                                                             Padding="5,0"
                                                             Margin="2"
-                                                            Tag="{Binding OrderID}" />
+                                                            Tag="{Binding OrderID}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button"
+                                                                   BasedOn="{StaticResource {x:Type Button}}">
+                                                                <Setter Property="IsEnabled"
+                                                                        Value="False" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Status}"
+                                                                                 Value="Pending">
+                                                                        <Setter Property="IsEnabled"
+                                                                                Value="True" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -568,12 +589,42 @@
                                                                 Click="BtnCompleteOrder_Click"
                                                                 Padding="5,0"
                                                                 Margin="2"
-                                                                Tag="{Binding OrderID}" />
+                                                                Tag="{Binding OrderID}">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button"
+                                                                       BasedOn="{StaticResource {x:Type Button}}">
+                                                                    <Setter Property="IsEnabled"
+                                                                            Value="False" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Status}"
+                                                                                     Value="Pending">
+                                                                            <Setter Property="IsEnabled"
+                                                                                    Value="True" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
                                                         <Button Content="Refuse"
                                                                 Click="BtnRefuseOrder_Click"
                                                                 Padding="5,0"
                                                                 Margin="2"
-                                                                Tag="{Binding OrderID}" />
+                                                                Tag="{Binding OrderID}">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button"
+                                                                       BasedOn="{StaticResource {x:Type Button}}">
+                                                                    <Setter Property="IsEnabled"
+                                                                            Value="False" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Status}"
+                                                                                     Value="Pending">
+                                                                            <Setter Property="IsEnabled"
+                                                                                    Value="True" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -655,6 +706,9 @@
                                                             Width="*" />
                                         <DataGridTextColumn Header="Total Money Spent"
                                                             Binding="{Binding TotalMoneySpent}"
+                                                            Width="*" />
+                                        <DataGridTextColumn Header="Total Order Completed"
+                                                            Binding="{Binding TotalOrderCompleted}"
                                                             Width="*" />
                                         <DataGridTemplateColumn Header="Actions"
                                                                 Width="120">
@@ -798,11 +852,26 @@
                                             <ComboBoxItem Content="Completed" />
                                             <ComboBoxItem Content="Cancelled" />
                                         </ComboBox>
+                                        <TextBlock Text="From:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="15,0,5,0" />
+                                        <DatePicker x:Name="dpFromDate"
+                                                    Width="130" />
+                                        <TextBlock Text="To:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="15,0,5,0" />
+                                        <DatePicker x:Name="dpToDate"
+                                                    Width="130" />
                                         <Button x:Name="btnFilterOrders"
                                                 Content="Apply Filter"
                                                 Padding="10,3"
                                                 Margin="10,0,0,0"
                                                 Click="BtnFilterOrders_Click" />
+                                        <Button x:Name="btnClearFiltersOrders"
+                                                Content="Clear Filters"
+                                                Padding="10,3"
+                                                Margin="5,0,0,0"
+                                                Click="BtnClearFiltersOrders_Click" />
                                     </WrapPanel>
                                 </StackPanel>
                                 <DataGrid x:Name="dgAdminOrders"

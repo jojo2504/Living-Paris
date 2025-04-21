@@ -114,6 +114,7 @@ namespace LivingParisApp {
                     // Create new dish object
                     var newDish = new Dish {
                         DishID = Convert.ToInt32(dishId),
+                        ChefID = _currentUser.UserID,
                         Name = txtName.Text,
                         Type = cmbType.Text,
                         DishPrice = price,
