@@ -5,70 +5,8 @@ using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 using LivingParisApp.Core.Engines.ShortestPaths;
 using System.Diagnostics.Metrics;
-
-#region cette partie est pour le premier rendu, rien ne sera reutilise
-public class GraphTests {
-    /*
-    [Fact]
-    public void Graph_ShouldInitialize_EmptyGraph() {
-        var graph = new Graph<int>();
-        Assert.Empty(graph.AdjacencyList);
-    }
-
-    [Fact]
-    public void Graph_ShouldInitialize_WithLinks() {
-        var nodeA = new Node<int>(1);
-        var nodeB = new Node<int>(2);
-        var link = new Link<int>(nodeA, nodeB, Direction.Undirected, 1.0);
-
-        var graph = new Graph<int>(new List<Link<int>> { link });
-
-        Assert.NotEmpty(graph.AdjacencyList);
-        Assert.Contains(nodeA, graph.AdjacencyList.Keys);
-        Assert.Contains(nodeB, graph.AdjacencyList.Keys);
-    }
-
-    [Fact]
-    public void AddEdgeList_Should_Add_UndirectedEdge() {
-        var graph = new Graph<int>();
-        var nodeA = new Node<int>(1);
-        var nodeB = new Node<int>(2);
-        var link = new Link<int>(nodeA, nodeB, Direction.Undirected, 2.0);
-
-        graph.AddEdgeList(link);
-
-        Assert.Contains(nodeA, graph.AdjacencyList.Keys);
-        Assert.Contains(nodeB, graph.AdjacencyList.Keys);
-        Assert.Contains(Tuple.Create(nodeB, 2.0), graph.AdjacencyList[nodeA]);
-        Assert.Contains(Tuple.Create(nodeA, 2.0), graph.AdjacencyList[nodeB]);
-    }
-
-    [Fact]
-    public void AddEdgeMatrix_Should_Add_WeightedEdge() {
-        var nodeA = new Node<int>(1);
-        var nodeB = new Node<int>(2);
-        var link = new Link<int>(nodeA, nodeB, Direction.Direct, 5.0);
-        var graph = new Graph<int>(new List<Link<int>> { link });
-
-        int indexA = graph.nodeToIndexMap[nodeA];
-        int indexB = graph.nodeToIndexMap[nodeB];
-
-        Assert.Equal(5, graph.AdjacencyMatrix[indexA, indexB]);
-    }
-
-    [Fact]
-    public void DisplayAdjacencyMatrix_Should_Return_CorrectFormat() {
-        var nodeA = new Node<int>(1);
-        var nodeB = new Node<int>(2);
-        var link = new Link<int>(nodeA, nodeB, Direction.Direct, 1.0);
-        var graph = new Graph<int>(new List<Link<int>> { link });
-
-        string matrixDisplay = graph.DisplayAdjacencyMatrix();
-        Assert.Contains("1", matrixDisplay);
-    }
-    */
-}
-#endregion
+using LivingParisApp.Core.Engines.GraphColoration;
+using Xunit.Abstractions;
 
 public class AdditionalShortestPathTests {
     [Fact]
@@ -272,7 +210,6 @@ public class AdditionalShortestPathTests {
         Assert.Equal(dijkstraPath.Count, aStarPath.Count);
     }
 
-    #region Dijkstra Test
     [Fact]
     public void Dijkstra_GetPath_ReturnsShortestPath() {
         // Arrange: Create a small test graph
@@ -312,9 +249,7 @@ public class AdditionalShortestPathTests {
             Assert.Equal(expectedList[i].Object.LibelleStation, pathList[i].Object.LibelleStation);
         }
     }
-    #endregion
 
-    #region Bellman-Ford Test
     [Fact]
     public void BellmanFord_GetPath_ReturnsShortestPath() {
         // Arrange: Create a small test graph
@@ -354,9 +289,7 @@ public class AdditionalShortestPathTests {
             Assert.Equal(expectedList[i].Object.LibelleStation, pathList[i].Object.LibelleStation);
         }
     }
-    #endregion
 
-    #region Floyd-Warshall Test
     [Fact]
     public void FloydWarshall_GetPath_ReturnsShortestPath() {
         // Arrange: Create a small test graph
@@ -396,9 +329,7 @@ public class AdditionalShortestPathTests {
             Assert.Equal(expectedList[i].Object.LibelleStation, pathList[i].Object.LibelleStation);
         }
     }
-    #endregion
 
-    #region Astar Test
     [Fact]
     public void Astar_GetPath_ReturnsShortestPath() {
         // Arrange: Create a test graph with realistic distances
@@ -442,5 +373,245 @@ public class AdditionalShortestPathTests {
 
         Assert.Contains(pathStations, possiblePaths);
     }
-    #endregion
+}
+
+public class WelshPowellTests {
+    private readonly ITestOutputHelper _output;
+
+    public WelshPowellTests(ITestOutputHelper output) {
+        _output = output;
+    }
+
+    [Fact]
+    public void ColorGraph_SimpleLinearGraph_ShouldRequireExactlyTwoColors() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+        var stationD = new MetroStation(4, "L2", "D", 3, 3, "Paris", "75004");
+        var stationE = new MetroStation(5, "L2", "E", 4, 4, "Paris", "75005");
+
+        // Create graph structure
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationB, stationC, 1.0);
+        map.AddBidirectionalEdge(stationC, stationD, 1.0);
+        map.AddBidirectionalEdge(stationD, stationE, 1.0);
+
+        _output.WriteLine(map.ToString());
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        // Action
+        var colorAssignment = welshPowell.ColorGraph();
+        var colorCount = welshPowell.GetColorCount();
+
+        _output.WriteLine($"{colorCount}");
+        
+        // Assert
+        Assert.Equal(2, colorCount);
+
+        // Group nodes by their station ID for easier testing
+        var nodesByStationId = new Dictionary<int, Node<MetroStation>>();
+        foreach (var node in colorAssignment.Keys) {
+            nodesByStationId[node.Object.ID] = node;
+        }
+
+        // Now we can use station IDs to access the correct nodes
+        Assert.NotEqual(colorAssignment[nodesByStationId[1]], colorAssignment[nodesByStationId[2]]);
+        Assert.Equal(colorAssignment[nodesByStationId[1]], colorAssignment[nodesByStationId[3]]);
+        Assert.Equal(colorAssignment[nodesByStationId[2]], colorAssignment[nodesByStationId[4]]);
+        Assert.Equal(colorAssignment[nodesByStationId[3]], colorAssignment[nodesByStationId[5]]);
+    }
+
+    [Fact]
+    public void ColorGraph_CompleteGraph_ShouldRequireNumberOfNodesColors() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+        var stationD = new MetroStation(4, "L2", "D", 3, 3, "Paris", "75004");
+
+        // Create complete graph (every node connected to every other node)
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationA, stationC, 1.0);
+        map.AddBidirectionalEdge(stationA, stationD, 1.0);
+        map.AddBidirectionalEdge(stationB, stationC, 1.0);
+        map.AddBidirectionalEdge(stationB, stationD, 1.0);
+        map.AddBidirectionalEdge(stationC, stationD, 1.0);
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        // Action
+        var colorAssignment = welshPowell.ColorGraph();
+        var colorCount = welshPowell.GetColorCount();
+
+        // Assert
+        Assert.Equal(4, colorCount); // Complete graph with 4 nodes needs 4 colors
+
+        // Verify no adjacent nodes have the same color
+        foreach (var node in map.AdjacencyList.Keys) {
+            foreach (var adjacentNodeTuple in map.AdjacencyList[node]) {
+                var adjacentNode = adjacentNodeTuple.Item1;
+                Assert.NotEqual(colorAssignment[node], colorAssignment[adjacentNode]);
+            }
+        }
+    }
+
+    [Fact]
+    public void ColorGraph_CycleGraph_ShouldRequireExactlyThreeColors() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+        var stationD = new MetroStation(4, "L2", "D", 3, 3, "Paris", "75004");
+        var stationE = new MetroStation(5, "L2", "E", 4, 4, "Paris", "75005");
+
+        // Create a cycle graph
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationB, stationC, 1.0);
+        map.AddBidirectionalEdge(stationC, stationD, 1.0);
+        map.AddBidirectionalEdge(stationD, stationE, 1.0);
+        map.AddBidirectionalEdge(stationE, stationA, 1.0); // Close the cycle
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        // Action
+        var colorAssignment = welshPowell.ColorGraph();
+        var colorCount = welshPowell.GetColorCount();
+
+        // Assert
+        Assert.True(colorCount <= 3, $"Expected at most 3 colors, but got {colorCount}");
+
+        // Verify no adjacent nodes have the same color
+        foreach (var node in map.AdjacencyList.Keys) {
+            foreach (var adjacentNodeTuple in map.AdjacencyList[node]) {
+                var adjacentNode = adjacentNodeTuple.Item1;
+                Assert.NotEqual(colorAssignment[node], colorAssignment[adjacentNode]);
+            }
+        }
+    }
+
+    [Fact]
+    public void GetNodesGroupedByColor_ShouldGroupCorrectly() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+        var stationD = new MetroStation(4, "L2", "D", 3, 3, "Paris", "75004");
+        var stationE = new MetroStation(5, "L2", "E", 4, 4, "Paris", "75005");
+
+        // Create graph structure
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationA, stationC, 1.0);
+        map.AddBidirectionalEdge(stationB, stationD, 1.0);
+        map.AddBidirectionalEdge(stationC, stationD, 1.0);
+        map.AddBidirectionalEdge(stationD, stationE, 1.0);
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        // Action
+        var colorAssignment = welshPowell.ColorGraph();
+        var nodesGroupedByColor = welshPowell.GetNodesGroupedByColor();
+
+        // Assert
+        foreach (var colorGroup in nodesGroupedByColor) {
+            var color = colorGroup.Key;
+            var nodes = colorGroup.Value;
+
+            // All nodes in a group should have the same color
+            foreach (var node in nodes) {
+                Assert.Equal(color, colorAssignment[node]);
+            }
+
+            // No adjacent nodes should be in the same group
+            for (int i = 0; i < nodes.Count; i++) {
+                for (int j = i + 1; j < nodes.Count; j++) {
+                    var node1 = nodes[i];
+                    var node2 = nodes[j];
+
+                    // Check they're not adjacent
+                    if (map.AdjacencyList.ContainsKey(node1) &&
+                        map.AdjacencyList[node1].Any(t => t.Item1 == node2)) {
+                        Assert.Fail($"Adjacent nodes {node1.Object.LibelleStation} and {node2.Object.LibelleStation} have the same color {color}");
+                    }
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void Reset_ShouldClearColorAssignments() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationB, stationC, 1.0);
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        // Action 1: Color the graph
+        var colorAssignment1 = welshPowell.ColorGraph();
+
+        // Action 2: Reset coloring
+        welshPowell.Reset();
+
+        // Action 3: Color again
+        var colorAssignment2 = welshPowell.ColorGraph();
+
+        // Assert
+        Assert.NotSame(colorAssignment1, colorAssignment2); // They should be different object instances
+        Assert.Equal(colorAssignment1.Count, colorAssignment2.Count); // But have the same number of nodes
+    }
+    
+    [Fact]
+    public void IsBipartite_ShouldReturnTrue() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationB, stationC, 1.0);
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        Assert.True(welshPowell.IsBipartite());
+    }
+
+    [Fact]
+    public void IsBipartite_ShouldReturnFalse() {
+        // Arrangement
+        var map = new Map<MetroStation>();
+
+        var stationA = new MetroStation(1, "L1", "A", 0, 0, "Paris", "75001");
+        var stationB = new MetroStation(2, "L1", "B", 1, 1, "Paris", "75002");
+        var stationC = new MetroStation(3, "L1", "C", 2, 2, "Paris", "75003");
+        var stationD = new MetroStation(4, "L2", "D", 3, 3, "Paris", "75004");
+
+        // Create complete graph (every node connected to every other node)
+        map.AddBidirectionalEdge(stationA, stationB, 1.0);
+        map.AddBidirectionalEdge(stationA, stationC, 1.0);
+        map.AddBidirectionalEdge(stationA, stationD, 1.0);
+        map.AddBidirectionalEdge(stationB, stationC, 1.0);
+        map.AddBidirectionalEdge(stationB, stationD, 1.0);
+        map.AddBidirectionalEdge(stationC, stationD, 1.0);
+
+        var welshPowell = new WelshPowell<MetroStation>(map);
+
+        Assert.False(welshPowell.IsBipartite());
+    }
 }
