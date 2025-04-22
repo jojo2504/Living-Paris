@@ -3,444 +3,660 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Living Paris"
         Height="670"
-        Width="980">
+        Width="980"
+        Background="#FFF8E1">
+    <Window.Resources>
+        <!-- Croissant Theme Styles -->
+        <Style x:Key="CroissantTabItem" TargetType="TabItem">
+            <Setter Property="Background" Value="#edb658"/>
+            <Setter Property="Foreground" Value="#8B4513"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"
+                                Margin="{TemplateBinding Margin}">
+                            <ContentPresenter ContentSource="Header"
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#f0c985"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#f0c985"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CroissantButton" TargetType="Button">
+            <Setter Property="Background" Value="#edb658"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#f0c985"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#FFA000"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#FFD54F"/>
+                                <Setter Property="Foreground" Value="#A9A9A9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CroissantTextBlock" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#8B4513"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Margin" Value="0,5,0,5"/>
+        </Style>
+
+        <Style x:Key="CroissantTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#8B4513"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#d5a24b"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CroissantPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#8B4513"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#d5a24b"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CroissantComboBox" TargetType="ComboBox">
+            <Setter Property="Background" Value="#FFF8E1"/>
+            <Setter Property="Foreground" Value="#8B4513"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton Name="ToggleButton"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          Background="{TemplateBinding Background}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Focusable="false"
+                                          IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border BorderThickness="{TemplateBinding BorderThickness}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="3">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Grid.Column="0"
+                                                                  Margin="6,3"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalAlignment="Center"
+                                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                                  Content="{TemplateBinding Content}"/>
+                                                <Path Grid.Column="1"
+                                                      Width="8" Height="5"
+                                                      Margin="0,0,6,0"
+                                                      Fill="#8B4513"
+                                                      Data="M 0 0 L 8 0 L 4 5 Z"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="true">
+                                                <Setter Property="Background" Value="#FFDAA4"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="true">
+                                                <Setter Property="Background" Value="#FFE0B2"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter IsHitTestVisible="False"
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+                            <Popup Name="PART_Popup"
+                                   AllowsTransparency="true"
+                                   IsOpen="{Binding Path=IsDropDownOpen,RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Bottom"
+                                   PopupAnimation="Slide">
+                                <Border BorderThickness="2"
+                                        BorderBrush="#a87a4f"
+                                        Background="#FFF8E1"
+                                        CornerRadius="3">
+                                    <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                                                  SnapsToDevicePixels="True">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                            </Trigger>
+                            <Trigger Property="IsGrouping" Value="True">
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            
+            <!-- The ItemContainerStyle for ComboBoxItems -->
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border Name="Border"
+                                            Padding="5,3"
+                                            BorderThickness="1"
+                                            CornerRadius="2"
+                                            SnapsToDevicePixels="true"
+                                            Background="Transparent">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="true">
+                                            <Setter TargetName="Border" Property="Background" Value="#FFDAA4"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="true">
+                                            <Setter TargetName="Border" Property="Background" Value="#edb658"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CroissantDataGrid" TargetType="DataGrid">
+            <Setter Property="Background" Value="#F5F5DC"/>
+            <Setter Property="Foreground" Value="#6B4E31"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>    
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="RowBackground" Value="#FDF5E6"/>
+            <Setter Property="AlternatingRowBackground" Value="#F0EAD6"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="ColumnWidth" Value="*"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGrid">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+        
+                                <!-- Column Headers -->
+                                <DataGridColumnHeadersPresenter Grid.Row="0" 
+                                                             HorizontalAlignment="Stretch"/>
+        
+                                <!-- Scrollable Content -->
+                                <ScrollViewer x:Name="DG_ScrollViewer" Grid.Row="1" Focusable="false">
+                                    <ScrollViewer.Template>
+                                        <ControlTemplate TargetType="ScrollViewer">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+        
+                                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                                      Grid.Column="0" Grid.Row="0"/>
+        
+                                                <ScrollBar x:Name="PART_VerticalScrollBar"
+                                                         Grid.Column="1" Grid.Row="0"
+                                                         Orientation="Vertical"
+                                                         Maximum="{TemplateBinding ScrollableHeight}"
+                                                         ViewportSize="{TemplateBinding ViewportHeight}"
+                                                         Value="{TemplateBinding VerticalOffset}"
+                                                         Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+        
+                                                <ScrollBar x:Name="PART_HorizontalScrollBar"
+                                                         Grid.Column="0" Grid.Row="1"
+                                                         Orientation="Horizontal"
+                                                         Maximum="{TemplateBinding ScrollableWidth}"
+                                                         ViewportSize="{TemplateBinding ViewportWidth}"
+                                                         Value="{TemplateBinding HorizontalOffset}"
+                                                         Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </ScrollViewer.Template>
+        
+                                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CroissantDatePicker" TargetType="DatePicker">
+            <Setter Property="Background" Value="#FFF8E1"/>
+            <Setter Property="Foreground" Value="#8B4513"/>
+            <Setter Property="BorderBrush" Value="#a87a4f"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="CalendarStyle">
+                <Setter.Value>
+                    <Style TargetType="Calendar">
+                        <Setter Property="Background" Value="#FFF8E1"/>
+                        <Setter Property="Foreground" Value="#8B4513"/>
+                        <Setter Property="BorderBrush" Value="#a87a4f"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePicker">
+                        <Grid x:Name="PART_Root">
+                            <Grid.Resources>
+                                <SolidColorBrush x:Key="DisabledBrush" Color="#A5FFFFFF" />
+                            </Grid.Resources>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="3"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2">
+                            </Border>
+                            
+                            <DatePickerTextBox x:Name="PART_TextBox"
+                                              Grid.Column="0"
+                                              Foreground="{TemplateBinding Foreground}"
+                                              FontFamily="{TemplateBinding FontFamily}"
+                                              Padding="{TemplateBinding Padding}"
+                                              BorderThickness="0"
+                                              Background="Transparent"
+                                              HorizontalContentAlignment="Stretch"
+                                              VerticalContentAlignment="Center"
+                                              Focusable="False"
+                                              IsReadOnly="True"/>
+                            
+                            <Button x:Name="PART_Button"
+                                    Grid.Column="1"
+                                    Width="30"
+                                    Height="30"
+                                    Padding="5,3"
+                                    Margin="0,0,10,0"
+                                    Focusable="False"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                                <Path Width="10" Height="6"
+                                    Fill="#8B4513"
+                                    Data="M 0 0 L 10 0 L 5 6 Z"
+                                    Stretch="Uniform"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </Button>
+                                      
+                            
+                            <Popup x:Name="PART_Popup" 
+                                   StaysOpen="False"
+                                   AllowsTransparency="True"
+                                   PlacementTarget="{Binding ElementName=PART_Root}">
+                                <Calendar x:Name="PART_Calendar"
+                                         BorderBrush="{TemplateBinding BorderBrush}"
+                                         BorderThickness="{TemplateBinding BorderThickness}"
+                                         Background="{TemplateBinding Background}"
+                                         Foreground="{TemplateBinding Foreground}"
+                                         Style="{TemplateBinding CalendarStyle}" />
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
-        <TabControl>
+        <TabControl Background="#FFF8E1">
             <!-- Sign In Tab -->
-            <TabItem Header="Sign In"
-                     x:Name="tabSignIn">
-                <StackPanel Margin="20">
-                    <TextBlock Text="Sign In"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Margin="0,0,0,20" />
-                    <TextBlock Text="Email:" />
-                    <TextBox x:Name="txtSignInEmail"
-                             Margin="0,5,0,10"
-                             KeyDown="txtSignIn_KeyDown" />
-                    <TextBlock Text="Password:" />
-                    <PasswordBox x:Name="pwdSignIn"
-                                 Margin="0,5,0,20"
-                                 KeyDown="txtSignIn_KeyDown" />
-                    <Button x:Name="btnSignIn"
-                            Content="Sign In"
-                            Width="100"
-                            HorizontalAlignment="Left" />
-                    <TextBlock x:Name="txtSignInStatus"
-                               Margin="0,10,0,0" />
+            <TabItem Header="Sign In" x:Name="tabSignIn" Style="{StaticResource CroissantTabItem}">
+                <StackPanel Margin="20" Background="#FFF8E1">
+                    <TextBlock Text="Sign In" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
+                    <TextBlock Text="Email:" Style="{StaticResource CroissantTextBlock}"/>
+                    <TextBox x:Name="txtSignInEmail" Margin="0,5,0,10" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                    <TextBlock Text="Password:" Style="{StaticResource CroissantTextBlock}"/>
+                    <PasswordBox x:Name="pwdSignIn" Margin="0,5,0,20" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantPasswordBox}"/>
+                    <Button x:Name="btnSignIn" Content="Sign In" Padding="5" Width="100" HorizontalAlignment="Left" Style="{StaticResource CroissantButton}"/>
+                    <TextBlock x:Name="txtSignInStatus" Margin="0,10,0,0" Style="{StaticResource CroissantTextBlock}"/>
                 </StackPanel>
             </TabItem>
             <!-- Sign Up Tab -->
-            <TabItem Header="Sign Up"
-                     x:Name="tabSignUp">
-                <ScrollViewer>
+            <TabItem Header="Sign Up" x:Name="tabSignUp" Style="{StaticResource CroissantTabItem}">
+                <ScrollViewer Background="#FFF8E1">
                     <StackPanel Margin="20">
-                        <TextBlock Text="Sign Up"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,20" />
-                        <TextBlock Text="First Name:" />
-                        <TextBox x:Name="txtFirstName"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Last Name:" />
-                        <TextBox x:Name="txtLastName"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Email:" />
-                        <TextBox x:Name="txtEmail"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Password:" />
-                        <PasswordBox x:Name="pwdSignUp"
-                                     Margin="0,5,0,10" />
-                        <TextBlock Text="Confirm Password:" />
-                        <PasswordBox x:Name="pwdConfirm"
-                                     Margin="0,5,0,10" />
-                        <TextBlock Text="Phone Number:" />
-                        <TextBox x:Name="txtPhone"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Street:" />
-                        <TextBox x:Name="txtStreet"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Street Number:" />
-                        <TextBox x:Name="txtStreetNumber"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Postcode:" />
-                        <TextBox x:Name="txtPostcode"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="City:" />
-                        <TextBox x:Name="txtCity"
-                                 Margin="0,5,0,10" />
-                        <TextBlock Text="Closest Metro (Optional):" />
-                        <ComboBox x:Name="cmbMetro"
-                                  Margin="0,5,0,10"
-                                  Width="200" />
-                        <TextBlock Text="User Type (Select One or Both):" />
-                        <StackPanel Orientation="Horizontal"
-                                    Margin="0,5,0,20">
-                            <CheckBox x:Name="chkClient"
-                                      Content="Client"
-                                      Margin="0,0,20,0" />
-                            <CheckBox x:Name="chkChef"
-                                      Content="Chef" />
+                        <TextBlock Text="Sign Up" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBlock Text="First Name:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtFirstName" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Last Name:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtLastName" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Email:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtEmail" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Password:" Style="{StaticResource CroissantTextBlock}"/>
+                        <PasswordBox x:Name="pwdSignUp" Margin="0,5,0,10" Style="{StaticResource CroissantPasswordBox}"/>
+                        <TextBlock Text="Confirm Password:" Style="{StaticResource CroissantTextBlock}"/>
+                        <PasswordBox x:Name="pwdConfirm" Margin="0,5,0,10" Style="{StaticResource CroissantPasswordBox}"/>
+                        <TextBlock Text="Phone Number:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtPhone" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Street:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtStreet" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Street Number:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtStreetNumber" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Postcode:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtPostcode" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="City:" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBox x:Name="txtCity" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
+                        <TextBlock Text="Closest Metro (Optional):" Style="{StaticResource CroissantTextBlock}"/>
+                        <ComboBox x:Name="cmbMetro" Margin="0,5,0,10" Width="200" Style="{StaticResource CroissantComboBox}"/>
+                        <TextBlock Text="User Type (Select One or Both):" Style="{StaticResource CroissantTextBlock}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,20">
+                            <CheckBox x:Name="chkClient" Content="Client" Margin="0,0,20,0" Foreground="#8B4513" FontFamily="Segoe UI"/>
+                            <CheckBox x:Name="chkChef" Content="Chef" Foreground="#8B4513" FontFamily="Segoe UI"/>
                         </StackPanel>
-                        <Button x:Name="btnSignUp"
-                                Content="Sign Up"
-                                Width="100"
-                                HorizontalAlignment="Left" />
-                        <TextBlock x:Name="txtSignUpStatus"
-                                   Margin="0,10,0,0" />
+                        <Button x:Name="btnSignUp" Content="Sign Up" Width="100" HorizontalAlignment="Left" Style="{StaticResource CroissantButton}"/>
+                        <TextBlock x:Name="txtSignUpStatus" Margin="0,10,0,0" Style="{StaticResource CroissantTextBlock}"/>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <!-- User Account Tab (visible after login) -->
-            <TabItem Header="My Account"
-                     x:Name="tabAccount">
-                <Grid Margin="20">
+            <!-- User Account Tab -->
+            <TabItem Header="My Account" x:Name="tabAccount" Style="{StaticResource CroissantTabItem}">
+                <Grid Margin="20" Background="#FFF8E1">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0"
-                               Text="My Account"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Margin="0,0,0,20" />
+                    <TextBlock Grid.Row="0" Text="My Account" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
                     <StackPanel Grid.Row="1">
-                        <!-- View Mode -->
                         <StackPanel x:Name="viewModePanel">
-                            <TextBlock x:Name="txtUserInfo"
-                                       Text="Welcome, [User]" />
-                            <TextBlock x:Name="txtUserEmail"
-                                       Text="Email: [Email]" />
-                            <TextBlock x:Name="txtClosestMetro"
-                                       Text="ClosestMetro: [ClosestMetro]" />
-                            <TextBlock Text="Roles:"
-                                       Margin="0,10,0,5" />
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,0,0,10">
-                                <CheckBox x:Name="chkAccountClient"
-                                          Content="Client"
-                                          Margin="0,0,20,0"
-                                          IsEnabled="False" />
-                                <CheckBox x:Name="chkAccountChef"
-                                          Content="Chef"
-                                          IsEnabled="False" />
+                            <TextBlock x:Name="txtUserInfo" Text="Welcome, [User]" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBlock x:Name="txtUserEmail" Text="Email: [Email]" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBlock x:Name="txtClosestMetro" Text="ClosestMetro: [ClosestMetro]" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBlock Text="Roles:" Margin="0,10,0,5" Style="{StaticResource CroissantTextBlock}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <CheckBox x:Name="chkAccountClient" Content="Client" Margin="0,0,20,0" IsEnabled="False" Foreground="#8B4513" FontFamily="Segoe UI"/>
+                                <CheckBox x:Name="chkAccountChef" Content="Chef" IsEnabled="False" Foreground="#8B4513" FontFamily="Segoe UI"/>
                             </StackPanel>
-                            <Button x:Name="btnEditAccount"
-                                    Content="Edit Account"
-                                    Width="120"
-                                    HorizontalAlignment="Left"
-                                    Margin="0,10,0,0"
-                                    Click="BtnEditAccount_Click" />
+                            <Button x:Name="btnEditAccount" Content="Edit Account" Width="120" HorizontalAlignment="Left" Margin="0,10,0,0" Click="BtnEditAccount_Click" Style="{StaticResource CroissantButton}"/>
                         </StackPanel>
                     </StackPanel>
-                    <Button Grid.Row="2"
-                            x:Name="btnSignOut"
-                            Content="Sign Out"
-                            Width="100"
-                            HorizontalAlignment="Left" />
+                    <Button Grid.Row="2" x:Name="btnSignOut" Content="Sign Out" Width="100" HorizontalAlignment="Left" Style="{StaticResource CroissantButton}"/>
                 </Grid>
             </TabItem>
             <!-- Metro Map Tab -->
-            <TabItem Header="Metro Map"
-                     x:Name="metroMap">
-                <Grid Margin="20">
+            <TabItem Header="Metro Map" x:Name="metroMap" Style="{StaticResource CroissantTabItem}">
+                <Grid Margin="20" Background="#FFF8E1">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0"
-                               Text="Paris Metro Map"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Margin="0,0,0,10" />
-                    <Border Grid.Row="1"
-                            Background="LightGray"
-                            ClipToBounds="True">
-                        <Viewbox x:Name="mapViewbox"
-                                 Stretch="Uniform">
-                            <Canvas x:Name="metroCanvas"
-                                    Width="1000"
-                                    Height="1000"
-                                    Background="Transparent" />
+                    <TextBlock Grid.Row="0" Text="Paris Metro Map" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
+                    <Border Grid.Row="1" Background="#FFFFFF" BorderBrush="#FFC107" BorderThickness="1" CornerRadius="5" ClipToBounds="True">
+                        <Viewbox x:Name="mapViewbox" Stretch="Uniform">
+                            <Canvas x:Name="metroCanvas" Width="1000" Height="1000" Background="Transparent"/>
                         </Viewbox>
                     </Border>
                 </Grid>
             </TabItem>
             <!-- Food Services Tab -->
-            <TabItem Header="Food Services"
-                     x:Name="tabFoodServices">
+            <TabItem Header="Food Services" x:Name="tabFoodServices" Style="{StaticResource CroissantTabItem}">
                 <Grid>
-                    <TabControl x:Name="foodServicesTabControl">
-                        <!-- CLIENT VIEW: Browse and Order Food -->
-                        <TabItem Header="Browse and Order"
-                                 x:Name="tabBrowseOrder">
-                            <Grid Margin="20">
+                    <TabControl x:Name="foodServicesTabControl" Background="#FFF8E1" BorderThickness="0">
+                        <!-- Browse and Order -->
+                        <TabItem Header="Browse and Order" x:Name="tabBrowseOrder" Style="{StaticResource CroissantTabItem}">
+                            <Grid Margin="20" Background="#FFF8E1">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="300" />
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="300"/>
                                 </Grid.ColumnDefinitions>
-                                <!-- Header -->
-                                <StackPanel Grid.Row="0"
-                                            Grid.Column="0"
-                                            Grid.ColumnSpan="2">
-                                    <TextBlock Text="Browse Available Dishes"
-                                               FontSize="20"
-                                               FontWeight="Bold"
-                                               Margin="0,0,0,10" />
-                                    <!-- Filters -->
+                                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                                    <TextBlock Text="Browse Available Dishes" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,0,0,10">
-                                        <StackPanel Orientation="Horizontal"
-                                                    Margin="0,0,15,0">
-                                            <TextBlock Text="Dish Type:"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,5,0" />
-                                            <ComboBox x:Name="cmbDishType"
-                                                      Width="120"
-                                                      SelectedIndex="0" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,15,0">
+                                            <TextBlock Text="Dish Type:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                            <ComboBox x:Name="cmbDishType" Width="120" SelectedIndex="0" Style="{StaticResource CroissantComboBox}"/>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal"
-                                                    Margin="0,0,15,0">
-                                            <TextBlock Text="Diet:"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,5,0" />
-                                            <ComboBox x:Name="cmbDiet"
-                                                      Width="120"
-                                                      SelectedIndex="0" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,15,0">
+                                            <TextBlock Text="Diet:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                            <ComboBox x:Name="cmbDiet" Width="120" SelectedIndex="0" Style="{StaticResource CroissantComboBox}"/>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal"
-                                                    Margin="0,0,15,0">
-                                            <TextBlock Text="Origin:"
-                                                       VerticalAlignment="Center"
-                                                       Margin="0,0,5,0" />
-                                            <ComboBox x:Name="cmbOrigin"
-                                                      Width="120"
-                                                      SelectedIndex="0" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,15,0">
+                                            <TextBlock Text="Origin:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                            <ComboBox x:Name="cmbOrigin" Width="120" SelectedIndex="0" Style="{StaticResource CroissantComboBox}"/>
                                         </StackPanel>
-                                        <Button x:Name="ApplyFiltersDishes"
-                                                Content="Apply Filters"
-                                                Padding="10,3"
-                                                Click="BtnApplyFiltersDishes_Click" />
-                                        <Button x:Name="btnClearFiltersDishes"
-                                                Content="Clear Filters"
-                                                Padding="10,3"
-                                                Margin="5,0,0,0"
-                                                Click="BtnClearFiltersDishes_Click" />
+                                        <Button x:Name="ApplyFiltersDishes" Content="Apply Filters" Padding="10,3" Click="BtnApplyFiltersDishes_Click" Style="{StaticResource CroissantButton}"/>
+                                        <Button x:Name="btnClearFiltersDishes" Content="Clear Filters" Padding="10,3" Margin="5,0,0,0" Click="BtnClearFiltersDishes_Click" Style="{StaticResource CroissantButton}"/>
                                     </WrapPanel>
                                 </StackPanel>
-                                <!-- Dish List -->
-                                <DataGrid x:Name="dgDishes"
-                                          Grid.Row="1"
-                                          Grid.Column="0"
-                                          Margin="0,0,10,0"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column">
+                                <DataGrid x:Name="dgDishes" Grid.Row="1" Grid.Column="0" Margin="0,0,10,0" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Name"
-                                                            Binding="{Binding Name}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Type"
-                                                            Binding="{Binding Type}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Diet"
-                                                            Binding="{Binding Diet}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Origin"
-                                                            Binding="{Binding Origin}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Chef"
-                                                            Binding="{Binding ChefName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Price"
-                                                            Binding="{Binding DishPrice, StringFormat={}{0:C2}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Available Until"
-                                                            Binding="{Binding PeremptionDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Add"
-                                                                Width="60">
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
+                                        <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
+                                        <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
+                                        <DataGridTextColumn Header="Chef" Binding="{Binding ChefName}" Width="*"/>
+                                        <DataGridTextColumn Header="Price" Binding="{Binding DishPrice, StringFormat={}{0:C2}}" Width="*"/>
+                                        <DataGridTextColumn Header="Available Until" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Add" Width="60">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="+"
-                                                            Click="BtnAddToCart_Click"
-                                                            Padding="5,0"
-                                                            Margin="2"
-                                                            Tag="{Binding DishID}" />
+                                                    <Button Content="+" Click="BtnAddToCart_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <!-- Shopping Cart Panel -->
-                                <Grid Grid.Row="1"
-                                      Grid.Column="1"
-                                      Background="#f5f5f5">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0"
-                                               Text="Your Cart"
-                                               FontWeight="Bold"
-                                               FontSize="16"
-                                               Margin="10" />
-                                    <ListBox x:Name="lbCart"
-                                             Grid.Row="1"
-                                             Margin="10">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Margin="0,5">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding Name}"
-                                                               Grid.Column="0" />
-                                                    <TextBlock Text="{Binding Quantity}"
-                                                               Grid.Column="1"
-                                                               Margin="5,0" />
-                                                    <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:C2}}"
-                                                               Grid.Column="2"
-                                                               Margin="5,0" />
-                                                    <Button Content="X"
-                                                            Grid.Column="3"
-                                                            Width="25"
-                                                            Height="25"
-                                                            Margin="5,0,0,0"
-                                                            Click="RemoveFromCart_Click"
-                                                            CommandParameter="{Binding}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                    <StackPanel Grid.Row="2"
-                                                Margin="10">
-                                        <TextBlock Text="Delivery Address:"
-                                                   FontWeight="Bold"
-                                                   Margin="0,0,0,5" />
-                                        <RadioButton x:Name="rbMyAddress"
-                                                     Content="Use my registered address"
-                                                     IsChecked="True"
-                                                     Margin="0,0,0,5" />
-                                        <RadioButton x:Name="rbCustomAddress"
-                                                     Content="Use different address"
-                                                     Margin="0,0,0,5"
-                                                     IsEnabled="False" />
-                                        <StackPanel x:Name="pnlCustomAddress"
-                                                    Visibility="Collapsed"
-                                                    Margin="20,5,0,10">
-                                            <TextBlock Text="Street:" />
-                                            <TextBox x:Name="txtOrderStreet"
-                                                     Margin="0,0,0,5" />
-                                            <TextBlock Text="Street Number:" />
-                                            <TextBox x:Name="txtOrderStreetNumber"
-                                                     Margin="0,0,0,5" />
-                                            <TextBlock Text="Postcode:" />
-                                            <TextBox x:Name="txtOrderPostcode"
-                                                     Margin="0,0,0,5" />
-                                            <TextBlock Text="City:" />
-                                            <TextBox x:Name="txtOrderCity"
-                                                     Margin="0,0,0,5" />
+                                <Border Grid.Row="1" Grid.Column="1" BorderBrush="#a87a4f" BorderThickness="2" CornerRadius="5" ClipToBounds="True">
+                                    <Grid Background="#FFF3E0" Margin="1">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Text="Your Cart" FontWeight="Bold" FontSize="16" Margin="10" Style="{StaticResource CroissantTextBlock}"/>
+                                        <ListBox x:Name="lbCart" Grid.Row="1" Margin="10">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderThickness="2" BorderBrush="139b30">
+                                                        <Grid Margin="0,5">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding Name}" Grid.Column="0" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
+                                                            <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:C2}}" Grid.Column="2" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
+                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Margin="0,0,0,0" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                        <StackPanel Grid.Row="2" Margin="10">
+                                            <TextBlock Text="Delivery Address:" FontWeight="Bold" Margin="0,0,0,5" Style="{StaticResource CroissantTextBlock}"/>
+                                            <RadioButton x:Name="rbMyAddress" Content="Use my registered address" IsChecked="True" Margin="0,0,0,5" Foreground="#8B4513" FontFamily="Segoe UI"/>
+                                            <RadioButton x:Name="rbCustomAddress" Content="Use different address" Margin="0,0,0,5" IsEnabled="False" Foreground="#8B4513" FontFamily="Segoe UI"/>
+                                            <StackPanel x:Name="pnlCustomAddress" Visibility="Collapsed" Margin="20,5,0,10">
+                                                <TextBlock Text="Street:" Style="{StaticResource CroissantTextBlock}"/>
+                                                <TextBox x:Name="txtOrderStreet" Margin="0,0,0,5" Style="{StaticResource CroissantTextBox}"/>
+                                                <TextBlock Text="Street Number:" Style="{StaticResource CroissantTextBlock}"/>
+                                                <TextBox x:Name="txtOrderStreetNumber" Margin="0,0,0,5" Style="{StaticResource CroissantTextBox}"/>
+                                                <TextBlock Text="Postcode:" Style="{StaticResource CroissantTextBlock}"/>
+                                                <TextBox x:Name="txtOrderPostcode" Margin="0,0,0,5" Style="{StaticResource CroissantTextBox}"/>
+                                                <TextBlock Text="City:" Style="{StaticResource CroissantTextBlock}"/>
+                                                <TextBox x:Name="txtOrderCity" Margin="0,0,0,5" Style="{StaticResource CroissantTextBox}"/>
+                                            </StackPanel>
+                                            <Separator Margin="0,5" Background="#FFC107"/>
+                                            <Grid Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Total:" FontWeight="Bold" Grid.Column="0" Style="{StaticResource CroissantTextBlock}"/>
+                                                <TextBlock x:Name="txtCartTotal" Text="€0.00" FontWeight="Bold" Grid.Column="1" Style="{StaticResource CroissantTextBlock}"/>
+                                            </Grid>
+                                            <Button x:Name="btnPlaceOrder" Content="Place Order" Padding="10,5" Margin="0,10,0,0" Click="BtnPlaceOrder_Click" Style="{StaticResource CroissantButton}"/>
                                         </StackPanel>
-                                        <Separator Margin="0,5" />
-                                        <Grid Margin="0,5">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Total:"
-                                                       FontWeight="Bold"
-                                                       Grid.Column="0" />
-                                            <TextBlock x:Name="txtCartTotal"
-                                                       Text="€0.00"
-                                                       FontWeight="Bold"
-                                                       Grid.Column="1" />
-                                        </Grid>
-                                        <Button x:Name="btnPlaceOrder"
-                                                Content="Place Order"
-                                                Padding="10,5"
-                                                Margin="0,10,0,0"
-                                                Click="BtnPlaceOrder_Click" />
-                                    </StackPanel>
-                                </Grid>
+                                    </Grid>
+                                </Border>
                             </Grid>
                         </TabItem>
-                        <!-- CHEF VIEW: Manage Dishes -->
-                        <TabItem Header="Manage My Dishes"
-                                 x:Name="tabManageDishes">
-                            <Grid Margin="20">
+                        <!-- Manage My Dishes -->
+                        <TabItem Header="Manage My Dishes" x:Name="tabManageDishes" Style="{StaticResource CroissantTabItem}">
+                            <Grid Margin="20" Background="#FFF8E1">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <!-- Header -->
                                 <StackPanel Grid.Row="0">
-                                    <TextBlock Text="My Dishes"
-                                               FontSize="20"
-                                               FontWeight="Bold"
-                                               Margin="0,0,0,10" />
-                                    <Button x:Name="btnAddNewDish"
-                                            Content="Add New Dish"
-                                            HorizontalAlignment="Left"
-                                            Padding="10,5"
-                                            Margin="0,0,0,10"
-                                            Click="BtnAddNewDish_Click" />
+                                    <TextBlock Text="My Dishes" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
+                                    <Button x:Name="btnAddNewDish" Content="Add New Dish" HorizontalAlignment="Left" Padding="10,5" Margin="0,0,0,10" Click="BtnAddNewDish_Click" Style="{StaticResource CroissantButton}"/>
                                 </StackPanel>
-                                <!-- My Dishes List -->
-                                <DataGrid x:Name="dgMyDishes"
-                                          Grid.Row="1"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column">
+                                <DataGrid x:Name="dgMyDishes" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Name"
-                                                            Binding="{Binding Name}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Type"
-                                                            Binding="{Binding Type}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Price"
-                                                            Binding="{Binding DishPrice, StringFormat={}{0:C2}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Created"
-                                                            Binding="{Binding FabricationDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Expires"
-                                                            Binding="{Binding PeremptionDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Diet"
-                                                            Binding="{Binding Diet}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Origin"
-                                                            Binding="{Binding Origin}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Actions"
-                                                                Width="*">
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
+                                        <DataGridTextColumn Header="Price" Binding="{Binding DishPrice, StringFormat={}{0:C2}}" Width="*"/>
+                                        <DataGridTextColumn Header="Created" Binding="{Binding FabricationDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Expires" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
+                                        <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <Button Content="Edit"
-                                                                Click="BtnEditDish_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding DishID}" />
-                                                        <Button Content="Delete"
-                                                                Click="BtnDeleteDish_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding DishID}" />
+                                                        <Button Content="Edit" Click="BtnEditDish_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                        <Button Content="Delete" Click="BtnDeleteDish_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -449,88 +665,45 @@
                                 </DataGrid>
                             </Grid>
                         </TabItem>
-                        <!-- My Orders Tab - For both roles -->
-                        <TabItem Header="My Orders"
-                                 x:Name="tabMyOrders">
-                            <Grid Margin="20">
+                        <!-- My Orders -->
+                        <TabItem Header="My Orders" x:Name="tabMyOrders" Style="{StaticResource CroissantTabItem}">
+                            <Grid Margin="20" Background="#FFF8E1">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <!-- Header -->
                                 <StackPanel Grid.Row="0">
-                                    <TextBlock Text="My Orders"
-                                               FontSize="20"
-                                               FontWeight="Bold"
-                                               Margin="0,0,0,10" />
-                                    <ComboBox x:Name="cmbOrderView"
-                                              Width="200"
-                                              HorizontalAlignment="Left"
-                                              Margin="0,0,0,10"
-                                              SelectionChanged="CmbOrderView_SelectionChanged">
-                                        <ComboBoxItem Content="Orders I Placed"
-                                                      IsSelected="True" />
-                                        <ComboBoxItem Content="Orders I Received" />
+                                    <TextBlock Text="My Orders" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
+                                    <ComboBox x:Name="cmbOrderView" Width="200" HorizontalAlignment="Left" Margin="0,0,0,10" SelectionChanged="CmbOrderView_SelectionChanged" Style="{StaticResource CroissantComboBox}">
+                                        <ComboBoxItem Content="Orders I Placed" IsSelected="True"/>
+                                        <ComboBoxItem Content="Orders I Received"/>
                                     </ComboBox>
                                 </StackPanel>
-                                <!-- Orders I Placed DataGrid -->
-                                <DataGrid x:Name="dgOrdersPlaced"
-                                          Grid.Row="1"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column"
-                                          Visibility="Visible">
+                                <DataGrid x:Name="dgOrdersPlaced" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Visibility="Visible" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Order ID"
-                                                            Binding="{Binding OrderID}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Date"
-                                                            Binding="{Binding OrderDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Client"
-                                                            Binding="{Binding ClientName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Chef"
-                                                            Binding="{Binding ChefName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Total"
-                                                            Binding="{Binding OrderTotal, StringFormat={}{0:C2}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Status"
-                                                            Binding="{Binding Status}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Details"
-                                                                Width="80">
+                                        <DataGridTextColumn Header="Order ID" Binding="{Binding OrderID}" Width="*"/>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="*"/>
+                                        <DataGridTextColumn Header="Chef" Binding="{Binding ChefName}" Width="*"/>
+                                        <DataGridTextColumn Header="Total" Binding="{Binding OrderTotal, StringFormat={}{0:C2}}" Width="*"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Details" Width="80">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="View"
-                                                            Click="BtnViewOrderDetails_Click"
-                                                            Padding="5,0"
-                                                            Margin="2"
-                                                            Tag="{Binding OrderID}" />
+                                                    <Button Content="View" Click="BtnViewOrderDetails_Click" Padding="5,0" Margin="2" Tag="{Binding OrderID}" Style="{StaticResource CroissantButton}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Cancel Order"
-                                                                Width="80">
+                                        <DataGridTemplateColumn Header="Cancel Order" Width="80">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="X"
-                                                            Click="BtnCancelOrder_Click"
-                                                            Padding="5,0"
-                                                            Margin="2"
-                                                            Tag="{Binding OrderID}">
+                                                    <Button Content="X" Click="BtnCancelOrder_Click" Padding="5,0" Margin="2" Tag="{Binding OrderID}">
                                                         <Button.Style>
-                                                            <Style TargetType="Button"
-                                                                   BasedOn="{StaticResource {x:Type Button}}">
-                                                                <Setter Property="IsEnabled"
-                                                                        Value="False" />
+                                                            <Style TargetType="Button" BasedOn="{StaticResource CroissantButton}">
+                                                                <Setter Property="IsEnabled" Value="False"/>
                                                                 <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding Status}"
-                                                                                 Value="Pending">
-                                                                        <Setter Property="IsEnabled"
-                                                                                Value="True" />
+                                                                    <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                                        <Setter Property="IsEnabled" Value="True"/>
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -541,85 +714,44 @@
                                         </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <!-- Orders I Received DataGrid -->
-                                <DataGrid x:Name="dgOrdersReceived"
-                                          Grid.Row="1"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column"
-                                          Visibility="Collapsed">
+                                <DataGrid x:Name="dgOrdersReceived" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Visibility="Collapsed" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Order ID"
-                                                            Binding="{Binding OrderID}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Date"
-                                                            Binding="{Binding OrderDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Client Name"
-                                                            Binding="{Binding ClientName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Address"
-                                                            Binding="{Binding Address}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Total"
-                                                            Binding="{Binding OrderTotal, StringFormat={}{0:C2}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Status"
-                                                            Binding="{Binding Status}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Details"
-                                                                Width="80">
+                                        <DataGridTextColumn Header="Order ID" Binding="{Binding OrderID}" Width="*"/>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Client Name" Binding="{Binding ClientName}" Width="*"/>
+                                        <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="*"/>
+                                        <DataGridTextColumn Header="Total" Binding="{Binding OrderTotal, StringFormat={}{0:C2}}" Width="*"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Details" Width="80">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="View"
-                                                            Click="BtnViewOrderDetails_Click"
-                                                            Padding="5,0"
-                                                            Margin="2"
-                                                            Tag="{Binding OrderID}" />
+                                                    <Button Content="View" Click="BtnViewOrderDetails_Click" Padding="5,0" Margin="2" Tag="{Binding OrderID}" Style="{StaticResource CroissantButton}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header="Actions"
-                                                                Width="Auto">
+                                        <DataGridTemplateColumn Header="Actions" Width="Auto">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <Button Content="Complete"
-                                                                Click="BtnCompleteOrder_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding OrderID}">
+                                                        <Button Content="Complete" Click="BtnCompleteOrder_Click" Padding="5,0" Margin="2" Tag="{Binding OrderID}">
                                                             <Button.Style>
-                                                                <Style TargetType="Button"
-                                                                       BasedOn="{StaticResource {x:Type Button}}">
-                                                                    <Setter Property="IsEnabled"
-                                                                            Value="False" />
+                                                                <Style TargetType="Button" BasedOn="{StaticResource CroissantButton}">
+                                                                    <Setter Property="IsEnabled" Value="False"/>
                                                                     <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Status}"
-                                                                                     Value="Pending">
-                                                                            <Setter Property="IsEnabled"
-                                                                                    Value="True" />
+                                                                        <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                                            <Setter Property="IsEnabled" Value="True"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
                                                             </Button.Style>
                                                         </Button>
-                                                        <Button Content="Refuse"
-                                                                Click="BtnRefuseOrder_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding OrderID}">
+                                                        <Button Content="Refuse" Click="BtnRefuseOrder_Click" Padding="5,0" Margin="2" Tag="{Binding OrderID}">
                                                             <Button.Style>
-                                                                <Style TargetType="Button"
-                                                                       BasedOn="{StaticResource {x:Type Button}}">
-                                                                    <Setter Property="IsEnabled"
-                                                                            Value="False" />
+                                                                <Style TargetType="Button" BasedOn="{StaticResource CroissantButton}">
+                                                                    <Setter Property="IsEnabled" Value="False"/>
                                                                     <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Status}"
-                                                                                     Value="Pending">
-                                                                            <Setter Property="IsEnabled"
-                                                                                    Value="True" />
+                                                                        <DataTrigger Binding="{Binding Status}" Value="Pending">
+                                                                            <Setter Property="IsEnabled" Value="True"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -636,95 +768,48 @@
                     </TabControl>
                 </Grid>
             </TabItem>
-            <TabItem Header="Admin Tab"
-                     x:Name="adminTab">
-                <Grid Margin="20">
+            <!-- Admin Tab -->
+            <TabItem Header="Admin Tab" x:Name="adminTab" Style="{StaticResource CroissantTabItem}">
+                <Grid Margin="20" Background="#FFF8E1">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0"
-                               Text="Admin Dashboard"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Margin="0,0,0,20" />
-                    <TabControl Grid.Row="1">
-                        <!-- User Management -->
-                        <TabItem Header="Manage Users">
+                    <TextBlock Grid.Row="0" Text="Admin Dashboard" FontSize="20" FontWeight="Bold" Margin="0,-10,0,0" Style="{StaticResource CroissantTextBlock}"/>
+                    <TabControl Grid.Row="1" Background="#FFF8E1" BorderThickness="0">
+                        <!-- Manage Users -->
+                        <TabItem Header="Manage Users" Style="{StaticResource CroissantTabItem}">
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0"
-                                            Margin="0,0,0,10">
-                                    <TextBlock Text="User Management"
-                                               FontSize="16"
-                                               FontWeight="Bold" />
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="User Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
-                                        <TextBlock Text="Search by Email:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,5,0" />
-                                        <TextBox x:Name="txtSearchUser"
-                                                 Width="200"
-                                                 Margin="0,0,10,0"
-                                                 KeyDown="TxtSearchUser_KeyDown" />
-                                        <Button x:Name="btnSearchUser"
-                                                Content="Search"
-                                                Padding="10,3"
-                                                Click="BtnSearchUser_Click" />
+                                        <TextBlock Text="Search by Email:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <TextBox x:Name="txtSearchUser" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchUser_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                                        <Button x:Name="btnSearchUser" Content="Search" Padding="10,3" Click="BtnSearchUser_Click" Style="{StaticResource CroissantButton}"/>
                                     </WrapPanel>
                                 </StackPanel>
-                                <DataGrid x:Name="dgUsers"
-                                          Grid.Row="1"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column">
+                                <DataGrid x:Name="dgUsers" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Email"
-                                                            Binding="{Binding Mail}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Password"
-                                                            Binding="{Binding Password}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Name"
-                                                            Binding="{Binding FullName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Phone Number"
-                                                            Binding="{Binding PhoneNumber}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="City"
-                                                            Binding="{Binding City}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Closest Metro"
-                                                            Binding="{Binding ClosestMetro}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Role"
-                                                            Binding="{Binding Roles}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Total Money Spent"
-                                                            Binding="{Binding TotalMoneySpent}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Total Order Completed"
-                                                            Binding="{Binding TotalOrderCompleted}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Actions"
-                                                                Width="120">
+                                        <DataGridTextColumn Header="Email" Binding="{Binding Mail}" Width="*"/>
+                                        <DataGridTextColumn Header="Password" Binding="{Binding Password}" Width="*"/>
+                                        <DataGridTextColumn Header="Name" Binding="{Binding FullName}" Width="*"/>
+                                        <DataGridTextColumn Header="Phone Number" Binding="{Binding PhoneNumber}" Width="*"/>
+                                        <DataGridTextColumn Header="City" Binding="{Binding City}" Width="*"/>
+                                        <DataGridTextColumn Header="Closest Metro" Binding="{Binding ClosestMetro}" Width="*"/>
+                                        <DataGridTextColumn Header="Role" Binding="{Binding Roles}" Width="*"/>
+                                        <DataGridTextColumn Header="Total Money Spent" Binding="{Binding TotalMoneySpent}" Width="*"/>
+                                        <DataGridTextColumn Header="Total Order Completed" Binding="{Binding TotalOrderCompleted}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Actions" Width="120">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <Button Content="Edit"
-                                                                Click="BtnEditUser_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding UserID}" />
-                                                        <Button Content="Delete"
-                                                                Click="BtnDeleteUser_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding UserID}" />
+                                                        <Button Content="Edit" Click="BtnEditUser_Click" Padding="5,0" Margin="2" Tag="{Binding UserID}" Style="{StaticResource CroissantButton}"/>
+                                                        <Button Content="Delete" Click="BtnDeleteUser_Click" Padding="5,0" Margin="2" Tag="{Binding UserID}" Style="{StaticResource CroissantButton}"/>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -733,93 +818,43 @@
                                 </DataGrid>
                             </Grid>
                         </TabItem>
-                        <!-- Dishes Management -->
-                        <TabItem Header="Manage Dishes">
+                        <!-- Manage Dishes -->
+                        <TabItem Header="Manage Dishes" Style="{StaticResource CroissantTabItem}">
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0"
-                                            Margin="0,0,0,10">
-                                    <TextBlock Text="Dish Management"
-                                               FontSize="16"
-                                               FontWeight="Bold" />
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="Dish Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
-                                        <TextBlock Text="Search by Name:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,5,0" />
-                                        <TextBox x:Name="txtSearchDish"
-                                                 Width="200"
-                                                 Margin="0,0,10,0"
-                                                 KeyDown="TxtSearchDish_KeyDown" />
-                                        <TextBlock Text="Filter by Chef:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,5,0" />
-                                        <ComboBox x:Name="cmbFilterChef"
-                                                  Width="150"
-                                                  Margin="0,0,10,0">
-                                            <ComboBoxItem Content="All Chefs"
-                                                          IsSelected="True" />
+                                        <TextBlock Text="Search by Name:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <TextBox x:Name="txtSearchDish" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchDish_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                                        <TextBlock Text="Filter by Chef:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <ComboBox x:Name="cmbFilterChef" Width="150" Padding="5,3" Margin="0,0,10,0" Style="{StaticResource CroissantComboBox}">
+                                            <ComboBoxItem Content="All Chefs" IsSelected="True"/>
                                         </ComboBox>
-                                        <Button x:Name="btnSearchDish"
-                                                Content="Search"
-                                                Padding="10,3"
-                                                Click="BtnSearchDish_Click" />
+                                        <Button x:Name="btnSearchDish" Content="Search" Padding="5,3" Click="BtnSearchDish_Click" Style="{StaticResource CroissantButton}"/>
                                     </WrapPanel>
                                 </StackPanel>
-                                <DataGrid x:Name="dgAdminDishes"
-                                          Grid.Row="1"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column">
+                                <DataGrid x:Name="dgAdminDishes" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="ID"
-                                                            Binding="{Binding DishID}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Name"
-                                                            Binding="{Binding Name}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Type"
-                                                            Binding="{Binding Type}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Chef"
-                                                            Binding="{Binding ChefName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Price"
-                                                            Binding="{Binding DishPrice, StringFormat={}{0:C2}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Created"
-                                                            Binding="{Binding FabricationDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Expires"
-                                                            Binding="{Binding PeremptionDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Diet"
-                                                            Binding="{Binding Diet}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Origin"
-                                                            Binding="{Binding Origin}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Status"
-                                                            Binding="{Binding Status}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Actions"
-                                                                Width="*">
+                                        <DataGridTextColumn Header="ID" Binding="{Binding DishID}" Width="*"/>
+                                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="*"/>
+                                        <DataGridTextColumn Header="Chef" Binding="{Binding ChefName}" Width="*"/>
+                                        <DataGridTextColumn Header="Price" Binding="{Binding DishPrice, StringFormat={}{0:C2}}" Width="*"/>
+                                        <DataGridTextColumn Header="Created" Binding="{Binding FabricationDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Expires" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
+                                        <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <Button Content="Edit"
-                                                                Click="BtnEditAdminDish_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding DishID}" />
-                                                        <Button Content="Delete"
-                                                                Click="BtnDeleteAdminDish_Click"
-                                                                Padding="5,0"
-                                                                Margin="2"
-                                                                Tag="{Binding DishID}" />
+                                                        <Button Content="Edit" Click="BtnEditAdminDish_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                        <Button Content="Delete" Click="BtnDeleteAdminDish_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -828,86 +863,43 @@
                                 </DataGrid>
                             </Grid>
                         </TabItem>
-                        <!-- Order Management -->
-                        <TabItem Header="Manage Orders">
+                        <!-- Manage Orders -->
+                        <TabItem Header="Manage Orders" Style="{StaticResource CroissantTabItem}">
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0"
-                                            Margin="0,0,0,10">
-                                    <TextBlock Text="Order Management"
-                                               FontSize="16"
-                                               FontWeight="Bold" />
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="Order Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
-                                        <TextBlock Text="Filter by Status:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,5,0" />
-                                        <ComboBox x:Name="cmbOrderStatus"
-                                                  Width="150"
-                                                  SelectedIndex="0">
-                                            <ComboBoxItem Content="All" />
-                                            <ComboBoxItem Content="Pending" />
-                                            <ComboBoxItem Content="Completed" />
-                                            <ComboBoxItem Content="Cancelled" />
+                                        <TextBlock Text="Filter by Status:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <ComboBox x:Name="cmbOrderStatus" Padding="5,3" Width="150" SelectedIndex="0" Style="{StaticResource CroissantComboBox}">
+                                            <ComboBoxItem Content="All"/>
+                                            <ComboBoxItem Content="Pending"/>
+                                            <ComboBoxItem Content="Completed"/>
+                                            <ComboBoxItem Content="Cancelled"/>
                                         </ComboBox>
-                                        <TextBlock Text="From:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="15,0,5,0" />
-                                        <DatePicker x:Name="dpFromDate"
-                                                    Width="130" />
-                                        <TextBlock Text="To:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="15,0,5,0" />
-                                        <DatePicker x:Name="dpToDate"
-                                                    Width="130" />
-                                        <Button x:Name="btnFilterOrders"
-                                                Content="Apply Filter"
-                                                Padding="10,3"
-                                                Margin="10,0,0,0"
-                                                Click="BtnFilterOrders_Click" />
-                                        <Button x:Name="btnClearFiltersOrders"
-                                                Content="Clear Filters"
-                                                Padding="10,3"
-                                                Margin="5,0,0,0"
-                                                Click="BtnClearFiltersOrders_Click" />
+                                        <TextBlock Text="From:" VerticalAlignment="Center" Margin="15,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <DatePicker x:Name="dpFromDate" Padding="5,3" Width="130" Style="{StaticResource CroissantDatePicker}"/>
+                                        <TextBlock Text="To:" VerticalAlignment="Center" Margin="15,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <DatePicker x:Name="dpToDate" Padding="5,3" Width="130" Style="{StaticResource CroissantDatePicker}"/>
+                                        <Button x:Name="btnFilterOrders" Content="Apply Filter" Padding="10,3" Margin="10,0,0,0" Click="BtnFilterOrders_Click" Style="{StaticResource CroissantButton}"/>
+                                        <Button x:Name="btnClearFiltersOrders" Content="Clear Filters" Padding="10,3" Margin="5,0,0,0" Click="BtnClearFiltersOrders_Click" Style="{StaticResource CroissantButton}"/>
                                     </WrapPanel>
                                 </StackPanel>
-                                <DataGrid x:Name="dgAdminOrders"
-                                          Grid.Row="1"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          HeadersVisibility="Column">
+                                <DataGrid x:Name="dgAdminOrders" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" Style="{StaticResource CroissantDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Order ID"
-                                                            Binding="{Binding OrderID}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Date"
-                                                            Binding="{Binding OrderDate, StringFormat={}{0:d}}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Client"
-                                                            Binding="{Binding ClientName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Chef"
-                                                            Binding="{Binding ChefName}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Status"
-                                                            Binding="{Binding Status}"
-                                                            Width="*" />
-                                        <DataGridTextColumn Header="Total"
-                                                            Binding="{Binding OrderTotal, StringFormat={}{0:C2}}"
-                                                            Width="*" />
-                                        <DataGridTemplateColumn Header="Actions"
-                                                                Width="*">
+                                        <DataGridTextColumn Header="Order ID" Binding="{Binding OrderID}" Width="*"/>
+                                        <DataGridTextColumn Header="Date" Binding="{Binding OrderDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTextColumn Header="Client" Binding="{Binding ClientName}" Width="*"/>
+                                        <DataGridTextColumn Header="Chef" Binding="{Binding ChefName}" Width="*"/>
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                                        <DataGridTextColumn Header="Total" Binding="{Binding OrderTotal, StringFormat={}{0:C2}}" Width="*"/>
+                                        <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="View"
-                                                            Click="BtnViewAdminOrder_Click"
-                                                            Padding="5,0"
-                                                            Margin="2"
-                                                            Tag="{Binding OrderID}" />
+                                                    <Button Content="View" Click="BtnViewAdminOrder_Click" Padding="5,0" Margin="2" Tag="{Binding OrderID}" Style="{StaticResource CroissantButton}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
