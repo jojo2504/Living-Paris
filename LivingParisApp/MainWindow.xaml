@@ -360,69 +360,24 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="3"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2">
-                            </Border>
-                            
-                            <DatePickerTextBox x:Name="PART_TextBox"
-                                              Grid.Column="0"
-                                              Foreground="{TemplateBinding Foreground}"
-                                              FontFamily="{TemplateBinding FontFamily}"
-                                              Padding="{TemplateBinding Padding}"
-                                              BorderThickness="0"
-                                              Background="Transparent"
-                                              HorizontalContentAlignment="Stretch"
-                                              VerticalContentAlignment="Center"
-                                              Focusable="False"
-                                              IsReadOnly="True"/>
-                            
-                            <Button x:Name="PART_Button"
-                                    Grid.Column="1"
-                                    Width="30"
-                                    Height="30"
-                                    Padding="5,3"
-                                    Margin="0,0,10,0"
-                                    Focusable="False"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Background="Transparent"
-                                    BorderThickness="0">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Grid.Column="0" Grid.ColumnSpan="2"/>
+                            <DatePickerTextBox x:Name="PART_TextBox" Grid.Column="0" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" Padding="{TemplateBinding Padding}" BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Focusable="False" IsReadOnly="True"/>
+                            <Button x:Name="PART_Button" Grid.Column="1" Width="30" Height="30" Padding="5,3" Margin="0,0,10,0" Focusable="False" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderThickness="0">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="Button">
-                                                    <ContentPresenter HorizontalAlignment="Center" 
-                                                                    VerticalAlignment="Center"/>
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
                                     </Style>
                                 </Button.Style>
-                                <Path Width="10" Height="6"
-                                    Fill="#8B4513"
-                                    Data="M 0 0 L 10 0 L 5 6 Z"
-                                    Stretch="Uniform"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>
+                                <Path Width="10" Height="6" Fill="#8B4513" Data="M 0 0 L 10 0 L 5 6 Z" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Button>
-                                      
-                            
-                            <Popup x:Name="PART_Popup" 
-                                   StaysOpen="False"
-                                   AllowsTransparency="True"
-                                   PlacementTarget="{Binding ElementName=PART_Root}">
-                                <Calendar x:Name="PART_Calendar"
-                                         BorderBrush="{TemplateBinding BorderBrush}"
-                                         BorderThickness="{TemplateBinding BorderThickness}"
-                                         Background="{TemplateBinding Background}"
-                                         Foreground="{TemplateBinding Foreground}"
-                                         Style="{TemplateBinding CalendarStyle}" />
+                            <Popup x:Name="PART_Popup" StaysOpen="False" AllowsTransparency="True" PlacementTarget="{Binding ElementName=PART_Root}">
+                                <Calendar x:Name="PART_Calendar" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}" Style="{TemplateBinding CalendarStyle}" />
                             </Popup>
                         </Grid>
                     </ControlTemplate>
