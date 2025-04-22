@@ -424,7 +424,7 @@
                         <TextBox x:Name="txtPostcode" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
                         <TextBlock Text="City:" Style="{StaticResource CroissantTextBlock}"/>
                         <TextBox x:Name="txtCity" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Closest Metro (Optional):" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBlock Text="Closest Metro:" Style="{StaticResource CroissantTextBlock}"/>
                         <ComboBox x:Name="cmbMetro" Margin="0,5,0,10" Width="200" Style="{StaticResource CroissantComboBox}"/>
                         <TextBlock Text="User Type (Select One or Both):" Style="{StaticResource CroissantTextBlock}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,5,0,20">
@@ -540,8 +540,8 @@
                                         <ListBox x:Name="lbCart" Grid.Row="1" Margin="10">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border BorderThickness="2" BorderBrush="139b30">
-                                                        <Grid Margin="0,5">
+                                                    <Border BorderThickness="2">
+                                                        <Grid Margin="0,2">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
@@ -550,7 +550,7 @@
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding Name}" Grid.Column="0" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
                                                             <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:C2}}" Grid.Column="2" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
-                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Margin="0,0,0,0" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
+                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Padding="4,2" Margin="0,0,0,5" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>

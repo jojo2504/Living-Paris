@@ -1158,25 +1158,31 @@ namespace LivingParisApp {
 
         public void BtnAddToCart_Click(object sender, RoutedEventArgs e) {
             Logger.Log("Add to cart button clicked");
-            if (sender is Button button && button.Tag is int dishId) {
-                _dishButtons[dishId] = button;
+            try {
+                if (sender is Button button && button.Tag is int dishId) {
+                    _dishButtons[dishId] = button;
 
-                var dish = _allDishes.FirstOrDefault(d => d.DishID == dishId);
-                if (dish != null) {
-                    var existingItem = _cartItems.FirstOrDefault(i => i.Dish.DishID == dishId);
-                    if (existingItem != null) {
-                        MessageBox.Show("This dish is already in your cart.", "Already Added", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
-                    else {
-                        _cartItems.Add(new CartItem { Dish = dish, Quantity = 1 });
-                    }
-                    UpdateCartTotal();
+                    var dish = _allDishes.FirstOrDefault(d => d.DishID == dishId);
+                    if (dish != null) {
+                        var existingItem = _cartItems.FirstOrDefault(i => i.Dish.DishID == dishId);
+                        if (existingItem != null) {
+                            MessageBox.Show("This dish is already in your cart.", "Already Added", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
+                        else {
+                            _cartItems.Add(new CartItem { Dish = dish, Quantity = 1 });
+                        }
+                        UpdateCartTotal();
 
-                    // Disable the add button for this dish
-                    button.IsEnabled = false;
-                    button.Content = "In Cart";
+                        // Disable the add button for this dish
+                        button.IsEnabled = false;
+                        button.Content = "In Cart";
+                    }
                 }
+                Logger.Success("Added item in the cart");
+            }
+            catch (Exception ex) {
+                Logger.Error(ex.ToString());
             }
         }
 
