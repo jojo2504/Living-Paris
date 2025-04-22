@@ -29,6 +29,21 @@ namespace LivingParisApp.Core.Mapping {
             AdjacencyList[fromNode].Add(Tuple.Create(toNode, weight));
         }
 
+        public override void AddBidirectionalEdge(T A, T B, double weight = 0){
+            var Anode = new Node<T>(A);
+            var Bnode = new Node<T>(B);
+
+            // Ensure both nodes exist in the adjacency list
+            if (!AdjacencyList.ContainsKey(Anode))
+                AdjacencyList[Anode] = new List<Tuple<Node<T>, double>>();
+            if (!AdjacencyList.ContainsKey(Bnode))
+                AdjacencyList[Bnode] = new List<Tuple<Node<T>, double>>();
+
+            // Add the edge
+            AdjacencyList[Anode].Add(Tuple.Create(Bnode, weight));
+            AdjacencyList[Bnode].Add(Tuple.Create(Anode, weight));
+        }
+
         public override void ParseNodes(string filePathNode) {
             // Step 1: Parse nodes (stations) from the first file
             FileReader nodeInitReader = new FileReader(filePathNode);
