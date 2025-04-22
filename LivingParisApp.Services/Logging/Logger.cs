@@ -5,6 +5,16 @@ namespace LivingParisApp.Services.Logging {
     public static class Logger {
         private static string LogFilePath = Path.Combine(LogsPath, "logs.log");
 
+        private static void LogMessage(object Object, LogEventLevel level = LogEventLevel.Information) {
+            // Open the StreamWriter inside the using statement
+            using (StreamWriter writer = new StreamWriter(LogFilePath, append: true)) {
+                string prefix = $"[{level}] ";
+                writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {prefix}{Object}");
+            }
+            if (level.Equals(LogEventLevel.Fatal)) {
+                Environment.Exit(1);
+            }
+        }
         private static void LogMessage(string message, LogEventLevel level = LogEventLevel.Information) {
             // Open the StreamWriter inside the using statement
             using (StreamWriter writer = new StreamWriter(LogFilePath, append: true)) {
@@ -35,6 +45,7 @@ namespace LivingParisApp.Services.Logging {
 
         // Convenience methods
         public static void Log(string message) => LogMessage(message, LogEventLevel.Information);
+        public static void Log(object Object) => LogMessage(Object, LogEventLevel.Information);
         public static void Log(Exception exception) => LogMessage(exception, LogEventLevel.Information);
         public static void Important(string message) => LogMessage(message, LogEventLevel.Important);
 

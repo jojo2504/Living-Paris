@@ -20,15 +20,21 @@ namespace LivingParisApp {
 
             Logger.ClearLog();
 
+
             string[] args = e.Args;
-            string[] validArgs = ["--reset", "--noLogSQL"];
+            Logger.Log(string.Join(" ", args));
+
+            string[] validArgs = ["--reset", "--noLogSQL", "--initMock"];
             bool[] bools = Enumerable.Repeat(false, validArgs.Length).ToArray();
 
-            for (int i = 0; i < args.Length; i++) {
-                if (validArgs.Contains(args[i])) {
-                    bools[i] = true;
+            foreach (string arg in args) {
+                int index = Array.IndexOf(validArgs, arg);
+                if (index != -1) {
+                    bools[index] = true;
                 }
             }
+
+            Logger.Log($"{bools[0]} {bools[1]} {bools[2]}");
 
             MySQLManager mySQLManager = new MySQLManager(bools);
 
@@ -38,7 +44,7 @@ namespace LivingParisApp {
                 Path.Combine(GetSolutionDirectoryInfo().FullName, "assets", "MetroParisArcs.csv")
             );
 
-            Logger.Log(map.ToString());
+            //Logger.Log(map.ToString());
 
             try {
                 MainWindow window = new MainWindow(mySQLManager, map);
