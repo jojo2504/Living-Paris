@@ -1366,6 +1366,11 @@ namespace LivingParisApp {
             /// <param name="sender"></param>
             /// <param name="e"></param>
 
+            if (cmbDishType == null || cmbDiet == null || cmbOrigin == null) {
+                Logger.Warning("Filter controls are not accessible");
+                return;
+            }
+
             _filteredAvailableDishes.Clear();
 
             // Start with full set
@@ -1395,6 +1400,20 @@ namespace LivingParisApp {
                 filteredAvailableDishes = _allDishes;
             }
 
+            // then search by name
+            if (!string.IsNullOrEmpty(txtSearchDishName.Text)) {
+                // Fuzzy match using Levenshtein distance
+                filteredAvailableDishes = filteredAvailableDishes
+                    .Select(order => new {
+                        Order = order,
+                        Distance = CalculateLevenshteinDistance(txtSearchDishName.Text, order.Status.ToLower())
+                    })
+                    .Where(x => x.Distance <= Math.Max(3, txtSearchDishName.Text.Length / 2)) // Adjust threshold as needed
+                    .OrderBy(x => x.Distance) // Closest matches first
+                    .ThenBy(x => x.Order.Status) // Then sort by Order name
+                    .Select(x => x.Order);
+            }
+
             // Remove duplicates that might have matched multiple criteria
             filteredAvailableDishes = filteredAvailableDishes.Where(d => d.Status == "Available");
             filteredAvailableDishes = filteredAvailableDishes.Distinct();
@@ -1408,6 +1427,7 @@ namespace LivingParisApp {
                 Logger.Warning("No dishes found with these filters");
             }
         }
+
         public void BtnClearFiltersDishes_Click(object sender, RoutedEventArgs e) {
             cmbDishType.SelectedIndex = 0;
             cmbDiet.SelectedIndex = 0;
