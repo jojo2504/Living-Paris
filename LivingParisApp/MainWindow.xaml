@@ -1,7 +1,6 @@
 ﻿<Window x:Class="LivingParisApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:LivingParisApp"
         Title="Living Paris"
         Height="670"
         Width="980"
@@ -738,7 +737,7 @@
                                     <TextBlock Text="Browse Available Dishes" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,0,0,10">
                                         <TextBlock Text="Name: " VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
-                                        <TextBox x:Name="txtSearchDishName" Width="200" Padding="5,3" KeyDown="BtnClearFiltersDishes_Click" Style="{StaticResource CroissantTextBox}"/>
+                                        <TextBox x:Name="txtSearchDishName" Width="200" Padding="5,3" KeyDown="TxtSearchDishName_KeyDown" KeyUp="TxtSearchDishName_KeyUp" Style="{StaticResource CroissantTextBox}"/>
                                     </WrapPanel>
                                     <WrapPanel Margin="0,0,0,10">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,15,0">
@@ -990,7 +989,7 @@
                                     <TextBlock Text="User Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
                                         <TextBlock Text="Search by Email:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
-                                        <TextBox x:Name="txtSearchUser" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchUser_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                                        <TextBox x:Name="txtSearchUser" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchUser_KeyDown" KeyUp="TxtSearchUser_KeyUp" Style="{StaticResource CroissantTextBox}"/>
                                         <Button x:Name="btnSearchUser" Content="Search" Padding="10,3" Click="BtnSearchUser_Click" Style="{StaticResource CroissantButton}"/>
                                     </WrapPanel>
                                 </StackPanel>
@@ -1030,7 +1029,7 @@
                                     <TextBlock Text="Dish Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
                                         <TextBlock Text="Search by Name:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
-                                        <TextBox x:Name="txtSearchDish" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchDish_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                                        <TextBox x:Name="txtSearchDish" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchDish_KeyDown" KeyUp="TxtSearchDish_KeyUp" Style="{StaticResource CroissantTextBox}"/>
                                         <TextBlock Text="Filter by Chef:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
                                         <ComboBox x:Name="cmbFilterChef" Width="150" Padding="5,3" Margin="0,0,10,0" Style="{StaticResource CroissantComboBox}">
                                             <ComboBoxItem Content="All Chefs" IsSelected="True"/>
