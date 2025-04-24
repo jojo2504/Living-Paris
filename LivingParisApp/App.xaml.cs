@@ -11,6 +11,8 @@ using System.IO;
 using System.Data;
 using System.Text;
 using LivingParisApp.Core.Mapping;
+using MySql.Data.MySqlClient;
+using LivingParisApp.Core.Engines.GraphColoration;
 
 namespace LivingParisApp {
     public partial class App : Application {
@@ -45,6 +47,22 @@ namespace LivingParisApp {
             );
 
             //Logger.Log(map.ToString());
+
+            //map all the relationship between chefs and clients based on their respectives ID
+            RelationshipMap<int> relationshipMap = new();
+            var query = @"SELECT DISTINCT ClientID, ChefID FROM Orders;";
+            var command = new MySqlCommand(query);
+            using (var reader = mySQLManager.ExecuteReader(command)) {
+                while (reader.Read()) {
+                    relationshipMap.AddBidirectionalEdge(reader.GetInt32("ClientID"), reader.GetInt32("ChefID"));
+                }
+            }
+
+            var color = new WelshPowell<int>(relationshipMap);
+            Logger.Log(color.GetColorCount());
+            Logger.Log(color.IsBipartite());
+            Logger.Log(color.IsPlanar());
+            Logger.Log(color.GetNodesGroupedByColor().Select(x => x.ToString()).ToArray());
 
             try {
                 MainWindow window = new MainWindow(mySQLManager, map);

@@ -15,36 +15,7 @@ namespace LivingParisApp.Core.Mapping {
             ParseArcs(filePathArcs);
         }
 
-        public override void AddEdge(T from, T to, double weight = 0) {
-            var fromNode = new Node<T>(from);
-            var toNode = new Node<T>(to);
-
-            // Ensure both nodes exist in the adjacency list
-            if (!AdjacencyList.ContainsKey(fromNode))
-                AdjacencyList[fromNode] = new List<Tuple<Node<T>, double>>();
-            if (!AdjacencyList.ContainsKey(toNode))
-                AdjacencyList[toNode] = new List<Tuple<Node<T>, double>>();
-
-            // Add the edge
-            AdjacencyList[fromNode].Add(Tuple.Create(toNode, weight));
-        }
-
-        public override void AddBidirectionalEdge(T A, T B, double weight = 0){
-            var Anode = new Node<T>(A);
-            var Bnode = new Node<T>(B);
-
-            // Ensure both nodes exist in the adjacency list
-            if (!AdjacencyList.ContainsKey(Anode))
-                AdjacencyList[Anode] = new List<Tuple<Node<T>, double>>();
-            if (!AdjacencyList.ContainsKey(Bnode))
-                AdjacencyList[Bnode] = new List<Tuple<Node<T>, double>>();
-
-            // Add the edge
-            AdjacencyList[Anode].Add(Tuple.Create(Bnode, weight));
-            AdjacencyList[Bnode].Add(Tuple.Create(Anode, weight));
-        }
-
-        public override void ParseNodes(string filePathNode) {
+        public void ParseNodes(string filePathNode) {
             // Step 1: Parse nodes (stations) from the first file
             FileReader nodeInitReader = new FileReader(filePathNode);
             
@@ -76,7 +47,7 @@ namespace LivingParisApp.Core.Mapping {
             }
         }
 
-        public override void ParseArcs(string filePathArcs) {
+        public void ParseArcs(string filePathArcs) {
             // Step 2: Parse arcs file and build the adjacency list
             FileReader arcInitReader = new FileReader(filePathArcs);
 

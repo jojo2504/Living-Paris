@@ -1,6 +1,7 @@
 ﻿<Window x:Class="LivingParisApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:LivingParisApp"
         Title="Living Paris"
         Height="670"
         Width="980"
@@ -255,82 +256,323 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        
+        <!-- Scrollbars Style with Fixed Direction -->
+<Style x:Key="CroissantScrollBarThumb" TargetType="{x:Type Thumb}">
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="{x:Type Thumb}">
+                <Border Background="#C19A6B" 
+                        CornerRadius="3"
+                        BorderBrush="#8B4513"
+                        BorderThickness="1"/>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
 
-        <Style x:Key="CroissantDataGrid" TargetType="DataGrid">
-            <Setter Property="Background" Value="#F5F5DC"/>
-            <Setter Property="Foreground" Value="#6B4E31"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>    
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="RowBackground" Value="#FDF5E6"/>
-            <Setter Property="AlternatingRowBackground" Value="#F0EAD6"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="ColumnWidth" Value="*"/>
+<Style x:Key="CroissantScrollBarStyle" TargetType="{x:Type ScrollBar}">
+    <Setter Property="Background" Value="#F5F5DC"/>
+    <Setter Property="BorderBrush" Value="#a87a4f"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Width" Value="14"/>
+    <Setter Property="MinWidth" Value="14"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="{x:Type ScrollBar}">
+                <Grid Background="{TemplateBinding Background}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Up Button -->
+                    <RepeatButton Grid.Row="0" 
+                                Command="ScrollBar.LineUpCommand" 
+                                Background="#F0EAD6"
+                                BorderBrush="#a87a4f"
+                                BorderThickness="1">
+                        <Path Fill="#8B4513" 
+                             Data="M 0 4 L 8 4 L 4 0 Z" 
+                             Width="8" Height="4"/>
+                    </RepeatButton>
+                    
+                    <!-- Scrollbar Track -->
+                    <Track x:Name="PART_Track" 
+                          Grid.Row="1" 
+                          IsDirectionReversed="True">
+                        <Track.DecreaseRepeatButton>
+                            <RepeatButton Command="ScrollBar.PageUpCommand" 
+                                        Background="Transparent"/>
+                        </Track.DecreaseRepeatButton>
+                        <Track.Thumb>
+                            <Thumb Style="{StaticResource CroissantScrollBarThumb}"/>
+                        </Track.Thumb>
+                        <Track.IncreaseRepeatButton>
+                            <RepeatButton Command="ScrollBar.PageDownCommand" 
+                                        Background="Transparent"/>
+                        </Track.IncreaseRepeatButton>
+                    </Track>
+                    
+                    <!-- Down Button -->
+                    <RepeatButton Grid.Row="2" 
+                                Command="ScrollBar.LineDownCommand" 
+                                Background="#F0EAD6"
+                                BorderBrush="#a87a4f"
+                                BorderThickness="1">
+                        <Path Fill="#8B4513" 
+                             Data="M 0 0 L 4 4 L 8 0 Z" 
+                             Width="8" Height="4"/>
+                    </RepeatButton>
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+        <Trigger Property="Orientation" Value="Horizontal">
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="MinHeight" Value="14"/>
+            <Setter Property="Width" Value="Auto"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="DataGrid">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-        
-                                <!-- Column Headers -->
-                                <DataGridColumnHeadersPresenter Grid.Row="0" 
-                                                             HorizontalAlignment="Stretch"/>
-        
-                                <!-- Scrollable Content -->
-                                <ScrollViewer x:Name="DG_ScrollViewer" Grid.Row="1" Focusable="false">
-                                    <ScrollViewer.Template>
-                                        <ControlTemplate TargetType="ScrollViewer">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="*"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                </Grid.RowDefinitions>
-        
-                                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
-                                                                      Grid.Column="0" Grid.Row="0"/>
-        
-                                                <ScrollBar x:Name="PART_VerticalScrollBar"
-                                                         Grid.Column="1" Grid.Row="0"
-                                                         Orientation="Vertical"
-                                                         Maximum="{TemplateBinding ScrollableHeight}"
-                                                         ViewportSize="{TemplateBinding ViewportHeight}"
-                                                         Value="{TemplateBinding VerticalOffset}"
-                                                         Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
-        
-                                                <ScrollBar x:Name="PART_HorizontalScrollBar"
-                                                         Grid.Column="0" Grid.Row="1"
-                                                         Orientation="Horizontal"
-                                                         Maximum="{TemplateBinding ScrollableWidth}"
-                                                         ViewportSize="{TemplateBinding ViewportWidth}"
-                                                         Value="{TemplateBinding HorizontalOffset}"
-                                                         Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
-                                            </Grid>
-                                        </ControlTemplate>
-                                    </ScrollViewer.Template>
-        
-                                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                </ScrollViewer>
-                            </Grid>
-                        </Border>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Left Button -->
+                            <RepeatButton Grid.Column="0" 
+                                        Command="ScrollBar.LineLeftCommand" 
+                                        Background="#F0EAD6"
+                                        BorderBrush="#a87a4f"
+                                        BorderThickness="1">
+                                <Path Fill="#8B4513" 
+                                     Data="M 4 0 L 0 4 L 4 8 Z" 
+                                     Width="4" Height="8"/>
+                            </RepeatButton>
+                            
+                            <!-- Scrollbar Track -->
+                            <Track x:Name="PART_Track" 
+                                  Grid.Column="1" 
+                                  IsDirectionReversed="False">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageLeftCommand" 
+                                                Background="Transparent"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource CroissantScrollBarThumb}"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageRightCommand" 
+                                                Background="Transparent"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                            
+                            <!-- Right Button -->
+                            <RepeatButton Grid.Column="2" 
+                                        Command="ScrollBar.LineRightCommand" 
+                                        Background="#F0EAD6"
+                                        BorderBrush="#a87a4f"
+                                        BorderThickness="1">
+                                <Path Fill="#8B4513" 
+                                     Data="M 0 0 L 4 4 L 0 8 Z" 
+                                     Width="4" Height="8"/>
+                            </RepeatButton>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
+        </Trigger>
+    </Style.Triggers>
+</Style>
+
+<!-- Column Header Style with Sort Arrows -->
+<Style x:Key="CroissantDataGridColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
+    <Setter Property="Background" Value="#D2B48C"/>
+    <Setter Property="Foreground" Value="#6B4E31"/>
+    <Setter Property="BorderBrush" Value="#8B4513"/>
+    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+    <Setter Property="Padding" Value="10,5"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="{x:Type DataGridColumnHeader}">
+                <Grid>
+                    <Border x:Name="HeaderBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Header Content -->
+                            <ContentPresenter Grid.Column="0"
+                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            
+                            <!-- Sort Direction Indicator -->
+                            <Grid Grid.Column="1" Margin="5,0,0,0" Width="8" Height="10">
+                                <!-- Up Arrow (Ascending) -->
+                                <Path x:Name="SortArrowAsc"
+                                    Width="8"
+                                    Height="4"
+                                    VerticalAlignment="Top"
+                                    Stretch="Fill"
+                                    Fill="#6B4E31"
+                                    Opacity="0.3"
+                                    Data="M 0,4 L 8,4 L 4,0 Z"/>
+                                
+                                <!-- Down Arrow (Descending) -->
+                                <Path x:Name="SortArrowDesc"
+                                    Width="8"
+                                    Height="4"
+                                    VerticalAlignment="Bottom"
+                                    Stretch="Fill"
+                                    Fill="#6B4E31"
+                                    Opacity="0.3"
+                                    Data="M 0,0 L 8,0 L 4,4 Z"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#E6CEA8"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="#C19A6B"/>
+                    </Trigger>
+                    <Trigger Property="SortDirection" Value="{x:Null}">
+                        <Setter TargetName="SortArrowAsc" Property="Opacity" Value="0.3"/>
+                        <Setter TargetName="SortArrowDesc" Property="Opacity" Value="0.3"/>
+                    </Trigger>
+                    <Trigger Property="SortDirection" Value="Ascending">
+                        <Setter TargetName="SortArrowAsc" Property="Opacity" Value="1"/>
+                        <Setter TargetName="SortArrowDesc" Property="Opacity" Value="0.1"/>
+                    </Trigger>
+                    <Trigger Property="SortDirection" Value="Descending">
+                        <Setter TargetName="SortArrowAsc" Property="Opacity" Value="0.1"/>
+                        <Setter TargetName="SortArrowDesc" Property="Opacity" Value="1"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
+
+<!-- Main DataGrid Style -->
+<Style x:Key="CroissantDataGrid" TargetType="{x:Type DataGrid}">
+    <Setter Property="Background" Value="#F5F5DC"/>
+    <Setter Property="Foreground" Value="#6B4E31"/>
+    <Setter Property="BorderBrush" Value="#a87a4f"/>    
+    <Setter Property="BorderThickness" Value="2"/>
+    <Setter Property="Margin" Value="5"/>
+    <Setter Property="RowBackground" Value="#FDF5E6"/>
+    <Setter Property="AlternatingRowBackground" Value="#F0EAD6"/>
+    <Setter Property="HeadersVisibility" Value="Column"/>
+    <Setter Property="FontFamily" Value="Segoe UI"/>
+    <Setter Property="VerticalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="ColumnWidth" Value="*"/>
+    <Setter Property="ColumnHeaderStyle" Value="{StaticResource CroissantDataGridColumnHeaderStyle}"/>
+    
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="{x:Type DataGrid}">
+                <Border BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}" 
+                        Background="{TemplateBinding Background}" 
+                        Padding="{TemplateBinding Padding}" 
+                        SnapsToDevicePixels="True"
+                        CornerRadius="5">
+                    <ScrollViewer x:Name="DG_ScrollViewer" Focusable="false">
+                        <ScrollViewer.Template>
+                            <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <!-- Column Headers -->
+                                    <DataGridColumnHeadersPresenter x:Name="PART_ColumnHeadersPresenter" 
+                                                                  Grid.Column="0" Grid.Row="0"/>
+                                    
+                                    <!-- Empty content message -->
+                                    <TextBlock Text="No items to display" 
+                                             Grid.Column="0" Grid.Row="1"
+                                             HorizontalAlignment="Center" 
+                                             VerticalAlignment="Center"
+                                             Foreground="#8B4513"
+                                             FontStyle="Italic">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasItems, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGrid}}}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    
+                                    <!-- DataGrid Items -->
+                                    <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" 
+                                                          CanContentScroll="{TemplateBinding CanContentScroll}" 
+                                                          Grid.Column="0" Grid.Row="1"/>
+                                    
+                                    <!-- Scrollbars -->
+                                    <ScrollBar x:Name="PART_VerticalScrollBar"
+                                             Grid.Column="1" Grid.Row="1"
+                                             Orientation="Vertical"
+                                             Maximum="{TemplateBinding ScrollableHeight}"
+                                             ViewportSize="{TemplateBinding ViewportHeight}"
+                                             Value="{TemplateBinding VerticalOffset}"
+                                             Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                             Style="{StaticResource CroissantScrollBarStyle}"/>
+                                    
+                                    <ScrollBar x:Name="PART_HorizontalScrollBar"
+                                             Grid.Column="0" Grid.Row="2"
+                                             Orientation="Horizontal"
+                                             Maximum="{TemplateBinding ScrollableWidth}"
+                                             ViewportSize="{TemplateBinding ViewportWidth}"
+                                             Value="{TemplateBinding HorizontalOffset}"
+                                             Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"
+                                             Style="{StaticResource CroissantScrollBarStyle}"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </ScrollViewer.Template>
+                        
+                        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    </ScrollViewer>
+                </Border>
+                
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsGrouping" Value="true">
+                        <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
 
         <Style x:Key="CroissantDatePicker" TargetType="DatePicker">
             <Setter Property="Background" Value="#FFF8E1"/>
@@ -389,12 +631,12 @@
         <TabControl Background="#FFF8E1">
             <!-- Sign In Tab -->
             <TabItem Header="Sign In" x:Name="tabSignIn" Style="{StaticResource CroissantTabItem}">
-                <StackPanel Margin="20" Background="#FFF8E1">
-                    <TextBlock Text="Sign In" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
+                <StackPanel Margin="10" Background="#FFF8E1">
+                    <TextBlock Text="Sign In" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
                     <TextBlock Text="Email:" Style="{StaticResource CroissantTextBlock}"/>
                     <TextBox x:Name="txtSignInEmail" Margin="0,5,0,10" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantTextBox}"/>
                     <TextBlock Text="Password:" Style="{StaticResource CroissantTextBlock}"/>
-                    <PasswordBox x:Name="pwdSignIn" Margin="0,5,0,20" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantPasswordBox}"/>
+                    <PasswordBox x:Name="pwdSignIn" Margin="0,5,0,10" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantPasswordBox}"/>
                     <Button x:Name="btnSignIn" Content="Sign In" Padding="5" Width="100" HorizontalAlignment="Left" Style="{StaticResource CroissantButton}"/>
                     <TextBlock x:Name="txtSignInStatus" Margin="0,10,0,0" Style="{StaticResource CroissantTextBlock}"/>
                 </StackPanel>
@@ -402,7 +644,7 @@
             <!-- Sign Up Tab -->
             <TabItem Header="Sign Up" x:Name="tabSignUp" Style="{StaticResource CroissantTabItem}">
                 <ScrollViewer Background="#FFF8E1">
-                    <StackPanel Margin="20">
+                    <StackPanel Margin="10">
                         <TextBlock Text="Sign Up" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
                         <TextBlock Text="First Name:" Style="{StaticResource CroissantTextBlock}"/>
                         <TextBox x:Name="txtFirstName" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
@@ -424,7 +666,7 @@
                         <TextBox x:Name="txtPostcode" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
                         <TextBlock Text="City:" Style="{StaticResource CroissantTextBlock}"/>
                         <TextBox x:Name="txtCity" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Closest Metro (Optional):" Style="{StaticResource CroissantTextBlock}"/>
+                        <TextBlock Text="Closest Metro:" Style="{StaticResource CroissantTextBlock}"/>
                         <ComboBox x:Name="cmbMetro" Margin="0,5,0,10" Width="200" Style="{StaticResource CroissantComboBox}"/>
                         <TextBlock Text="User Type (Select One or Both):" Style="{StaticResource CroissantTextBlock}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,5,0,20">
@@ -438,7 +680,7 @@
             </TabItem>
             <!-- User Account Tab -->
             <TabItem Header="My Account" x:Name="tabAccount" Style="{StaticResource CroissantTabItem}">
-                <Grid Margin="20" Background="#FFF8E1">
+                <Grid Margin="10" Background="#FFF8E1">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -482,7 +724,7 @@
                     <TabControl x:Name="foodServicesTabControl" Background="#FFF8E1" BorderThickness="0">
                         <!-- Browse and Order -->
                         <TabItem Header="Browse and Order" x:Name="tabBrowseOrder" Style="{StaticResource CroissantTabItem}">
-                            <Grid Margin="20" Background="#FFF8E1">
+                            <Grid Margin="10" Background="#FFF8E1">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
@@ -494,6 +736,10 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
                                     <TextBlock Text="Browse Available Dishes" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
+                                    <WrapPanel Margin="0,0,0,10">
+                                        <TextBlock Text="Name: " VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <TextBox x:Name="txtSearchDishName" Width="200" Padding="5,3" KeyDown="BtnClearFiltersDishes_Click" Style="{StaticResource CroissantTextBox}"/>
+                                    </WrapPanel>
                                     <WrapPanel Margin="0,0,0,10">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,15,0">
                                             <TextBlock Text="Dish Type:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
@@ -540,8 +786,8 @@
                                         <ListBox x:Name="lbCart" Grid.Row="1" Margin="10">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border BorderThickness="2" BorderBrush="139b30">
-                                                        <Grid Margin="0,5">
+                                                    <Border BorderThickness="2">
+                                                        <Grid Margin="0,2">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
@@ -550,7 +796,7 @@
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding Name}" Grid.Column="0" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
                                                             <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:C2}}" Grid.Column="2" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
-                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Margin="0,0,0,0" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
+                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Padding="4,2" Margin="0,0,0,5" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
