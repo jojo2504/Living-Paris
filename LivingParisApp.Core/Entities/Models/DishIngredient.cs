@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace LivingParisApp.Core.Models.Food {
+namespace LivingParisApp.Core.Entities.Models {
     public class DishIngredient {
         [Key]
         [Column(Order = 0)]
@@ -17,11 +17,5 @@ namespace LivingParisApp.Core.Models.Food {
         public int? Gramme { get; set; }
 
         public int? Pieces { get; set; }
-
-        [ForeignKey("IngredientID")]
-        public virtual Ingredient Ingredient { get; set; }
-
-        [ForeignKey("DishID")]
-        public virtual Dish Dish { get; set; }
     }
 }

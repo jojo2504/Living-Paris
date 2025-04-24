@@ -1,7 +1,5 @@
 using System.Text;
 using LivingParisApp.Core.GraphStructure;
-using LivingParisApp.Services.MySQL;
-using MySql.Data.MySqlClient;
 
 namespace LivingParisApp.Core.Mapping {
     public class RelationshipMap<T> : Graph<T> {

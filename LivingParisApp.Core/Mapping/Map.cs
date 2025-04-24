@@ -1,11 +1,12 @@
 using System.Text;
+using LivingParisApp.Core.Entities.Station;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Services.FileHandling;
 
 namespace LivingParisApp.Core.Mapping {
     public class Map<T> : Graph<T> where T : IStation<T> {
-        private Dictionary<string, Node<T>> stationIdToNode = new Dictionary<string, Node<T>>();
-        private Dictionary<string, Node<T>> stationNameToNode = new Dictionary<string, Node<T>>();
+        private readonly Dictionary<string, Node<T>> stationIdToNode = new Dictionary<string, Node<T>>();
+        private readonly Dictionary<string, Node<T>> stationNameToNode = new Dictionary<string, Node<T>>();
 
         public Map() {
         }

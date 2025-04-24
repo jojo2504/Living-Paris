@@ -1,4 +1,4 @@
-namespace LivingParisApp.Core.Mapping {
+namespace LivingParisApp.Core.Entities.Station {
     public interface IStation<T> where T : IStation<T> {
         public int ID { get; }
         public string LibelleLine { get; }

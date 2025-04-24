@@ -1,50 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Windows.Input;
 using LivingParisApp.Core.GraphStructure;
-using System.Windows.Threading;
-using System.Windows.Media.Animation;
 using LivingParisApp.Services.Logging;
-
-using LivingParisApp.Core.Models.Human;
-
+using LivingParisApp.Core.Entities.Models;
 using MySql.Data.MySqlClient;
 using LivingParisApp.Services.MySQL;
 using System.Data;
 using LivingParisApp.Core.Mapping;
 using System.Collections.ObjectModel;
-using LivingParisApp.Core.Models.Food;
-using LivingParisApp.Core.Models.OrderInfo;
 using LivingParisApp.Core.Engines.ShortestPaths;
+using LivingParisApp.Core.Entities.Station;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
         MySQLManager _mySQLManager;
         private User _currentUser;
         Map<MetroStation> _map;
-
-        private static readonly Dictionary<string, Brush> LineColors = new Dictionary<string, Brush> {
-            {"1", Brushes.Yellow},
-            {"2", Brushes.Blue},
-            {"3", Brushes.Red},
-            {"4", Brushes.Green},
-            {"5", Brushes.Orange},
-            {"6", Brushes.Pink},
-            {"7", Brushes.Purple},
-            {"8", Brushes.Brown},
-            {"9", Brushes.Cyan},
-            {"10", Brushes.Lime},
-            {"11", Brushes.Magenta},
-            {"12", Brushes.Olive},
-            {"13", Brushes.Navy},
-            {"14", Brushes.Teal},
-            // Add more lines as needed
-        };
 
         // Zoom/pan variables
         private Point _lastMousePosition;
@@ -568,9 +542,7 @@ namespace LivingParisApp {
 
                         // Get line color
                         string lineCode = stationNode.Object.LibelleLine ?? "default";
-                        Brush lineColor = isPathConnection
-                            ? Brushes.Yellow
-                            : (LineColors.TryGetValue(lineCode, out var color) ? color : Brushes.Gray);
+                        Brush lineColor = isPathConnection ? Brushes.Yellow : Brushes.Gray;
 
                         // Create the line
                         var line = new Line {

@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>assets\Microsoft-Fluentui-Emoji-3d-Croissant-3d.ico</ApplicationIcon>
+    <ApplicationIcon>assets\images\Microsoft-Fluentui-Emoji-3d-Croissant-3d.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="assets\Microsoft-Fluentui-Emoji-3d-Croissant-3d.ico" />
+    <Content Include="assets\images\Microsoft-Fluentui-Emoji-3d-Croissant-3d.ico" />
   </ItemGroup>
 
   <ItemGroup>

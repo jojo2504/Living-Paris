@@ -1,3 +1,4 @@
+using LivingParisApp.Core.Entities.Station;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
 

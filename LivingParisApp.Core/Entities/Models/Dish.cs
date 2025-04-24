@@ -1,10 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using LivingParisApp.Core.Models.Human;
-using LivingParisApp.Core.Models.OrderInfo;
 
-namespace LivingParisApp.Core.Models.Food {
+namespace LivingParisApp.Core.Entities.Models {
     public class Dish : INotifyPropertyChanged {
         private string _name;
         private string _type;

@@ -1,9 +1,7 @@
 using MySql.Data.MySqlClient;
-using System;
 using System.Data;
-using System.Collections.Generic;
 using LivingParisApp.Services.Logging;
-using static LivingParisApp.Services.EnvironmentSetup.Constants;
+using static LivingParisApp.Services.Environment.Constants;
 
 namespace LivingParisApp.Services.MySQL {
     public class MySQLManager {
@@ -194,13 +192,13 @@ namespace LivingParisApp.Services.MySQL {
             try {
                 if (_resetDatabase) {
                     // reset database
-                    var resetTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "reset_database.sql");
+                    var resetTablePath = Path.Combine(SqlScriptsPath, "reset_database.sql");
                     var resetTableQuery = File.ReadAllText(resetTablePath);
                     ExecuteNonQuery(resetTableQuery);
                     Logger.Log("Database resetted successfully");
                 }
                 // Add your table creation queries here
-                var createTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "create_database.sql");
+                var createTablePath = Path.Combine(SqlScriptsPath, "create_database.sql");
                 var createTableQuery = File.ReadAllText(createTablePath);
                 ExecuteNonQuery(createTableQuery);
                 Logger.Log("Database initialized successfully with all tables");
@@ -214,18 +212,18 @@ namespace LivingParisApp.Services.MySQL {
         public void InitializeMockDatabase() {
             try {
                 // reset database
-                var resetTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "reset_database.sql");
+                var resetTablePath = Path.Combine(SqlScriptsPath, "reset_database.sql");
                 var resetTableQuery = File.ReadAllText(resetTablePath);
                 ExecuteNonQuery(resetTableQuery);
                 Logger.Success("Database resetted successfully");
 
                 // Add your table creation queries here
-                var createTablePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "create_database.sql");
+                var createTablePath = Path.Combine(SqlScriptsPath, "create_database.sql");
                 var createTableQuery = File.ReadAllText(createTablePath);
                 ExecuteNonQuery(createTableQuery);
 
                 // Add your table creation queries here
-                var mockDatabasePath = Path.Combine(GetSolutionDirectoryInfo().FullName, "scripts", "create_mock_database.sql");
+                var mockDatabasePath = Path.Combine(SqlScriptsPath, "create_mock_database.sql");
                 var mockDatabaseQuery = File.ReadAllText(mockDatabasePath);
                 ExecuteNonQuery(mockDatabaseQuery);
                 Logger.Log("Database initialized successfully with all tables");

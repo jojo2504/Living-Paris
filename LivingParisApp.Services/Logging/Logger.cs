@@ -1,4 +1,4 @@
-using static LivingParisApp.Services.EnvironmentSetup.Constants;
+using static LivingParisApp.Services.Environment.Constants;
 using LivingParisApp.Services.Logging.Events;
 
 namespace LivingParisApp.Services.Logging {
@@ -12,7 +12,7 @@ namespace LivingParisApp.Services.Logging {
                 writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {prefix}{Object}");
             }
             if (level.Equals(LogEventLevel.Fatal)) {
-                Environment.Exit(1);
+                System.Environment.Exit(1);
             }
         }
         private static void LogMessage(string message, LogEventLevel level = LogEventLevel.Information) {
@@ -22,7 +22,7 @@ namespace LivingParisApp.Services.Logging {
                 writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {prefix}{message}");
             }
             if (level.Equals(LogEventLevel.Fatal)) {
-                Environment.Exit(1);
+                System.Environment.Exit(1);
             }
         }
 
@@ -39,7 +39,7 @@ namespace LivingParisApp.Services.Logging {
                 }
             }
             if (level.Equals(LogEventLevel.Fatal)) {
-                Environment.Exit(1);
+                System.Environment.Exit(1);
             }
         }
 

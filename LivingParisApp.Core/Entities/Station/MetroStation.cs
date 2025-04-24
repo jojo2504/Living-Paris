@@ -1,6 +1,4 @@
-using LivingParisApp.Core.GraphStructure;
-
-namespace LivingParisApp.Core.Mapping {
+namespace LivingParisApp.Core.Entities.Station {
     public class MetroStation : IStation<MetroStation>{
         public int ID { get; }
         public string LibelleLine { get; }
