@@ -2,6 +2,7 @@ using System.Text;
 using LivingParisApp.Core.Entities.Station;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Services.FileHandling;
+using LivingParisApp.Services.Logging;
 
 namespace LivingParisApp.Core.Mapping {
     public class Map<T> : Graph<T> where T : IStation<T> {

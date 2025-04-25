@@ -13,7 +13,6 @@
 - [Living-Paris](#living-paris)
   - [Summary](#summary)
   - [Introduction](#introduction)
-  - [Features (On-Progress)](#features-on-progress)
   - [Getting Started (For Custom Building)](#getting-started-for-custom-building)
   - [Entity-Relationship Diagram](#entity-relationship-diagram-outdated)
 
@@ -23,20 +22,16 @@ Living Paris is an application that facilitates meal sharing between neighbors w
 This project aims to explore graphs and their functionality, particularly in optimizing delivery routes and analyzing user interactions.
 **This repository is a project for A2/S4 students in computer sciences.**
 
-## Features (On-Progress)
-- Graph Creation: The system models user interactions and delivery routes using graph structures.
-
-- Graph Traversal Algorithms: The application implements Breadth-First Search (BFS) and Depth-First Search (DFS) to analyze and optimize delivery paths.
-
-- XML Representation of Graphs: The graph data is stored and represented using XML for better visualization and management.
-
 ## Getting Started (For Custom Building)
 1. Clone the repository to your local machine or download the latest release.
-2. Make sure your .NET version is `9.0`.
+2. Make sure your .NET version is `9.x`.
 3. To run the project : 
     - go to `LivingParisApp/`,
     - use in terminal `dotnet run` \
-      Current arguments list : [`--reset`, `--noLogSQL`]
+      Current arguments list : [`--reset`, `--noLogSQL`, `--initMock`]
+      - `reset` wipes all the database's data.
+      - `noLogSQL` will prevent any SQL query to be written on the log file. 
+      - `initMock` resets the database and populate it.
 4. To run the tests :
     - go to `Living-Paris/`,
     - use in terminal `dotnet test`.
@@ -46,15 +41,8 @@ This project aims to explore graphs and their functionality, particularly in opt
 This diagram will evolve in the future as we add more functionalities to the app.
 
 ## Known Issues
-- An item in the cart will not be deleted even if the chef has deleted his dish from the marketplace.
-- The map has a rotation issue.
-- No QoL buttons has been implemented yet.
-- User can't modify more than their role.
-- user can't cancel an order or remove an item from the cart.
-- User can't change their address.
-- QoL navigation has not been implemented proprely yet.
-- No preview times or cost.
+- The map has a rotation issue and is not well implemented.
 - Cost is suppository for now.
-- Not every information in the marketplace has been implemented yet.
 - Marketplace doesn't support dish info view yet.
+- Dishes can't be created with ingredients details.
 - Sign up infos are not erased after sign up completion.
