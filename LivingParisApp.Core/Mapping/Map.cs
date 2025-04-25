@@ -114,6 +114,34 @@ namespace LivingParisApp.Core.Mapping {
             }
         }
 
+        public void AddBidirectionalEdge(T A, T B, double weight = 0) {
+            // Look for existing nodes or create new ones
+            Node<T> Anode = null;
+            Node<T> Bnode = null;
+            
+            // Try to find existing nodes first
+            foreach (var node in AdjacencyList.Keys) {
+                if (node.Object.ID == A.ID)
+                    Anode = node;
+                if (node.Object.ID == B.ID)
+                    Bnode = node;
+            }
+            
+            // Create new nodes if not found
+            if (Anode == null) Anode = new Node<T>(A);
+            if (Bnode == null) Bnode = new Node<T>(B);
+
+            // Ensure both nodes exist in the adjacency list
+            if (!AdjacencyList.ContainsKey(Anode))
+                AdjacencyList[Anode] = new List<Tuple<Node<T>, double>>();
+            if (!AdjacencyList.ContainsKey(Bnode))
+                AdjacencyList[Bnode] = new List<Tuple<Node<T>, double>>();
+
+            // Add the edge
+            AdjacencyList[Anode].Add(Tuple.Create(Bnode, weight));
+            AdjacencyList[Bnode].Add(Tuple.Create(Anode, weight));
+        }
+
         public override string ToString() {
             StringBuilder stringBuilder = new StringBuilder();
             foreach (KeyValuePair<Node<T>, List<Tuple<Node<T>, double>>> kpv in AdjacencyList) {
