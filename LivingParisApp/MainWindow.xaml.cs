@@ -1359,6 +1359,18 @@ namespace LivingParisApp {
             }
         }
 
+        public void TxtSearchDishName_KeyDown(object sender, KeyEventArgs e) {
+            //Logger.Log($"Key pressed: {e.Key}");
+            BtnClearFiltersDishes_Click(sender, e); // Call the existing click handler
+        }
+
+        private void TxtSearchDishName_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Back) {
+                //Logger.Log($"Key pressed: {e.Key}");
+                BtnClearFiltersDishes_Click(sender, e); // Call the existing click handler
+            }
+        }
+
         public void BtnApplyFiltersDishes_Click(object sender = null, RoutedEventArgs e = null) {
             /// <summary>
             /// This applies the filter on all available dishes IN the MARKETPLACE
@@ -1367,7 +1379,7 @@ namespace LivingParisApp {
             /// <param name="e"></param>
 
             if (cmbDishType == null || cmbDiet == null || cmbOrigin == null) {
-                Logger.Warning("Filter controls are not accessible");
+                Logger.Warning("Filter cont rols are not accessible");
                 return;
             }
 
@@ -1401,17 +1413,22 @@ namespace LivingParisApp {
             }
 
             // then search by name
-            if (!string.IsNullOrEmpty(txtSearchDishName.Text)) {
+            string searchDish = txtSearchDishName.Text.Trim().ToLower();
+
+            if (!string.IsNullOrEmpty(searchDish)) {
                 // Fuzzy match using Levenshtein distance
                 filteredAvailableDishes = filteredAvailableDishes
-                    .Select(order => new {
-                        Order = order,
-                        Distance = CalculateLevenshteinDistance(txtSearchDishName.Text, order.Status.ToLower())
+                    .Where(dish => {
+                        string dishName = dish.Name.ToLower();
+
+                        // Match if:
+                        // 1. Dish name contains the search term (most intuitive)
+                        // 2. OR Levenshtein distance is small enough for typo tolerance
+                        return dishName.Contains(searchDish) ||
+                            CalculateLevenshteinDistance(searchDish, dishName) <= Math.Min(3, searchDish.Length);
                     })
-                    .Where(x => x.Distance <= Math.Max(3, txtSearchDishName.Text.Length / 2)) // Adjust threshold as needed
-                    .OrderBy(x => x.Distance) // Closest matches first
-                    .ThenBy(x => x.Order.Status) // Then sort by Order name
-                    .Select(x => x.Order);
+                    .OrderBy(dish => dish.Name.ToLower().Contains(searchDish) ? 0 : 1) // Exact substring matches first
+                    .ThenBy(dish => dish.Name); // Then alphabetically
             }
 
             // Remove duplicates that might have matched multiple criteria
@@ -1428,7 +1445,7 @@ namespace LivingParisApp {
             }
         }
 
-        public void BtnClearFiltersDishes_Click(object sender, RoutedEventArgs e) {
+        public void BtnClearFiltersDishes_Click(object sender = null, RoutedEventArgs e = null) {
             cmbDishType.SelectedIndex = 0;
             cmbDiet.SelectedIndex = 0;
             cmbOrigin.SelectedIndex = 0;
@@ -1441,9 +1458,13 @@ namespace LivingParisApp {
         #region Admin
         // Admin Tab - User Management
         private void TxtSearchUser_KeyDown(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Enter) {
+            BtnSearchUser_Click(sender, e);
+        }
+
+        private void TxtSearchUser_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Back) {
                 // Trigger the search button's click event
-                BtnSearchUser_Click(sender, e);
+                BtnSearchUser_Click(sender, e); 
             }
         }
 
@@ -1540,8 +1561,12 @@ namespace LivingParisApp {
 
         // Admin Tab - Dish Management
         private void TxtSearchDish_KeyDown(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Enter) {
-                // Trigger the search button's click event
+            BtnSearchDish_Click(sender, e);
+        }
+
+        private void TxtSearchDish_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Back) {
+                // Trigger the Back button's click event
                 BtnSearchDish_Click(sender, e);
             }
         }
