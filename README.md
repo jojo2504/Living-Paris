@@ -26,7 +26,7 @@ This project aims to explore graphs and their functionality, particularly in opt
 1. Clone the repository to your local machine or download the latest release.
 2. Make sure your .NET version is `9.x`.
 3. To run the project : 
-    - run.app
+    - run.app \
       Current arguments list : [`--reset`, `--noLogSQL`, `--initMock`]
       - `reset` wipes all the database's data.
       - `noLogSQL` will prevent any SQL query to be written on the log file. 
