@@ -602,7 +602,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Grid.Column="0" Grid.ColumnSpan="2"/>
-                            <DatePickerTextBox x:Name="PART_TextBox" Grid.Column="0" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" Padding="{TemplateBinding Padding}" BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Focusable="False" IsReadOnly="True"/>
+                            <DatePickerTextBox x:Name="PART_TextBox" Text="Select Date" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" Padding="{TemplateBinding Padding}" BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Focusable="False" IsReadOnly="True"/>
                             <Button x:Name="PART_Button" Grid.Column="1" Width="30" Height="30" Padding="5,3" Margin="0,0,10,0" Focusable="False" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderThickness="0">
                                 <Button.Style>
                                     <Style TargetType="Button">
