@@ -207,6 +207,11 @@ namespace LivingParisApp {
             txtSignInEmail.Text = string.Empty;
             pwdSignIn.Password = string.Empty;
             txtSignInStatus.Text = string.Empty;
+
+            if (tabAccount.Parent is TabControl tabControl) {
+                // Select the sign in tab
+                tabControl.SelectedIndex = 1;
+            }
         }
 
         private void txtSignIn_KeyDown(object sender, KeyEventArgs e) {
@@ -307,17 +312,65 @@ namespace LivingParisApp {
                 return;
             }
 
-            // Basic validation for required fields
-            if (string.IsNullOrWhiteSpace(txtFirstName.Text) ||
-                string.IsNullOrWhiteSpace(txtLastName.Text) ||
-                string.IsNullOrWhiteSpace(txtEmail.Text) ||
-                string.IsNullOrWhiteSpace(pwdSignUp.Password) ||
-                string.IsNullOrWhiteSpace(txtPhone.Text) ||
-                string.IsNullOrWhiteSpace(txtStreet.Text) ||
-                string.IsNullOrWhiteSpace(txtStreetNumber.Text) ||
-                string.IsNullOrWhiteSpace(txtPostcode.Text) ||
-                string.IsNullOrWhiteSpace(txtCity.Text)) {
-                txtSignUpStatus.Text = "Please fill in all required fields";
+            // Basic validation for required fields with specific error messages
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text)) {
+                txtSignUpStatus.Text = "First name is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtLastName.Text)) {
+                txtSignUpStatus.Text = "Last name is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtEmail.Text)) {
+                txtSignUpStatus.Text = "Email address is required";
+                return;
+            }
+            else if (!IsValidEmail(txtEmail.Text)) {
+                txtSignUpStatus.Text = "Please enter a valid email address";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(pwdSignUp.Password)) {
+                txtSignUpStatus.Text = "Password is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtPhone.Text)) {
+                txtSignUpStatus.Text = "Phone number is required";
+                return;
+            }
+            else if (txtPhone.Text.Length != 10 || !txtPhone.Text.All(char.IsDigit)) {
+                txtSignUpStatus.Text = "Phone number must be exactly 10 digits";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtStreet.Text)) {
+                txtSignUpStatus.Text = "Street name is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtStreetNumber.Text)) {
+                txtSignUpStatus.Text = "Street number is required";
+                return;
+            }
+            else if (!int.TryParse(txtStreetNumber.Text, out _)) {
+                txtSignUpStatus.Text = "Street number must be a valid number";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtPostcode.Text)) {
+                txtSignUpStatus.Text = "Postal code is required";
+                return;
+            }
+            else if (txtPostcode.Text.Length != 5 || !txtPostcode.Text.All(char.IsDigit)) {
+                txtSignUpStatus.Text = "Postal code must be exactly 5 digits";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtCity.Text)) {
+                txtSignUpStatus.Text = "City is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtClosestMetro.Text)) {
+                txtSignUpStatus.Text = "Closest metro station is required";
+                return;
+            }
+            if (!chkClient.IsChecked == true && !chkChef.IsChecked == true) {
+                txtSignUpStatus.Text = "Please select at least one role (Client or Chef)";
                 return;
             }
 
@@ -343,14 +396,22 @@ namespace LivingParisApp {
             return count > 0;
         }
 
+        private bool IsValidEmail(string email) {
+            try {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch {
+                return false;
+            }
+        }
+
         private void BtnSignOut_Click(object sender, RoutedEventArgs e) {
             // Clear current user
             _currentUser = null;
 
             // Update UI for logged out state
             UpdateUIForLoggedOutUser();
-
-            MessageBox.Show("Signed out successfully");
         }
 
         private void SaveAccountToDatabase() {
