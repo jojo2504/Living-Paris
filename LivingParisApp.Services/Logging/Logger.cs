@@ -9,7 +9,7 @@ namespace LivingParisApp.Services.Logging {
             // Open the StreamWriter inside the using statement
             using (StreamWriter writer = new StreamWriter(LogFilePath, append: true)) {
                 string prefix = $"[{level}] ";
-                writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {prefix}{string.Join(", ", Objects.Select(x => x.ToString()))}");
+                writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {prefix}{string.Join(" ", Objects.Select(x => x.ToString()))}");
             }
             if (level.Equals(LogEventLevel.Fatal)) {
                 System.Environment.Exit(1);

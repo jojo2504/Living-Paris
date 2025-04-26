@@ -210,7 +210,7 @@ namespace LivingParisApp {
 
             if (tabAccount.Parent is TabControl tabControl) {
                 // Select the sign in tab
-                tabControl.SelectedIndex = 1;
+                tabControl.SelectedIndex = 0;
             }
         }
 
@@ -278,20 +278,20 @@ namespace LivingParisApp {
                             PhoneNumber = (string)userReader["PhoneNumber"],
                             Password = (string)passwordResult,
                             TotalMoneySpent = (decimal)userReader["TotalMoneySpent"],
-                            ClosestMetro = userReader["ClosestMetro"] == DBNull.Value ? "" : (string)userReader["ClosestMetro"],
+                            ClosestMetro = (string)userReader["ClosestMetro"],
                             IsChef = (int)userReader["IsChef"],
                             IsClient = (int)userReader["IsClient"]
                         };
                         UpdateUIForLoggedInUser();
+                        // Switch to the Sign In tab (assuming TabControl is the main control)
+                        // Get the parent TabControl
+                        if (tabAccount.Parent is TabControl tabControl) {
+                            // Select the first tab (Sign In tab)
+                            tabControl.SelectedIndex = 4;
+                        }
                     }
                 }
 
-                // Switch to the Sign In tab (assuming TabControl is the main control)
-                // Get the parent TabControl
-                if (tabAccount.Parent is TabControl tabControl) {
-                    // Select the first tab (Sign In tab)
-                    tabControl.SelectedIndex = 4;
-                }
             }
             catch (Exception ex) {
                 Logger.Error($"Login error: {ex}");
@@ -365,7 +365,7 @@ namespace LivingParisApp {
                 txtSignUpStatus.Text = "City is required";
                 return;
             }
-            if (string.IsNullOrWhiteSpace(txtClosestMetro.Text)) {
+            if (string.IsNullOrWhiteSpace(cmbMetro.Text)) {
                 txtSignUpStatus.Text = "Closest metro station is required";
                 return;
             }
@@ -380,7 +380,38 @@ namespace LivingParisApp {
                 return;
             }
 
+            //reset every boxes
             SaveAccountToDatabase();
+
+            ResetSignUpBoxes();
+        }
+
+        private void ResetSignUpBoxes() {
+            Logger.Log(txtFirstName.Text);
+            Logger.Log(txtLastName.Text);
+            Logger.Log(txtEmail.Text);
+            Logger.Log(pwdSignUp.Password);
+            Logger.Log(pwdConfirm.Password);
+            Logger.Log(txtPhone.Text);
+            Logger.Log(txtStreet.Text);
+            Logger.Log(txtStreetNumber.Text);
+            Logger.Log(txtPostcode.Text);
+            Logger.Log(txtCity.Text);
+            Logger.Log(cmbMetro.Text);
+
+            txtFirstName.Text = "";
+            txtLastName.Text = "";
+            txtEmail.Text = "";
+            pwdSignUp.Password = "";
+            pwdConfirm.Password = "";
+            txtPhone.Text = "";
+            txtStreet.Text = "";
+            txtStreetNumber.Text = "";
+            txtPostcode.Text = "";
+            txtCity.Text = "";
+            cmbMetro.Text = "";
+            chkClient.IsChecked = false;
+            chkChef.IsChecked = false;
         }
 
         private bool EmailExists(string email) {
@@ -425,12 +456,12 @@ namespace LivingParisApp {
                 command.Parameters.AddWithValue("@LastName", txtLastName.Text);
                 command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
                 command.Parameters.AddWithValue("@Street", txtStreet.Text);
-                command.Parameters.AddWithValue("@StreetNumber", int.Parse(txtStreetNumber.Text));
+                command.Parameters.AddWithValue("@StreetNumber", txtStreetNumber.Text);
                 command.Parameters.AddWithValue("@Postcode", txtPostcode.Text);
                 command.Parameters.AddWithValue("@City", txtCity.Text);
                 command.Parameters.AddWithValue("@PhoneNumber", txtPhone.Text);
                 command.Parameters.AddWithValue("@Mail", txtEmail.Text);
-                command.Parameters.AddWithValue("@ClosestMetro", string.IsNullOrWhiteSpace(cmbMetro.Text) ? DBNull.Value : cmbMetro.Text);
+                command.Parameters.AddWithValue("@ClosestMetro", cmbMetro.Text);
                 command.Parameters.AddWithValue("@Password", pwdSignUp.Password);
                 command.Parameters.AddWithValue("@IsClient", (bool)chkClient.IsChecked ? 1 : 0);
                 command.Parameters.AddWithValue("@IsChef", (bool)chkChef.IsChecked ? 1 : 0);
@@ -1622,6 +1653,57 @@ namespace LivingParisApp {
             }
         }
 
+        public void BtnViewDishDetails_Click(object sender = null, RoutedEventArgs e = null) {
+            Logger.Log("View DishDetails details button clicked");
+
+            if (sender is Button button && button.DataContext is Dish selectedDish) {
+                try {
+                    Logger.Log("selected dish id: ", selectedDish.DishID);
+                    // Step 1: Retrieve the list of ingredients in the dish
+                    var ingredients = new List<(string Name, int Quantity, string MeasurementType)>();
+                    string query = @"
+                        SELECT i.Name, 
+                            CASE 
+                                WHEN di.Grams IS NOT NULL THEN di.Grams
+                                WHEN di.Pieces IS NOT NULL THEN di.Pieces
+                                ELSE NULL
+                            END AS Quantity,
+                            CASE 
+                                WHEN di.Grams IS NOT NULL THEN 'Grams'
+                                WHEN di.Pieces IS NOT NULL THEN 'Pieces'
+                                ELSE NULL
+                            END AS MeasurementType
+                        FROM Dishes d
+                        JOIN DishIngredients di ON d.DishID = di.DishID
+                        JOIN Ingredients i ON di.IngredientID = i.IngredientID
+                        WHERE d.DishID = @DishID;";
+                    var command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@DishID", selectedDish.DishID);
+
+                    using (var reader = _mySQLManager.ExecuteReader(command)) {
+                        while (reader.Read()) {
+                            ingredients.Add((
+                                Name: reader.GetString("Name"),
+                                Quantity: reader.GetInt32("Quantity"),
+                                MeasurementType: reader.GetString("MeasurementType")
+                            ));
+                        }
+                    }
+                    Logger.Log(ingredients.Count);
+                    // Step 2: Display dish details
+                    string details = $"Name: {selectedDish.Name:dd/MM/yyyy}\n" +
+                                    "Ingredients:\n";
+                    foreach (var ingredient in ingredients) {
+                        details += $"{ingredient.Quantity} {ingredient.MeasurementType} of {ingredient.Name}\n";
+                    }
+
+                    MessageBox.Show(details, "Dish Details");
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+            }
+        }
         public void TxtSearchDishName_KeyDown(object sender, KeyEventArgs e) {
             //Logger.Log($"Key pressed: {e.Key}");
             BtnClearFiltersDishes_Click(sender, e); // Call the existing click handler
@@ -2017,7 +2099,7 @@ namespace LivingParisApp {
 
         #endregion
 
-        #region Actions
+        #region Collection Macros 
 
         private void RemoveUserFromCollections(int userId) {
             var userToRemoveAllUsers = _allUsers.FirstOrDefault(d => d.UserID == userId);

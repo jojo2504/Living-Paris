@@ -187,6 +187,13 @@
                                         <DataGridTextColumn Header="Chef" Binding="{Binding ChefName}" Width="*"/>
                                         <DataGridTextColumn Header="Price" Binding="{Binding DishPrice, StringFormat={}{0:C2}}" Width="*"/>
                                         <DataGridTextColumn Header="Available Until" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTemplateColumn Header="View" Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View" Click="BtnViewDishDetails_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn Header="Add" Width="60">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
