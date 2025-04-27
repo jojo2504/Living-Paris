@@ -11,10 +11,14 @@
 
 ## Summary
 - [Living-Paris](#living-paris)
+  - [Code owner](#code-owner)
+  - [Collaborators](#collaborators)
   - [Summary](#summary)
   - [Introduction](#introduction)
   - [Getting Started (For Custom Building)](#getting-started-for-custom-building)
-  - [Entity-Relationship Diagram](#entity-relationship-diagram-outdated)
+  - [Entity-Relationship Diagram (Outdated)](#entity-relationship-diagram-outdated)
+  - [Known Issues](#known-issues)
+  - [To Implement](#to-implement)
 
 ## Introduction
 Living Paris is an application that facilitates meal sharing between neighbors within Paris. The platform allows individuals or local businesses to order homemade meals prepared by registered cooks. Users can register as either a cook or a client—or both simultaneously—by providing their personal details such as name, address, phone number, and email.
@@ -24,22 +28,27 @@ This project aims to explore graphs and their functionality, particularly in opt
 
 ## Getting Started (For Custom Building)
 1. Clone the repository to your local machine or download the latest release.
-2. Make sure your .NET version is `9.x`.
+2. Make sure your .NET version is at least `9.x.x`.
 3. To run the project : 
     - run.app \
       Current arguments list : [`--reset`, `--noLogSQL`, `--initMock`]
       - `reset` wipes all the database's data.
-      - `noLogSQL` will prevent any SQL query to be written on the log file. 
-      - `initMock` resets the database and populate it.
+      - `noLogSQL` will prevent any SQL query to be written on the log file located at `%appdata%/livingparis/logs`. 
+      - `initMock` resets the database and populate it with arbritary values (not completed).
 4. To run the tests :
     - run.test
      
 ## Entity-Relationship Diagram (Outdated)
 ![Entity Association Diagram](/markdownassets/Image/Entity_Association_Diagram.png)
-This diagram will evolve in the future as we add more functionalities to the app.
+This diagram will evolve in the future as we add more functionalities to the app. \
+The diagram is under update.
 
 ## Known Issues
-- Cost is suppository for now.
-- Marketplace doesn't support dish info view yet.
-- Dishes can't be created with ingredients details.
-- Sign up infos are not erased after sign up completion.
+- The map is not interactable.
+- Xaml style is not consistent across tabs.
+- Dijkstra is broken | Not critical since we are using A*.
+
+## To Implement
+- Display Vertex Cover
+- Display `RelationshipMap` coloration graph
+- Tests for : vertex cover, graph coloration
