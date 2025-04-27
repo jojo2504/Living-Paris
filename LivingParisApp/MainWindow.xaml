@@ -5,440 +5,103 @@
         Height="670"
         Width="980"
         Background="#FFF8E1">
-    <Window.Resources>
-        <!-- Croissant Theme Styles -->
-        <Style x:Key="CroissantTabItem" TargetType="TabItem">
-            <Setter Property="Background" Value="#edb658"/>
-            <Setter Property="Foreground" Value="#8B4513"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabItem">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5"
-                                Margin="{TemplateBinding Margin}">
-                            <ContentPresenter ContentSource="Header"
-                                              Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#f0c985"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#f0c985"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CroissantButton" TargetType="Button">
-            <Setter Property="Background" Value="#edb658"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#f0c985"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#FFA000"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#FFD54F"/>
-                                <Setter Property="Foreground" Value="#A9A9A9"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CroissantTextBlock" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#8B4513"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Margin" Value="0,5,0,5"/>
-        </Style>
-
-        <Style x:Key="CroissantTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#8B4513"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#d5a24b"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CroissantPasswordBox" TargetType="PasswordBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#8B4513"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="PasswordBox">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#d5a24b"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CroissantComboBox" TargetType="ComboBox">
-            <Setter Property="Background" Value="#FFF8E1"/>
-            <Setter Property="Foreground" Value="#8B4513"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Name="ToggleButton"
-                                          BorderBrush="{TemplateBinding BorderBrush}"
-                                          Background="{TemplateBinding Background}"
-                                          BorderThickness="{TemplateBinding BorderThickness}"
-                                          Focusable="false"
-                                          IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
-                                          ClickMode="Press">
-                                <ToggleButton.Template>
-                                    <ControlTemplate TargetType="ToggleButton">
-                                        <Border BorderThickness="{TemplateBinding BorderThickness}"
-                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                Background="{TemplateBinding Background}"
-                                                CornerRadius="3">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <ContentPresenter Grid.Column="0"
-                                                                  Margin="6,3"
-                                                                  HorizontalAlignment="Left"
-                                                                  VerticalAlignment="Center"
-                                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
-                                                                  Content="{TemplateBinding Content}"/>
-                                                <Path Grid.Column="1"
-                                                      Width="8" Height="5"
-                                                      Margin="0,0,6,0"
-                                                      Fill="#8B4513"
-                                                      Data="M 0 0 L 8 0 L 4 5 Z"/>
-                                            </Grid>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="true">
-                                                <Setter Property="Background" Value="#FFDAA4"/>
-                                            </Trigger>
-                                            <Trigger Property="IsChecked" Value="true">
-                                                <Setter Property="Background" Value="#FFE0B2"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </ToggleButton.Template>
-                            </ToggleButton>
-                            <ContentPresenter IsHitTestVisible="False"
-                                              Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Left"
-                                              VerticalAlignment="Center"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
-                            <Popup Name="PART_Popup"
-                                   AllowsTransparency="true"
-                                   IsOpen="{Binding Path=IsDropDownOpen,RelativeSource={RelativeSource TemplatedParent}}"
-                                   Placement="Bottom"
-                                   PopupAnimation="Slide">
-                                <Border BorderThickness="2"
-                                        BorderBrush="#a87a4f"
-                                        Background="#FFF8E1"
-                                        CornerRadius="3">
-                                    <ScrollViewer MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                                                  SnapsToDevicePixels="True">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#CCCCCC"/>
-                            </Trigger>
-                            <Trigger Property="IsGrouping" Value="True">
-                                <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            
-            <!-- The ItemContainerStyle for ComboBoxItems -->
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ComboBoxItem">
-                                    <Border Name="Border"
-                                            Padding="5,3"
-                                            BorderThickness="1"
-                                            CornerRadius="2"
-                                            SnapsToDevicePixels="true"
-                                            Background="Transparent">
-                                        <ContentPresenter />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsHighlighted" Value="true">
-                                            <Setter TargetName="Border" Property="Background" Value="#FFDAA4"/>
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="true">
-                                            <Setter TargetName="Border" Property="Background" Value="#edb658"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CroissantDataGrid" TargetType="DataGrid">
-            <Setter Property="Background" Value="#F5F5DC"/>
-            <Setter Property="Foreground" Value="#6B4E31"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>    
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="RowBackground" Value="#FDF5E6"/>
-            <Setter Property="AlternatingRowBackground" Value="#F0EAD6"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="VerticalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="ColumnWidth" Value="*"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGrid">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-        
-                                <!-- Column Headers -->
-                                <DataGridColumnHeadersPresenter Grid.Row="0" 
-                                                             HorizontalAlignment="Stretch"/>
-        
-                                <!-- Scrollable Content -->
-                                <ScrollViewer x:Name="DG_ScrollViewer" Grid.Row="1" Focusable="false">
-                                    <ScrollViewer.Template>
-                                        <ControlTemplate TargetType="ScrollViewer">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="*"/>
-                                                    <RowDefinition Height="Auto"/>
-                                                </Grid.RowDefinitions>
-        
-                                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
-                                                                      Grid.Column="0" Grid.Row="0"/>
-        
-                                                <ScrollBar x:Name="PART_VerticalScrollBar"
-                                                         Grid.Column="1" Grid.Row="0"
-                                                         Orientation="Vertical"
-                                                         Maximum="{TemplateBinding ScrollableHeight}"
-                                                         ViewportSize="{TemplateBinding ViewportHeight}"
-                                                         Value="{TemplateBinding VerticalOffset}"
-                                                         Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
-        
-                                                <ScrollBar x:Name="PART_HorizontalScrollBar"
-                                                         Grid.Column="0" Grid.Row="1"
-                                                         Orientation="Horizontal"
-                                                         Maximum="{TemplateBinding ScrollableWidth}"
-                                                         ViewportSize="{TemplateBinding ViewportWidth}"
-                                                         Value="{TemplateBinding HorizontalOffset}"
-                                                         Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
-                                            </Grid>
-                                        </ControlTemplate>
-                                    </ScrollViewer.Template>
-        
-                                    <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                </ScrollViewer>
-                            </Grid>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CroissantDatePicker" TargetType="DatePicker">
-            <Setter Property="Background" Value="#FFF8E1"/>
-            <Setter Property="Foreground" Value="#8B4513"/>
-            <Setter Property="BorderBrush" Value="#a87a4f"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="CalendarStyle">
-                <Setter.Value>
-                    <Style TargetType="Calendar">
-                        <Setter Property="Background" Value="#FFF8E1"/>
-                        <Setter Property="Foreground" Value="#8B4513"/>
-                        <Setter Property="BorderBrush" Value="#a87a4f"/>
-                        <Setter Property="BorderThickness" Value="1"/>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DatePicker">
-                        <Grid x:Name="PART_Root">
-                            <Grid.Resources>
-                                <SolidColorBrush x:Key="DisabledBrush" Color="#A5FFFFFF" />
-                            </Grid.Resources>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Grid.Column="0" Grid.ColumnSpan="2"/>
-                            <DatePickerTextBox x:Name="PART_TextBox" Grid.Column="0" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" Padding="{TemplateBinding Padding}" BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Focusable="False" IsReadOnly="True"/>
-                            <Button x:Name="PART_Button" Grid.Column="1" Width="30" Height="30" Padding="5,3" Margin="0,0,10,0" Focusable="False" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" BorderThickness="0">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </Button.Style>
-                                <Path Width="10" Height="6" Fill="#8B4513" Data="M 0 0 L 10 0 L 5 6 Z" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Button>
-                            <Popup x:Name="PART_Popup" StaysOpen="False" AllowsTransparency="True" PlacementTarget="{Binding ElementName=PART_Root}">
-                                <Calendar x:Name="PART_Calendar" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Foreground="{TemplateBinding Foreground}" Style="{TemplateBinding CalendarStyle}" />
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
     <Grid>
         <TabControl Background="#FFF8E1">
             <!-- Sign In Tab -->
             <TabItem Header="Sign In" x:Name="tabSignIn" Style="{StaticResource CroissantTabItem}">
-                <StackPanel Margin="20" Background="#FFF8E1">
-                    <TextBlock Text="Sign In" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
+                <StackPanel Margin="10" Background="#FFF8E1">
+                    <TextBlock Text="Sign In" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
                     <TextBlock Text="Email:" Style="{StaticResource CroissantTextBlock}"/>
                     <TextBox x:Name="txtSignInEmail" Margin="0,5,0,10" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantTextBox}"/>
                     <TextBlock Text="Password:" Style="{StaticResource CroissantTextBlock}"/>
-                    <PasswordBox x:Name="pwdSignIn" Margin="0,5,0,20" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantPasswordBox}"/>
+                    <PasswordBox x:Name="pwdSignIn" Margin="0,5,0,10" KeyDown="txtSignIn_KeyDown" Style="{StaticResource CroissantPasswordBox}"/>
                     <Button x:Name="btnSignIn" Content="Sign In" Padding="5" Width="100" HorizontalAlignment="Left" Style="{StaticResource CroissantButton}"/>
                     <TextBlock x:Name="txtSignInStatus" Margin="0,10,0,0" Style="{StaticResource CroissantTextBlock}"/>
                 </StackPanel>
             </TabItem>
             <!-- Sign Up Tab -->
             <TabItem Header="Sign Up" x:Name="tabSignUp" Style="{StaticResource CroissantTabItem}">
-                <ScrollViewer Background="#FFF8E1">
-                    <StackPanel Margin="20">
-                        <TextBlock Text="Sign Up" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBlock Text="First Name:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtFirstName" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Last Name:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtLastName" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Email:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtEmail" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Password:" Style="{StaticResource CroissantTextBlock}"/>
-                        <PasswordBox x:Name="pwdSignUp" Margin="0,5,0,10" Style="{StaticResource CroissantPasswordBox}"/>
-                        <TextBlock Text="Confirm Password:" Style="{StaticResource CroissantTextBlock}"/>
-                        <PasswordBox x:Name="pwdConfirm" Margin="0,5,0,10" Style="{StaticResource CroissantPasswordBox}"/>
-                        <TextBlock Text="Phone Number:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtPhone" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Street:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtStreet" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Street Number:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtStreetNumber" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Postcode:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtPostcode" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="City:" Style="{StaticResource CroissantTextBlock}"/>
-                        <TextBox x:Name="txtCity" Margin="0,5,0,10" Style="{StaticResource CroissantTextBox}"/>
-                        <TextBlock Text="Closest Metro (Optional):" Style="{StaticResource CroissantTextBlock}"/>
-                        <ComboBox x:Name="cmbMetro" Margin="0,5,0,10" Width="200" Style="{StaticResource CroissantComboBox}"/>
-                        <TextBlock Text="User Type (Select One or Both):" Style="{StaticResource CroissantTextBlock}"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,5,0,20">
-                            <CheckBox x:Name="chkClient" Content="Client" Margin="0,0,20,0" Foreground="#8B4513" FontFamily="Segoe UI"/>
-                            <CheckBox x:Name="chkChef" Content="Chef" Foreground="#8B4513" FontFamily="Segoe UI"/>
+                <ScrollViewer Background="#FFF8E1" VerticalScrollBarVisibility="Hidden">
+                    <Grid Margin="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Header -->
+                            <RowDefinition Height="*"/>     <!-- Form Fields -->
+                            <RowDefinition Height="Auto"/> <!-- Button Area -->
+                            <RowDefinition Height="1000*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Header -->
+                        <TextBlock Text="Sign Up" FontSize="24" FontWeight="Bold" Margin="0,0,0,20" 
+                                Grid.ColumnSpan="2" Style="{StaticResource CroissantTextBlock}"/>
+                        
+                        <!-- Left Column -->
+                        <StackPanel Grid.Column="0" Margin="0,40,10,0">
+                            <TextBlock Text="Personal Information" FontWeight="SemiBold" FontSize="16" 
+                                    Margin="0,0,0,15" Style="{StaticResource CroissantTextBlock}"/>
+                            
+                            <TextBlock Text="First Name:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtFirstName" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Last Name:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtLastName" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Email:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtEmail" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Phone Number:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtPhone" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Password:" Style="{StaticResource CroissantTextBlock}"/>
+                            <PasswordBox x:Name="pwdSignUp" Margin="0,3,0,10" Style="{StaticResource CroissantPasswordBox}"/>
+                            
+                            <TextBlock Text="Confirm Password:" Style="{StaticResource CroissantTextBlock}"/>
+                            <PasswordBox x:Name="pwdConfirm" Margin="0,3,0,15" Style="{StaticResource CroissantPasswordBox}"/>
                         </StackPanel>
-                        <Button x:Name="btnSignUp" Content="Sign Up" Width="100" HorizontalAlignment="Left" Style="{StaticResource CroissantButton}"/>
-                        <TextBlock x:Name="txtSignUpStatus" Margin="0,10,0,0" Style="{StaticResource CroissantTextBlock}"/>
-                    </StackPanel>
+                        
+                        <!-- Right Column -->
+                        <StackPanel Grid.Column="1" Margin="10,40,0,0">
+                            <TextBlock Text="Address Information" FontWeight="SemiBold" FontSize="16" 
+                                    Margin="0,0,0,15" Style="{StaticResource CroissantTextBlock}"/>
+                            
+                            <TextBlock Text="Street:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtStreet" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Street Number:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtStreetNumber" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Postcode:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtPostcode" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="City:" Style="{StaticResource CroissantTextBlock}"/>
+                            <TextBox x:Name="txtCity" Margin="0,3,0,10" Style="{StaticResource CroissantTextBox}"/>
+                            
+                            <TextBlock Text="Closest Metro:" Style="{StaticResource CroissantTextBlock}"/>
+                            <ComboBox x:Name="cmbMetro" Height="40" Margin="0,3,0,15" Style="{StaticResource CroissantComboBox}"/>
+                            
+                            <TextBlock Text="User Type:" Style="{StaticResource CroissantTextBlock}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,15">
+                                <CheckBox x:Name="chkClient" Content="Client" Margin="0,0,20,0" Foreground="#8B4513" FontFamily="Segoe UI" Style="{StaticResource CroissantCheckBox}"/>
+                                <CheckBox x:Name="chkChef" Content="Chef" Foreground="#8B4513" FontFamily="Segoe UI" Style="{StaticResource CroissantCheckBox}"/>
+                            </StackPanel>
+                        </StackPanel>
+                        
+                        <!-- Button and Status Area - separate row with padding -->
+                        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,30,0,0">
+                            <Button x:Name="btnSignUp" Content="Sign Up" Width="120" Height="35" 
+                                    HorizontalAlignment="Center" Style="{StaticResource CroissantButton}"/>
+                            <TextBlock x:Name="txtSignUpStatus" Margin="0,10,0,0" TextAlignment="Center" 
+                                    Style="{StaticResource CroissantTextBlock}"/>
+                        </StackPanel>
+                    </Grid>
                 </ScrollViewer>
             </TabItem>
             <!-- User Account Tab -->
             <TabItem Header="My Account" x:Name="tabAccount" Style="{StaticResource CroissantTabItem}">
-                <Grid Margin="20" Background="#FFF8E1">
+                <Grid Margin="10" Background="#FFF8E1">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -482,7 +145,7 @@
                     <TabControl x:Name="foodServicesTabControl" Background="#FFF8E1" BorderThickness="0">
                         <!-- Browse and Order -->
                         <TabItem Header="Browse and Order" x:Name="tabBrowseOrder" Style="{StaticResource CroissantTabItem}">
-                            <Grid Margin="20" Background="#FFF8E1">
+                            <Grid Margin="10" Background="#FFF8E1">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
@@ -494,6 +157,10 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
                                     <TextBlock Text="Browse Available Dishes" FontSize="20" FontWeight="Bold" Margin="0,0,0,10" Style="{StaticResource CroissantTextBlock}"/>
+                                    <WrapPanel Margin="0,0,0,10">
+                                        <TextBlock Text="Name: " VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                                        <TextBox x:Name="txtSearchDishName" Width="200" Padding="5,3" KeyDown="TxtSearchDishName_KeyDown" KeyUp="TxtSearchDishName_KeyUp" Style="{StaticResource CroissantTextBox}"/>
+                                    </WrapPanel>
                                     <WrapPanel Margin="0,0,0,10">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,15,0">
                                             <TextBlock Text="Dish Type:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
@@ -520,6 +187,13 @@
                                         <DataGridTextColumn Header="Chef" Binding="{Binding ChefName}" Width="*"/>
                                         <DataGridTextColumn Header="Price" Binding="{Binding DishPrice, StringFormat={}{0:C2}}" Width="*"/>
                                         <DataGridTextColumn Header="Available Until" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
+                                        <DataGridTemplateColumn Header="View" Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View" Click="BtnViewDishDetails_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn Header="Add" Width="60">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -540,8 +214,8 @@
                                         <ListBox x:Name="lbCart" Grid.Row="1" Margin="10">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border BorderThickness="2" BorderBrush="139b30">
-                                                        <Grid Margin="0,5">
+                                                    <Border BorderThickness="2">
+                                                        <Grid Margin="0,2">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
@@ -550,7 +224,7 @@
                                                             </Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding Name}" Grid.Column="0" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
                                                             <TextBlock Text="{Binding TotalPrice, StringFormat={}{0:C2}}" Grid.Column="2" Style="{StaticResource CroissantTextBlock}" Margin="0,5,4,0"/>
-                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Margin="0,0,0,0" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
+                                                            <Button Content="X" Grid.Column="3" Width="25" Height="25" Padding="4,2" Margin="0,0,0,5" Click="RemoveFromCart_Click" CommandParameter="{Binding}" Style="{StaticResource CroissantButton}"/>
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
@@ -606,6 +280,13 @@
                                         <DataGridTextColumn Header="Expires" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
                                         <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
                                         <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
+                                        <DataGridTemplateColumn Header="View" Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View" Click="BtnViewDishDetails_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -744,7 +425,7 @@
                                     <TextBlock Text="User Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
                                         <TextBlock Text="Search by Email:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
-                                        <TextBox x:Name="txtSearchUser" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchUser_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                                        <TextBox x:Name="txtSearchUser" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchUser_KeyDown" KeyUp="TxtSearchUser_KeyUp" Style="{StaticResource CroissantTextBox}"/>
                                         <Button x:Name="btnSearchUser" Content="Search" Padding="10,3" Click="BtnSearchUser_Click" Style="{StaticResource CroissantButton}"/>
                                     </WrapPanel>
                                 </StackPanel>
@@ -784,7 +465,7 @@
                                     <TextBlock Text="Dish Management" FontSize="16" FontWeight="Bold" Style="{StaticResource CroissantTextBlock}"/>
                                     <WrapPanel Margin="0,10,0,0">
                                         <TextBlock Text="Search by Name:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
-                                        <TextBox x:Name="txtSearchDish" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchDish_KeyDown" Style="{StaticResource CroissantTextBox}"/>
+                                        <TextBox x:Name="txtSearchDish" Width="200" Padding="5,3" Margin="0,0,10,0" KeyDown="TxtSearchDish_KeyDown" KeyUp="TxtSearchDish_KeyUp" Style="{StaticResource CroissantTextBox}"/>
                                         <TextBlock Text="Filter by Chef:" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
                                         <ComboBox x:Name="cmbFilterChef" Width="150" Padding="5,3" Margin="0,0,10,0" Style="{StaticResource CroissantComboBox}">
                                             <ComboBoxItem Content="All Chefs" IsSelected="True"/>
@@ -804,6 +485,13 @@
                                         <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
                                         <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                                        <DataGridTemplateColumn Header="View" Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View" Click="BtnViewDishDetails_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>

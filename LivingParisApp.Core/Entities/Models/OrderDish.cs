@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using LivingParisApp.Core.Models.Food;
 
-namespace LivingParisApp.Core.Models.OrderInfo {
+namespace LivingParisApp.Core.Entities.Models {
     public class OrderDish {
         [Key]
         [Column(Order = 0)]

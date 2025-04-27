@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS Users (
     IsClient INT NOT NULL DEFAULT 0,
     IsChef INT NOT NULL DEFAULT 0,
     PRIMARY KEY (UserID),
-    CHECK (CHAR_LENGTH(PhoneNumber) = 1) -- NEED TO CHANGE TO 10 IN THE FUTURE, SET TO ONE FOR EASY NEW ACCOUNT CREATION
+    CHECK (CHAR_LENGTH(PhoneNumber) = 10)
 );
 
 -- Orders depends on Chefs and Clients and Dishes
@@ -78,13 +78,13 @@ CREATE TABLE IF NOT EXISTS DishIngredients (
     DishIngredientsID INT AUTO_INCREMENT NOT NULL,
     IngredientID INT NOT NULL,
     DishID INT NOT NULL,
-    Gramme INT DEFAULT NULL,
+    Grams INT DEFAULT NULL,
     Pieces INT DEFAULT NULL,
     PRIMARY KEY (DishIngredientsID),
     FOREIGN KEY (IngredientID) REFERENCES Ingredients(IngredientID) ON DELETE CASCADE,
     FOREIGN KEY (DishID) REFERENCES Dishes(DishID) ON DELETE CASCADE,
     CHECK (
-        (Gramme IS NOT NULL AND Pieces IS NULL) OR
-        (Pieces IS NOT NULL AND Gramme IS NULL)
+        (Grams IS NOT NULL AND Pieces IS NULL) OR
+        (Pieces IS NOT NULL AND Grams IS NULL)
     )
 );

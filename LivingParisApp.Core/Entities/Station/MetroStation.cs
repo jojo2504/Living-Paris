@@ -1,6 +1,6 @@
-using LivingParisApp.Core.GraphStructure;
+using System.Globalization;
 
-namespace LivingParisApp.Core.Mapping {
+namespace LivingParisApp.Core.Entities.Station {
     public class MetroStation : IStation<MetroStation>{
         public int ID { get; }
         public string LibelleLine { get; }
@@ -11,14 +11,14 @@ namespace LivingParisApp.Core.Mapping {
         public string CommuneCode { get; }
         const double earthRadius = 6371; // Earth's radius in kilometers
 
-        public MetroStation(int ID, string LibelleLine, string libelleStation, double latitude, double longitude, string CommuneName, string CommuneCode) {
+        public MetroStation(int ID, string libelleLine, string libelleStation, double longitude, double latitude, string communeName, string communeCode) {
             this.ID = ID;
-            LibelleLine = LibelleLine;
+            LibelleLine = libelleLine;
             LibelleStation = libelleStation;
-            Latitude = latitude;
             Longitude = longitude;
-            CommuneName = CommuneName;
-            CommuneCode = CommuneCode;
+            Latitude = latitude;
+            CommuneName = communeName;
+            CommuneCode = communeCode;
         }
 
         public static MetroStation FromParts(string[] parts) {
@@ -26,8 +26,8 @@ namespace LivingParisApp.Core.Mapping {
                 Convert.ToInt32(parts[0]),
                 parts[1],
                 parts[2],
-                string.IsNullOrEmpty(parts[3]) ? 0 : Convert.ToDouble(parts[3]),
-                string.IsNullOrEmpty(parts[4]) ? 0 : Convert.ToDouble(parts[4]),
+                string.IsNullOrEmpty(parts[3]) ? 0 : Convert.ToDouble(parts[3], CultureInfo.InvariantCulture),
+                string.IsNullOrEmpty(parts[4]) ? 0 : Convert.ToDouble(parts[4], CultureInfo.InvariantCulture),
                 parts[5],
                 parts[6]
             );

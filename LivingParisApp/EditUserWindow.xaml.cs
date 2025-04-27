@@ -1,7 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Windows;
-using LivingParisApp.Core.Models.Human;
+using LivingParisApp.Core.Entities.Models;
 using LivingParisApp.Services.Logging;
 using LivingParisApp.Services.MySQL;
 using MySql.Data.MySqlClient;

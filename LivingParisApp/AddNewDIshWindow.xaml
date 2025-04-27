@@ -3,56 +3,111 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Add New Dish" 
-        Height="400" 
-        Width="400"
-        WindowStartupLocation="CenterScreen">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        Height="600" 
+        Width="550"
+        WindowStartupLocation="CenterScreen"
+        Background="#FFF8E1">
+    
+    <!-- Import your resource dictionary -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/LivingParisApp;component/Resources/ResourceDictionaryCroissant.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <!-- Main ScrollViewer to make the entire window scrollable -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Label Content="Name:" Grid.Row="0"/>
-        <TextBox x:Name="txtName" Grid.Row="1" Margin="0,0,0,10"/>
+            <TextBlock Text="Name:" Grid.Row="0" Style="{StaticResource CroissantTextBlock}"/>
+            <TextBox x:Name="txtName" Grid.Row="1" Margin="0,0,0,10" Style="{StaticResource CroissantTextBox}"/>
 
-        <Label Content="Type:" Grid.Row="2"/>
-        <ComboBox x:Name="cmbType" Grid.Row="3" Margin="0,0,0,10" Width="120">
-            <ComboBoxItem Content="entree" />
-            <ComboBoxItem Content="main dish" />
-            <ComboBoxItem Content="dessert" />
-        </ComboBox>
+            <TextBlock Text="Type:" Grid.Row="2" Style="{StaticResource CroissantTextBlock}"/>
+            <ComboBox x:Name="cmbType" Grid.Row="3" SelectedIndex="0" Margin="0,0,0,10" Style="{StaticResource CroissantComboBox}">
+                <ComboBoxItem Content="entree" />
+                <ComboBoxItem Content="main dish" />
+                <ComboBoxItem Content="dessert" />
+            </ComboBox>
 
-        <Label Content="Price:" Grid.Row="4"/>
-        <TextBox x:Name="txtPrice" Grid.Row="5" Margin="0,0,0,10"/>
+            <TextBlock Text="Price:" Grid.Row="4" Style="{StaticResource CroissantTextBlock}"/>
+            <TextBox x:Name="txtPrice" Grid.Row="5" Margin="0,0,0,10" Style="{StaticResource CroissantTextBox}"/>
 
-        <Label Content="Diet:" Grid.Row="6"/>
-        <TextBox x:Name="txtDiet" Grid.Row="7" Margin="0,0,0,10"/>
+            <TextBlock Text="Diet:" Grid.Row="6" Style="{StaticResource CroissantTextBlock}"/>
+            <TextBox x:Name="txtDiet" Grid.Row="7" Margin="0,0,0,10" Style="{StaticResource CroissantTextBox}"/>
 
-        <Label Content="Origin:" Grid.Row="8"/>
-        <TextBox x:Name="txtOrigin" Grid.Row="9" Margin="0,0,0,10"/>
+            <TextBlock Text="Origin:" Grid.Row="8" Style="{StaticResource CroissantTextBlock}"/>
+            <TextBox x:Name="txtOrigin" Grid.Row="9" Margin="0,0,0,10" Style="{StaticResource CroissantTextBox}"/>
 
-        <StackPanel Grid.Row="10" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Right"
-                    Margin="0,20,0,0">
-            <Button x:Name="btnSave" 
-                    Content="Save" 
-                    Width="80" 
-                    Margin="0,0,10,0" 
-                    Click="BtnSave_Click"/>
-            <Button x:Name="btnCancel" 
-                    Content="Cancel" 
-                    Width="80" 
-                    Click="BtnCancel_Click"/>
-        </StackPanel>
-    </Grid>
+            <!-- Ingredients Section -->
+            <TextBlock Text="Ingredients:" Grid.Row="10" FontWeight="Bold" Margin="0,10,0,10" Style="{StaticResource CroissantTextBlock}"/>
+            
+            <!-- Ingredients panel - now directly below the Ingredients title -->
+            <StackPanel x:Name="ingredientsPanel" Grid.Row="11" Margin="0,0,0,10">
+                <!-- First ingredient entry with proper Grid layout -->
+                <Grid Margin="0,5,0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/> <!-- New column for remove button -->
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Text="Name:" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                    <TextBox x:Name="txtIngredientName1" Grid.Column="1" Margin="0,0,10,0" Style="{StaticResource CroissantTextBox}"/>
+                    <TextBlock Text="Amount:" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,5,0" Style="{StaticResource CroissantTextBlock}"/>
+                    <TextBox x:Name="txtIngredientAmount1" Grid.Column="3" Width="60" Margin="0,0,5,0" Style="{StaticResource CroissantTextBox}"/>
+                    <ComboBox x:Name="cmbMeasureType1" Grid.Column="4" Width="80" SelectedIndex="0" Style="{StaticResource CroissantComboBox}">
+                        <ComboBoxItem Content="Grams"/>
+                        <ComboBoxItem Content="Pieces"/>
+                    </ComboBox>
+                    <Button Grid.Column="5" Content="✕" Width="40" Height="40" Margin="5,0,5,0" ToolTip="Remove ingredient" Click="RemoveIngredient_Click" Tag="1" Style="{StaticResource CroissantButton}"/>
+                </Grid>
+                
+                <!-- Add ingredient button -->
+                <Button x:Name="btnAddIngredient" 
+                        Content="+ Add Another Ingredient" 
+                        HorizontalAlignment="Left"
+                        Margin="0,10,0,5"
+                        Padding="5,2"
+                        Click="BtnAddIngredient_Click"
+                        Style="{StaticResource CroissantButton}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="12" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Right"
+                        Margin="0,10,0,0">
+                <Button x:Name="btnSave" 
+                        Content="Save" 
+                        Width="80" 
+                        Margin="0,0,10,0" 
+                        Click="BtnSave_Click"
+                        Style="{StaticResource CroissantButton}"/>
+                <Button x:Name="btnCancel" 
+                        Content="Cancel" 
+                        Width="80" 
+                        Click="BtnCancel_Click"
+                        Style="{StaticResource CroissantButton}"/>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </Window>

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace LivingParisApp.Services.EnvironmentSetup {
+namespace LivingParisApp.Services.Environment {
     internal static class ConfigLoader {
         // Database properties
         public static string DatabaseHost { get; }
@@ -51,7 +51,7 @@ namespace LivingParisApp.Services.EnvironmentSetup {
                 if (baseDirectoryConfig.GetProperty("Type").GetString() == "AppData") {
                     string baseDirectoryPath = baseDirectoryConfig.GetProperty("Path").GetString()!;
                     BaseAppDataPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
                         baseDirectoryPath
                     );
                 }
@@ -61,7 +61,7 @@ namespace LivingParisApp.Services.EnvironmentSetup {
                 if (logsConfig.GetProperty("Type").GetString() == "AppData") {
                     string logsPath = logsConfig.GetProperty("Path").GetString()!;
                     LogsPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData),
                         logsPath
                     );
                     var logFileName = logsConfig.GetProperty("File").GetProperty("Name").GetString();

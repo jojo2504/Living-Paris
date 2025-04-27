@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using LivingParisApp.Core.Entities.Station;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Core.Mapping;
+using LivingParisApp.Services.Logging;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths {
     public class BellmanFord<T> : ShortestPathsEngine<T> where T : IStation<T> {
@@ -12,7 +11,7 @@ namespace LivingParisApp.Core.Engines.ShortestPaths {
         /// </summary>
         /// <param name="map">The map containing nodes and their connections</param>
         /// <param name="start">The starting node for path calculations</param>
-        public void Init(Map<T> map, Node<T> start) {
+        public int Init(Map<T> map, Node<T> start) {
             if (start != null) {
                 _startVertice = start;
                 _distances = new Dictionary<Node<T>, double>();
@@ -47,11 +46,14 @@ namespace LivingParisApp.Core.Engines.ShortestPaths {
                     foreach (var neighbor in node.Value) {
                         if (_distances[node.Key] != double.PositiveInfinity &&
                             _distances[neighbor.Item1] > _distances[node.Key] + neighbor.Item2) {
-                            throw new InvalidOperationException("Graph contains a negative-weight cycle");
+                            Logger.Warning("There is a negative-weight cycles.");
+                            return 1; // indicate no success
                         }
                     }
                 }
             }
+
+            return 0; // indicate success
         }
 
         /// <summary>

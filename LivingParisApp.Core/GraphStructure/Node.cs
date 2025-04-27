@@ -6,6 +6,7 @@ namespace LivingParisApp.Core.GraphStructure {
     public class Node<T> {
         public T Object { get; }
         public Node(T obj) => Object = obj;
+        
         /// <summary>
         /// Returns a string representation of the node.
         /// </summary>
@@ -24,14 +25,5 @@ namespace LivingParisApp.Core.GraphStructure {
                 return EqualityComparer<T>.Default.Equals(Object, other.Object);
             return false;
         }
-
-        /// <summary>
-        /// Serves as the default hash function.
-        /// </summary>
-        /// <returns>A hash code for the current object.</returns>
-        public override int GetHashCode() {
-            return Object != null ? Object.GetHashCode() : 0;
-        }
-
     }
 }

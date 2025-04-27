@@ -1,10 +1,7 @@
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using LivingParisApp.Core.Models.Human;
 
-namespace LivingParisApp.Core.Models.OrderInfo {
+namespace LivingParisApp.Core.Entities.Models {
     public class Order : INotifyPropertyChanged {
         [Key]
         public int OrderID { get; set; }

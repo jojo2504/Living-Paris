@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace LivingParisApp.Core.Models.Human {
+namespace LivingParisApp.Core.Entities.Models {
     public class User : INotifyPropertyChanged {
         private int _userID;
         private string _lastName;

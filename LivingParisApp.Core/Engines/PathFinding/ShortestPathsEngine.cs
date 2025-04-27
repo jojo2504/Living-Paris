@@ -1,5 +1,5 @@
-using LivingParisApp.Core.Mapping;
 using LivingParisApp.Core.GraphStructure;
+using LivingParisApp.Core.Entities.Station;
 
 namespace LivingParisApp.Core.Engines.ShortestPaths {
     public class ShortestPathsEngine<T> where T : IStation<T> {

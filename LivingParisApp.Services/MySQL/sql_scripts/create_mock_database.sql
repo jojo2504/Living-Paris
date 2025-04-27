@@ -17,31 +17,31 @@ SET FOREIGN_KEY_CHECKS = 1;
 INSERT INTO Users (LastName, FirstName, Street, StreetNumber, Postcode, City, PhoneNumber, Mail, ClosestMetro, Password, IsClient, IsChef) VALUES
 
 -- Admin (1)
-('Admin', 'Admin', 'Rue de Rivoli', 45, '75001', 'Paris', '1', 'admin', 'Louvre-Rivoli', 'admin', 1, 1),
+('Admin', 'Admin', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'admin', 'Louvre-Rivoli', 'admin', 1, 1),
 
 -- Chefs (10)
-('Dubois', 'Marie', 'Rue de Rivoli', 45, '75001', 'Paris', '1', 'marie.dubois@email.com', 'Louvre-Rivoli', 'chef_password1', 0, 1),
-('Martin', 'Jean', 'Avenue des Champs-Élysées', 120, '75008', 'Paris', '2', 'jean.martin@email.com', 'George V', 'chef_password2', 0, 1),
-('Leroy', 'Sophie', 'Boulevard Saint-Germain', 78, '75006', 'Paris', '3', 'sophie.leroy@email.com', 'Saint-Germain-des-Prés', 'chef_password3', 0, 1),
-('Moreau', 'Pierre', 'Rue Montorgueil', 25, '75002', 'Paris', '4', 'pierre.moreau@email.com', 'Étienne Marcel', 'chef_password4', 0, 1),
-('Bernard', 'Claire', 'Rue du Faubourg Saint-Honoré', 189, '75008', 'Paris', '5', 'claire.bernard@email.com', 'Miromesnil', 'chef_password5', 0, 1),
-('Thomas', 'Michel', 'Avenue Montaigne', 32, '75008', 'Paris', '6', 'michel.thomas@email.com', 'Alma-Marceau', 'chef_password6', 0, 1),
-('Petit', 'Isabelle', 'Rue de Charonne', 71, '75011', 'Paris', '7', 'isabelle.petit@email.com', 'Charonne', 'chef_password7', 0, 1),
-('Robert', 'Antoine', 'Boulevard de Clichy', 56, '75018', 'Paris', '8', 'antoine.robert@email.com', 'Blanche', 'chef_password8', 0, 1),
-('Richard', 'Nathalie', 'Rue de la Roquette', 103, '75011', 'Paris', '9', 'nathalie.richard@email.com', 'Bastille', 'chef_password9', 0, 1),
-('Durand', 'François', 'Rue de Buci', 19, '75006', 'Paris', '0', 'francois.durand@email.com', 'Odéon', 'chef_password10', 0, 1),
+('Dubois', 'Marie', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'marie.dubois@email.com', 'Louvre-Rivoli', 'chef_password1', 0, 1),
+('Martin', 'Jean', 'Avenue des Champs-Élysées', 120, '75008', 'Paris', '2234567890', 'jean.martin@email.com', 'George V', 'chef_password2', 0, 1),
+('Leroy', 'Sophie', 'Boulevard Saint-Germain', 78, '75006', 'Paris', '3234567890', 'sophie.leroy@email.com', 'Saint-Germain-des-Prés', 'chef_password3', 0, 1),
+('Moreau', 'Pierre', 'Rue Montorgueil', 25, '75002', 'Paris', '4234567890', 'pierre.moreau@email.com', 'Étienne Marcel', 'chef_password4', 0, 1),
+('Bernard', 'Claire', 'Rue du Faubourg Saint-Honoré', 189, '75008', 'Paris', '5234567890', 'claire.bernard@email.com', 'Miromesnil', 'chef_password5', 0, 1),
+('Thomas', 'Michel', 'Avenue Montaigne', 32, '75008', 'Paris', '6234567890', 'michel.thomas@email.com', 'Alma-Marceau', 'chef_password6', 0, 1),
+('Petit', 'Isabelle', 'Rue de Charonne', 71, '75011', 'Paris', '7234567890', 'isabelle.petit@email.com', 'Charonne', 'chef_password7', 0, 1),
+('Robert', 'Antoine', 'Boulevard de Clichy', 56, '75018', 'Paris', '8234567890', 'antoine.robert@email.com', 'Blanche', 'chef_password8', 0, 1),
+('Richard', 'Nathalie', 'Rue de la Roquette', 103, '75011', 'Paris', '9234567890', 'nathalie.richard@email.com', 'Bastille', 'chef_password9', 0, 1),
+('Durand', 'François', 'Rue de Buci', 19, '75006', 'Paris', '0234567890', 'francois.durand@email.com', 'Odéon', 'chef_password10', 0, 1),
 
 -- Clients (10)
-('Lambert', 'Julie', 'Rue Saint-Honoré', 235, '75001', 'Paris', '1', 'julie.lambert@email.com', 'Tuileries', 'client_password1', 1, 0),
-('Simon', 'Thomas', 'Avenue de l''Opéra', 17, '75001', 'Paris', '2', 'thomas.simon@email.com', 'Opéra', 'client_password2', 1, 0),
-('Roux', 'Caroline', 'Rue de Vaugirard', 150, '75015', 'Paris', '3', 'caroline.roux@email.com', 'Vaugirard', 'client_password3', 1, 0),
-('Fournier', 'David', 'Rue de la Pompe', 42, '75016', 'Paris', '4', 'david.fournier@email.com', 'La Muette', 'client_password4', 1, 0),
-('Morel', 'Amélie', 'Avenue Parmentier', 63, '75011', 'Paris', '5', 'amelie.morel@email.com', 'Parmentier', 'client_password5', 1, 0),
-('Vincent', 'Nicolas', 'Rue des Martyrs', 88, '75009', 'Paris', '6', 'nicolas.vincent@email.com', 'Saint-Georges', 'client_password6', 1, 0),
-('Legrand', 'Stéphanie', 'Boulevard Raspail', 112, '75006', 'Paris', '7', 'stephanie.legrand@email.com', 'Rennes', 'client_password7', 1, 0),
-('Rousseau', 'Julien', 'Avenue de Clichy', 35, '75017', 'Paris', '8', 'julien.rousseau@email.com', 'La Fourche', 'client_password8', 1, 0),
-('Mercier', 'Elise', 'Rue de Belleville', 128, '75020', 'Paris', '9', 'elise.mercier@email.com', 'Jourdain', 'client_password9', 1, 0),
-('Garcia', 'Paul', 'Rue Oberkampf', 72, '75011', 'Paris', '0', 'paul.garcia@email.com', 'Parmentier', 'client_password10', 1, 0);
+('Lambert', 'Julie', 'Rue Saint-Honoré', 235, '75001', 'Paris', '1234567890', 'julie.lambert@email.com', 'Tuileries', 'client_password1', 1, 0),
+('Simon', 'Thomas', 'Avenue de l''Opéra', 17, '75001', 'Paris', '2234567890', 'thomas.simon@email.com', 'Opéra', 'client_password2', 1, 0),
+('Roux', 'Caroline', 'Rue de Vaugirard', 150, '75015', 'Paris', '3234567890', 'caroline.roux@email.com', 'Vaugirard', 'client_password3', 1, 0),
+('Fournier', 'David', 'Rue de la Pompe', 42, '75016', 'Paris', '4234567890', 'david.fournier@email.com', 'La Muette', 'client_password4', 1, 0),
+('Morel', 'Amélie', 'Avenue Parmentier', 63, '75011', 'Paris', '5234567890', 'amelie.morel@email.com', 'Parmentier', 'client_password5', 1, 0),
+('Vincent', 'Nicolas', 'Rue des Martyrs', 88, '75009', 'Paris', '6234567890', 'nicolas.vincent@email.com', 'Saint-Georges', 'client_password6', 1, 0),
+('Legrand', 'Stéphanie', 'Boulevard Raspail', 112, '75006', 'Paris', '7234567890', 'stephanie.legrand@email.com', 'Rennes', 'client_password7', 1, 0),
+('Rousseau', 'Julien', 'Avenue de Clichy', 35, '75017', 'Paris', '8234567890', 'julien.rousseau@email.com', 'La Fourche', 'client_password8', 1, 0),
+('Mercier', 'Elise', 'Rue de Belleville', 128, '75020', 'Paris', '9234567890', 'elise.mercier@email.com', 'Jourdain', 'client_password9', 1, 0),
+('Garcia', 'Paul', 'Rue Oberkampf', 72, '75011', 'Paris', '0234567890', 'paul.garcia@email.com', 'Parmentier', 'client_password10', 1, 0);
 
 -- 2. Insert Ingredients
 INSERT INTO Ingredients (Name) VALUES
@@ -139,7 +139,7 @@ INSERT INTO Dishes (ChefID, Name, Type, DishPrice, FabricationDate, PeremptionDa
 (10, 'Opera Cake', 'dessert', 11.25, '2025-04-14 15:45:00', '2025-04-19 15:45:00', 'Vegetarian', 'French');
 
 -- 4. Insert DishIngredients
-INSERT INTO DishIngredients (IngredientID, DishID, Gramme, Pieces) VALUES
+INSERT INTO DishIngredients (IngredientID, DishID, Grams, Pieces) VALUES
 -- Quiche Lorraine
 (1, 1, 250, NULL), -- Flour
 (2, 1, 150, NULL), -- Butter
@@ -311,7 +311,7 @@ INSERT INTO OrderDishes (OrderID, DishID, Quantity, OrderPrice) VALUES
 
 -- Add more DishIngredients for the remaining dishes
 -- Adding a few more examples
-INSERT INTO DishIngredients (IngredientID, DishID, Gramme, Pieces) VALUES
+INSERT INTO DishIngredients (IngredientID, DishID, Grams, Pieces) VALUES
 -- Ratatouille
 (6, 8, 40, NULL),    -- Olive Oil
 (7, 8, NULL, 4),     -- Garlic

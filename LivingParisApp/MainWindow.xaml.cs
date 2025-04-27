@@ -1,50 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Windows.Input;
 using LivingParisApp.Core.GraphStructure;
-using System.Windows.Threading;
-using System.Windows.Media.Animation;
 using LivingParisApp.Services.Logging;
-
-using LivingParisApp.Core.Models.Human;
-
+using LivingParisApp.Core.Entities.Models;
 using MySql.Data.MySqlClient;
 using LivingParisApp.Services.MySQL;
 using System.Data;
 using LivingParisApp.Core.Mapping;
 using System.Collections.ObjectModel;
-using LivingParisApp.Core.Models.Food;
-using LivingParisApp.Core.Models.OrderInfo;
 using LivingParisApp.Core.Engines.ShortestPaths;
+using LivingParisApp.Core.Entities.Station;
+using System.Windows.Media.Effects;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
         MySQLManager _mySQLManager;
         private User _currentUser;
         Map<MetroStation> _map;
-
-        private static readonly Dictionary<string, Brush> LineColors = new Dictionary<string, Brush> {
-            {"1", Brushes.Yellow},
-            {"2", Brushes.Blue},
-            {"3", Brushes.Red},
-            {"4", Brushes.Green},
-            {"5", Brushes.Orange},
-            {"6", Brushes.Pink},
-            {"7", Brushes.Purple},
-            {"8", Brushes.Brown},
-            {"9", Brushes.Cyan},
-            {"10", Brushes.Lime},
-            {"11", Brushes.Magenta},
-            {"12", Brushes.Olive},
-            {"13", Brushes.Navy},
-            {"14", Brushes.Teal},
-            // Add more lines as needed
-        };
+        private double minLat, maxLat, minLon, maxLon;
+        private readonly Dictionary<Node<MetroStation>, Point> stationCoordinates = new Dictionary<Node<MetroStation>, Point>();
 
         // Zoom/pan variables
         private Point _lastMousePosition;
@@ -58,7 +35,6 @@ namespace LivingParisApp {
         private Dictionary<int, Button> _dishButtons = new Dictionary<int, Button>();
         // This will allow us to track for dishes which have been added to the cart
         // By getting their id, we can then backtrack and target the source button
-
 
         // Observable Collections
         private ObservableCollection<string> _allMetroName = new();
@@ -127,7 +103,7 @@ namespace LivingParisApp {
             cmbDiet.ItemsSource = Diets;
             cmbOrigin.ItemsSource = Origins;
 
-            this.Loaded += (sender, e) => DrawNodes();
+            this.Loaded += (sender, e) => RenderMap();
         }
 
         private void LoadInitialData() {
@@ -231,6 +207,11 @@ namespace LivingParisApp {
             txtSignInEmail.Text = string.Empty;
             pwdSignIn.Password = string.Empty;
             txtSignInStatus.Text = string.Empty;
+
+            if (tabAccount.Parent is TabControl tabControl) {
+                // Select the sign in tab
+                tabControl.SelectedIndex = 0;
+            }
         }
 
         private void txtSignIn_KeyDown(object sender, KeyEventArgs e) {
@@ -297,20 +278,20 @@ namespace LivingParisApp {
                             PhoneNumber = (string)userReader["PhoneNumber"],
                             Password = (string)passwordResult,
                             TotalMoneySpent = (decimal)userReader["TotalMoneySpent"],
-                            ClosestMetro = userReader["ClosestMetro"] == DBNull.Value ? "" : (string)userReader["ClosestMetro"],
+                            ClosestMetro = (string)userReader["ClosestMetro"],
                             IsChef = (int)userReader["IsChef"],
                             IsClient = (int)userReader["IsClient"]
                         };
                         UpdateUIForLoggedInUser();
+                        // Switch to the Sign In tab (assuming TabControl is the main control)
+                        // Get the parent TabControl
+                        if (tabAccount.Parent is TabControl tabControl) {
+                            // Select the first tab (Sign In tab)
+                            tabControl.SelectedIndex = 4;
+                        }
                     }
                 }
 
-                // Switch to the Sign In tab (assuming TabControl is the main control)
-                // Get the parent TabControl
-                if (tabAccount.Parent is TabControl tabControl) {
-                    // Select the first tab (Sign In tab)
-                    tabControl.SelectedIndex = 4;
-                }
             }
             catch (Exception ex) {
                 Logger.Error($"Login error: {ex}");
@@ -331,17 +312,65 @@ namespace LivingParisApp {
                 return;
             }
 
-            // Basic validation for required fields
-            if (string.IsNullOrWhiteSpace(txtFirstName.Text) ||
-                string.IsNullOrWhiteSpace(txtLastName.Text) ||
-                string.IsNullOrWhiteSpace(txtEmail.Text) ||
-                string.IsNullOrWhiteSpace(pwdSignUp.Password) ||
-                string.IsNullOrWhiteSpace(txtPhone.Text) ||
-                string.IsNullOrWhiteSpace(txtStreet.Text) ||
-                string.IsNullOrWhiteSpace(txtStreetNumber.Text) ||
-                string.IsNullOrWhiteSpace(txtPostcode.Text) ||
-                string.IsNullOrWhiteSpace(txtCity.Text)) {
-                txtSignUpStatus.Text = "Please fill in all required fields";
+            // Basic validation for required fields with specific error messages
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text)) {
+                txtSignUpStatus.Text = "First name is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtLastName.Text)) {
+                txtSignUpStatus.Text = "Last name is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtEmail.Text)) {
+                txtSignUpStatus.Text = "Email address is required";
+                return;
+            }
+            else if (!IsValidEmail(txtEmail.Text)) {
+                txtSignUpStatus.Text = "Please enter a valid email address";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(pwdSignUp.Password)) {
+                txtSignUpStatus.Text = "Password is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtPhone.Text)) {
+                txtSignUpStatus.Text = "Phone number is required";
+                return;
+            }
+            else if (txtPhone.Text.Length != 10 || !txtPhone.Text.All(char.IsDigit)) {
+                txtSignUpStatus.Text = "Phone number must be exactly 10 digits";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtStreet.Text)) {
+                txtSignUpStatus.Text = "Street name is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtStreetNumber.Text)) {
+                txtSignUpStatus.Text = "Street number is required";
+                return;
+            }
+            else if (!int.TryParse(txtStreetNumber.Text, out _)) {
+                txtSignUpStatus.Text = "Street number must be a valid number";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtPostcode.Text)) {
+                txtSignUpStatus.Text = "Postal code is required";
+                return;
+            }
+            else if (txtPostcode.Text.Length != 5 || !txtPostcode.Text.All(char.IsDigit)) {
+                txtSignUpStatus.Text = "Postal code must be exactly 5 digits";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtCity.Text)) {
+                txtSignUpStatus.Text = "City is required";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(cmbMetro.Text)) {
+                txtSignUpStatus.Text = "Closest metro station is required";
+                return;
+            }
+            if (!chkClient.IsChecked == true && !chkChef.IsChecked == true) {
+                txtSignUpStatus.Text = "Please select at least one role (Client or Chef)";
                 return;
             }
 
@@ -351,7 +380,38 @@ namespace LivingParisApp {
                 return;
             }
 
+            //reset every boxes
             SaveAccountToDatabase();
+
+            ResetSignUpBoxes();
+        }
+
+        private void ResetSignUpBoxes() {
+            Logger.Log(txtFirstName.Text);
+            Logger.Log(txtLastName.Text);
+            Logger.Log(txtEmail.Text);
+            Logger.Log(pwdSignUp.Password);
+            Logger.Log(pwdConfirm.Password);
+            Logger.Log(txtPhone.Text);
+            Logger.Log(txtStreet.Text);
+            Logger.Log(txtStreetNumber.Text);
+            Logger.Log(txtPostcode.Text);
+            Logger.Log(txtCity.Text);
+            Logger.Log(cmbMetro.Text);
+
+            txtFirstName.Text = "";
+            txtLastName.Text = "";
+            txtEmail.Text = "";
+            pwdSignUp.Password = "";
+            pwdConfirm.Password = "";
+            txtPhone.Text = "";
+            txtStreet.Text = "";
+            txtStreetNumber.Text = "";
+            txtPostcode.Text = "";
+            txtCity.Text = "";
+            cmbMetro.Text = "";
+            chkClient.IsChecked = false;
+            chkChef.IsChecked = false;
         }
 
         private bool EmailExists(string email) {
@@ -367,14 +427,22 @@ namespace LivingParisApp {
             return count > 0;
         }
 
+        private bool IsValidEmail(string email) {
+            try {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch {
+                return false;
+            }
+        }
+
         private void BtnSignOut_Click(object sender, RoutedEventArgs e) {
             // Clear current user
             _currentUser = null;
 
             // Update UI for logged out state
             UpdateUIForLoggedOutUser();
-
-            MessageBox.Show("Signed out successfully");
         }
 
         private void SaveAccountToDatabase() {
@@ -388,12 +456,12 @@ namespace LivingParisApp {
                 command.Parameters.AddWithValue("@LastName", txtLastName.Text);
                 command.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
                 command.Parameters.AddWithValue("@Street", txtStreet.Text);
-                command.Parameters.AddWithValue("@StreetNumber", int.Parse(txtStreetNumber.Text));
+                command.Parameters.AddWithValue("@StreetNumber", txtStreetNumber.Text);
                 command.Parameters.AddWithValue("@Postcode", txtPostcode.Text);
                 command.Parameters.AddWithValue("@City", txtCity.Text);
                 command.Parameters.AddWithValue("@PhoneNumber", txtPhone.Text);
                 command.Parameters.AddWithValue("@Mail", txtEmail.Text);
-                command.Parameters.AddWithValue("@ClosestMetro", string.IsNullOrWhiteSpace(cmbMetro.Text) ? DBNull.Value : cmbMetro.Text);
+                command.Parameters.AddWithValue("@ClosestMetro", cmbMetro.Text);
                 command.Parameters.AddWithValue("@Password", pwdSignUp.Password);
                 command.Parameters.AddWithValue("@IsClient", (bool)chkClient.IsChecked ? 1 : 0);
                 command.Parameters.AddWithValue("@IsChef", (bool)chkChef.IsChecked ? 1 : 0);
@@ -454,7 +522,6 @@ namespace LivingParisApp {
             e.Handled = true;
         }
 
-        // Replace the existing MouseLeftButtonDown handler with this fixed version
         private void MetroCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
             // Remove the Ellipse check to allow dragging from anywhere on the canvas
             _lastMousePosition = e.GetPosition(metroCanvas);
@@ -481,7 +548,7 @@ namespace LivingParisApp {
             }
         }
 
-        private void DrawNodes(LinkedList<Node<MetroStation>> path = null) {
+        private void RenderMap(LinkedList<Node<MetroStation>> path = null) {
             try {
                 metroCanvas.Children.Clear();
 
@@ -489,12 +556,7 @@ namespace LivingParisApp {
                     return;
                 }
 
-                // Create a content canvas that will be transformed
-                Canvas contentCanvas = new Canvas {
-                    Width = 1000,
-                    Height = 1000,
-                    Background = Brushes.Transparent
-                };
+                InitMapBounds();
 
                 // Extract all valid stations with coordinates
                 var stations = _map.AdjacencyList.Keys
@@ -507,143 +569,381 @@ namespace LivingParisApp {
                     return;
                 }
 
-                // Calculate geographical boundaries
-                // SWAP LONGITUDE AND LATITUDE HERE
-                double minX = stations.Min(s => s.Object.Latitude);  // Using latitude for X
-                double maxX = stations.Max(s => s.Object.Latitude);
-                double minY = stations.Min(s => s.Object.Longitude); // Using longitude for Y
-                double maxY = stations.Max(s => s.Object.Longitude);
-
-                // Add padding (10%)
-                double xPadding = (maxX - minX) * 0.1;
-                double yPadding = (maxY - minY) * 0.1;
-
-                minX -= xPadding;
-                maxX += xPadding;
-                minY -= yPadding;
-                maxY += yPadding;
-
-                // Create path edge list for highlighting
-                var pathEdges = new List<(Node<MetroStation> Start, Node<MetroStation> End)>();
-                if (path != null && path.Count > 1) {
-                    var current = path.First;
-                    while (current?.Next != null) {
-                        pathEdges.Add((current.Value, current.Next.Value));
-                        current = current.Next;
-                    }
-                }
-
-                // Calculate and store coordinates for all stations
-                var stationCoordinates = new Dictionary<Node<MetroStation>, Point>();
+                // draw all the nodes
                 foreach (var station in stations) {
-                    // SWAP LONGITUDE AND LATITUDE FOR MAPPING
-                    // Use latitude for X and longitude for Y
-                    double x = ((station.Object.Latitude - minX) / (maxX - minX)) * 1000;
-                    double y = 1000 - ((station.Object.Longitude - minY) / (maxY - minY)) * 1000;
-
-                    // Ensure coordinates are within canvas bounds
-                    x = Math.Max(10, Math.Min(990, x));
-                    y = Math.Max(10, Math.Min(990, y));
-
-                    stationCoordinates[station] = new Point(x, y);
+                    DrawNode(station);
                 }
 
-                // Rest of the code remains the same...
-                // Draw connections
-                foreach (var stationNode in stations) {
-                    if (!stationCoordinates.TryGetValue(stationNode, out Point startPoint))
-                        continue;
-
-                    // Get all connected stations
-                    var connections = _map.AdjacencyList[stationNode];
-                    foreach (var connection in connections) {
-                        var neighborNode = connection.Item1;
-                        if (neighborNode == null || !stationCoordinates.TryGetValue(neighborNode, out Point endPoint))
-                            continue;
-
-                        // Determine if this connection is part of the highlighted path
-                        bool isPathConnection = pathEdges.Any(edge =>
-                            (edge.Start == stationNode && edge.End == neighborNode) ||
-                            (edge.Start == neighborNode && edge.End == stationNode));
-
-                        // Get line color
-                        string lineCode = stationNode.Object.LibelleLine ?? "default";
-                        Brush lineColor = isPathConnection
-                            ? Brushes.Yellow
-                            : (LineColors.TryGetValue(lineCode, out var color) ? color : Brushes.Gray);
-
-                        // Create the line
-                        var line = new Line {
-                            X1 = startPoint.X,
-                            Y1 = startPoint.Y,
-                            X2 = endPoint.X,
-                            Y2 = endPoint.Y,
-                            Stroke = lineColor,
-                            StrokeThickness = isPathConnection ? 5 : 3,
-                            StrokeStartLineCap = PenLineCap.Round
-                        };
-
-                        Panel.SetZIndex(line, isPathConnection ? 1 : 0);
-                        contentCanvas.Children.Add(line);
-                    }
-                }
-
-                // Draw stations
-                foreach (var station in stations) {
-                    if (!stationCoordinates.TryGetValue(station, out Point point))
-                        continue;
-
-                    bool isPathStation = path != null && path.Contains(station);
-
-                    var circle = new Ellipse {
-                        Width = 12,
-                        Height = 12,
-                        Fill = isPathStation ? Brushes.Yellow : Brushes.White,
-                        Stroke = Brushes.Black,
-                        StrokeThickness = 2,
-                        Cursor = Cursors.Hand,
-                        Tag = station.Object.LibelleStation
-                    };
-
-                    Canvas.SetLeft(circle, point.X - 6);
-                    Canvas.SetTop(circle, point.Y - 6);
-                    Panel.SetZIndex(circle, 2);
-
-                    var label = new TextBlock {
-                        Text = station.Object.LibelleStation ?? "Unknown",
-                        FontSize = 10,
-                        Foreground = Brushes.Black,
-                        Background = new SolidColorBrush(Color.FromArgb(220, 255, 255, 255)),
-                        Padding = new Thickness(3),
-                        Visibility = Visibility.Hidden
-                    };
-
-                    Canvas.SetLeft(label, point.X + 8);
-                    Canvas.SetTop(label, point.Y - 8);
-                    Panel.SetZIndex(label, 3);
-
-                    circle.MouseEnter += (s, e) => {
-                        label.Visibility = Visibility.Visible;
-                        ((Ellipse)s).Fill = Brushes.LightYellow;
-                    };
-
-                    circle.MouseLeave += (s, e) => {
-                        label.Visibility = Visibility.Hidden;
-                        ((Ellipse)s).Fill = isPathStation ? Brushes.Yellow : Brushes.White;
-                    };
-
-                    contentCanvas.Children.Add(circle);
-                    contentCanvas.Children.Add(label);
-                }
-
-                // Apply transform and add to main canvas
-                contentCanvas.RenderTransform = _transformGroup;
-                metroCanvas.Children.Add(contentCanvas);
+                // draw all the edges
+                DrawEdges(path, stations);
             }
             catch (Exception ex) {
-                MessageBox.Show($"Error drawing map: {ex.Message}", "Drawing Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Logger.Error(ex.Message);
             }
+        }
+
+        private void InitMapBounds() {
+            var nodeList = _map.AdjacencyList.Keys.ToList();
+            minLat = maxLat = nodeList[0].Object.Latitude;
+            minLon = maxLon = nodeList[0].Object.Longitude;
+
+            foreach (var node in _map.AdjacencyList.Keys) {
+                minLat = Math.Min(minLat, node.Object.Latitude);
+                maxLat = Math.Max(maxLat, node.Object.Latitude);
+                minLon = Math.Min(minLon, node.Object.Longitude);
+                maxLon = Math.Max(maxLon, node.Object.Longitude);
+            }
+
+            // Add a small buffer
+            double latBuffer = (maxLat - minLat) * 0.05;
+            double lonBuffer = (maxLon - minLon) * 0.05;
+
+            minLat -= latBuffer;
+            maxLat += latBuffer;
+            minLon -= lonBuffer;
+            maxLon += lonBuffer;
+        }
+
+
+        private void DrawNode(Node<MetroStation> node) {
+            try {
+                double x = ScaleLongitude(node.Object.Longitude);
+                double y = ScaleLatitude(node.Object.Latitude);
+
+                // Store position for links
+                stationCoordinates[node] = new Point(x, y);
+
+                // Create station visual with drop shadow
+                var shadowEffect = new DropShadowEffect {
+                    Color = Colors.Black,
+                    Direction = 315,
+                    ShadowDepth = 2,
+                    BlurRadius = 4,
+                    Opacity = 0.6
+                };
+
+                // Station marker with gradient
+                var gradientStops = new GradientStopCollection {
+                    new GradientStop(Colors.White, 0.0),
+                    new GradientStop(GetStationColor(node.Object.LibelleLine), 1.0)
+                };
+
+                Ellipse nodeEllipse = new Ellipse {
+                    Width = 18,
+                    Height = 18,
+                    StrokeThickness = 2,
+                    Stroke = new SolidColorBrush(Colors.White),
+                    Fill = new RadialGradientBrush(gradientStops),
+                    Effect = shadowEffect
+                };
+
+                // Add white border for better contrast
+                Ellipse outerRing = new Ellipse {
+                    Width = 22,
+                    Height = 22,
+                    StrokeThickness = 2,
+                    Stroke = new SolidColorBrush(Colors.Black),
+                    Fill = new SolidColorBrush(Colors.Transparent)
+                };
+
+                // Position the node elements
+                Canvas.SetLeft(outerRing, x - outerRing.Width / 2);
+                Canvas.SetTop(outerRing, y - outerRing.Height / 2);
+                Canvas.SetLeft(nodeEllipse, x - nodeEllipse.Width / 2);
+                Canvas.SetTop(nodeEllipse, y - nodeEllipse.Height / 2);
+                Panel.SetZIndex(outerRing, 5);
+                Panel.SetZIndex(nodeEllipse, 10);
+
+                metroCanvas.Children.Add(outerRing);
+                metroCanvas.Children.Add(nodeEllipse);
+
+                // Create the node label with better visibility
+                TextBlock nodeLabel = new TextBlock {
+                    Text = node.Object.LibelleStation,
+                    FontSize = 11,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush(Colors.Black),
+                    TextAlignment = TextAlignment.Center,
+                    Background = new SolidColorBrush(Color.FromArgb(180, 255, 255, 255)),
+                    Padding = new Thickness(3, 1, 3, 1)
+                };
+
+                // Create a border for the text to improve readability
+                Border labelBorder = new Border {
+                    Child = nodeLabel,
+                    CornerRadius = new CornerRadius(3),
+                    BorderBrush = new SolidColorBrush(Colors.Gray),
+                    BorderThickness = new Thickness(1)
+                };
+
+                // Position the label
+                Canvas.SetLeft(labelBorder, x + 12);
+                Canvas.SetTop(labelBorder, y - 12);
+                Panel.SetZIndex(labelBorder, 15);
+
+                // Add to canvas
+                metroCanvas.Children.Add(labelBorder);
+
+                // Add mouse hover behavior for better UX
+                AddHoverBehavior(nodeEllipse, labelBorder, node);
+            }
+            catch (Exception ex) {
+                Logger.Fatal(ex);
+            }
+        }
+
+        private void AddHoverBehavior(Ellipse nodeEllipse, Border labelBorder, Node<MetroStation> node) {
+            // Create animation for hover effect
+            nodeEllipse.MouseEnter += (s, e) => {
+                nodeEllipse.Width = 24;
+                nodeEllipse.Height = 24;
+                Canvas.SetLeft(nodeEllipse, Canvas.GetLeft(nodeEllipse) - 3);
+                Canvas.SetTop(nodeEllipse, Canvas.GetTop(nodeEllipse) - 3);
+
+                // Highlight label
+                labelBorder.BorderBrush = new SolidColorBrush(Colors.DarkBlue);
+                labelBorder.Background = new SolidColorBrush(Colors.LightYellow);
+
+                // Show station info tooltip
+                ToolTip tooltip = new ToolTip {
+                    Content = $"Station: {node.Object.LibelleStation}\nLigne: {node.Object.LibelleLine}"
+                };
+                nodeEllipse.ToolTip = tooltip;
+            };
+
+            nodeEllipse.MouseLeave += (s, e) => {
+                nodeEllipse.Width = 18;
+                nodeEllipse.Height = 18;
+                Canvas.SetLeft(nodeEllipse, Canvas.GetLeft(nodeEllipse) + 3);
+                Canvas.SetTop(nodeEllipse, Canvas.GetTop(nodeEllipse) + 3);
+
+                // Restore label
+                labelBorder.BorderBrush = new SolidColorBrush(Colors.Gray);
+                labelBorder.Background = new SolidColorBrush(Color.FromArgb(180, 255, 255, 255));
+            };
+        }
+
+        // Helper method to get color based on metro line
+        private Color GetStationColor(string lineCode) {
+            if (string.IsNullOrEmpty(lineCode)) return Colors.RosyBrown;
+
+            // Create a color mapping for different metro lines
+            var colorMap = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase) {
+                { "1", Colors.DarkBlue },
+                { "2", Colors.Red },
+                { "3", Colors.Green },
+                { "4", Colors.Purple },
+                { "5", Colors.Orange },
+                { "6", Colors.Teal },
+                { "7", Colors.Pink },
+                { "8", Colors.YellowGreen },
+                { "9", Colors.Brown },
+                { "10", Colors.DeepSkyBlue },
+                // Add more lines as needed
+            };
+
+            return colorMap.TryGetValue(lineCode, out var color) ? color : Colors.RosyBrown;
+        }
+
+        private double ScaleLongitude(double longitude) {
+            double width = metroCanvas.Width;
+            // Basic linear mapping is fine for longitude
+            return (longitude - minLon) / (maxLon - minLon) * width;
+        }
+
+        private double ScaleLatitude(double latitude) {
+            double height = metroCanvas.Height;
+
+            // Convert latitude to Mercator projection
+            double latRad = latitude * Math.PI / 180; // Convert to radians
+            double mercatorY = Math.Log(Math.Tan(Math.PI / 4 + latRad / 2));
+
+            // Calculate the Mercator Y values for min and max latitudes
+            double minLatRad = minLat * Math.PI / 180;
+            double maxLatRad = maxLat * Math.PI / 180;
+            double minMercatorY = Math.Log(Math.Tan(Math.PI / 4 + minLatRad / 2));
+            double maxMercatorY = Math.Log(Math.Tan(Math.PI / 4 + maxLatRad / 2));
+
+            // Scale and invert
+            return height - ((mercatorY - minMercatorY) / (maxMercatorY - minMercatorY)) * height;
+        }
+
+        private void DrawEdges(LinkedList<Node<MetroStation>> path, List<Node<MetroStation>> stations) {
+            // Create path edge list for highlighting
+            var pathEdges = new List<(Node<MetroStation> Start, Node<MetroStation> End)>();
+            if (path != null && path.Count > 1) {
+                var current = path.First;
+                while (current?.Next != null) {
+                    pathEdges.Add((current.Value, current.Next.Value));
+                    current = current.Next;
+                }
+            }
+
+            // Group connections by line for better visualization
+            var lineConnections = new Dictionary<string, List<(Point Start, Point End, bool IsPath)>>();
+
+            foreach (var stationNode in stations) {
+                if (!stationCoordinates.TryGetValue(stationNode, out Point startPoint))
+                    continue;
+
+                // Get all connected stations
+                var connections = _map.AdjacencyList[stationNode];
+                foreach (var connection in connections) {
+                    var neighborNode = connection.Item1;
+                    if (neighborNode == null || !stationCoordinates.TryGetValue(neighborNode, out Point endPoint))
+                        continue;
+
+                    // Determine if this connection is part of the highlighted path
+                    bool isPathConnection = pathEdges.Any(edge =>
+                        (edge.Start == stationNode && edge.End == neighborNode) ||
+                        (edge.Start == neighborNode && edge.End == stationNode));
+
+                    // Get line code and normalize it
+                    string lineCode = stationNode.Object.LibelleLine ?? "default";
+
+                    // Add to line connections
+                    if (!lineConnections.ContainsKey(lineCode))
+                        lineConnections[lineCode] = new List<(Point, Point, bool)>();
+
+                    lineConnections[lineCode].Add((startPoint, endPoint, isPathConnection));
+                }
+            }
+
+            // Draw connections by line
+            foreach (var linePair in lineConnections) {
+                string lineCode = linePair.Key;
+                var connections = linePair.Value;
+
+                Color baseColor = GetStationColor(lineCode);
+                Brush regularBrush = new SolidColorBrush(baseColor);
+
+                // Create highlighted path brush with glow effect
+                LinearGradientBrush highlightBrush = new LinearGradientBrush {
+                    StartPoint = new Point(0, 0),
+                    EndPoint = new Point(1, 1)
+                };
+                highlightBrush.GradientStops.Add(new GradientStop(Colors.Yellow, 0.0));
+                highlightBrush.GradientStops.Add(new GradientStop(Colors.Orange, 1.0));
+
+                foreach (var (start, end, isPath) in connections) {
+                    // Create beautiful curved line with appropriate styling
+                    Path linePath = new Path();
+
+                    // Define geometry for bezier curve
+                    PathGeometry geometry = new PathGeometry();
+                    PathFigure figure = new PathFigure { StartPoint = start };
+
+                    // Calculate control points for slight curve
+                    Vector direction = end - start;
+                    double distance = direction.Length;
+                    Vector perpendicular = new Vector(-direction.Y, direction.X);
+                    perpendicular.Normalize();
+                    perpendicular *= distance * 0.05; // Curve amount
+
+                    Point controlPoint1 = start + (direction * 0.33) + perpendicular;
+                    Point controlPoint2 = start + (direction * 0.66) - perpendicular;
+
+                    figure.Segments.Add(new BezierSegment(controlPoint1, controlPoint2, end, true));
+                    geometry.Figures.Add(figure);
+
+                    linePath.Data = geometry;
+                    linePath.Stroke = isPath ? highlightBrush : regularBrush;
+                    linePath.StrokeThickness = isPath ? 6 : 4;
+                    linePath.StrokeStartLineCap = PenLineCap.Round;
+                    linePath.StrokeEndLineCap = PenLineCap.Round;
+
+                    if (isPath) {
+                        // Add glow effect for highlighted path
+                        linePath.Effect = new DropShadowEffect {
+                            Color = Colors.Gold,
+                            Direction = 0,
+                            ShadowDepth = 0,
+                            BlurRadius = 10,
+                            Opacity = 0.7
+                        };
+                    }
+
+                    Panel.SetZIndex(linePath, isPath ? 3 : 1);
+                    metroCanvas.Children.Add(linePath);
+                }
+            }
+
+            // Add legend for metro lines (optional)
+            CreateLineLegend(lineConnections.Keys.ToList());
+        }
+
+        private void CreateLineLegend(List<string> lineNames) {
+            // Remove any existing legend
+            var existingLegend = metroCanvas.Children.OfType<Border>().FirstOrDefault(b => b.Name == "LineLegend");
+            if (existingLegend != null)
+                metroCanvas.Children.Remove(existingLegend);
+
+            // Create legend panel
+            StackPanel legendPanel = new StackPanel {
+                Orientation = Orientation.Vertical,
+                Background = new SolidColorBrush(Color.FromArgb(220, 255, 255, 255))
+            };
+
+            // Add legend title
+            TextBlock legendTitle = new TextBlock {
+                Text = "Metro Line",
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(5),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            legendPanel.Children.Add(legendTitle);
+
+            // Add separator
+            legendPanel.Children.Add(new Separator { Margin = new Thickness(0, 0, 0, 5) });
+
+            // Add line entries
+            foreach (var line in lineNames.OrderBy(l => l)) {
+                StackPanel lineEntry = new StackPanel {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(5)
+                };
+
+                Rectangle colorBox = new Rectangle {
+                    Width = 15,
+                    Height = 15,
+                    Fill = new SolidColorBrush(GetStationColor(line)),
+                    Margin = new Thickness(0, 0, 5, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                TextBlock lineLabel = new TextBlock {
+                    Text = $"Line {line}",
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                lineEntry.Children.Add(colorBox);
+                lineEntry.Children.Add(lineLabel);
+                legendPanel.Children.Add(lineEntry);
+            }
+
+            // Create border for legend
+            Border legendBorder = new Border {
+                Name = "LineLegend",
+                Child = legendPanel,
+                BorderBrush = new SolidColorBrush(Colors.Gray),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(5),
+                Effect = new DropShadowEffect {
+                    Color = Colors.Gray,
+                    Direction = 315,
+                    ShadowDepth = 3,
+                    BlurRadius = 5,
+                    Opacity = 0.5
+                }
+            };
+
+            // Position legend in top-right corner
+            Canvas.SetRight(legendBorder, -50);
+            Canvas.SetTop(legendBorder, 10);
+            Panel.SetZIndex(legendBorder, 100);
+
+            metroCanvas.Children.Add(legendBorder);
         }
 
         #endregion
@@ -722,7 +1022,6 @@ namespace LivingParisApp {
             }
             catch (Exception ex) {
                 Logger.Log($"Error loading my dishes: {ex.Message}");
-                MessageBox.Show($"Error loading my dishes: {ex.Message}");
             }
         }
 
@@ -778,7 +1077,6 @@ namespace LivingParisApp {
             }
             catch (Exception ex) {
                 Logger.Log($"Error loading orders: {ex.Message}");
-                MessageBox.Show($"Error loading orders: {ex.Message}");
             }
         }
 
@@ -821,7 +1119,6 @@ namespace LivingParisApp {
             }
             catch (Exception ex) {
                 Logger.Log($"Error loading received orders: {ex.Message}");
-                MessageBox.Show($"Error loading received orders: {ex.Message}");
             }
         }
 
@@ -1099,7 +1396,6 @@ namespace LivingParisApp {
             }
             catch (Exception ex) {
                 Logger.Log($"Error placing order: {ex.Message}");
-                MessageBox.Show($"Error placing order: {ex.Message}");
             }
         }
 
@@ -1158,25 +1454,31 @@ namespace LivingParisApp {
 
         public void BtnAddToCart_Click(object sender, RoutedEventArgs e) {
             Logger.Log("Add to cart button clicked");
-            if (sender is Button button && button.Tag is int dishId) {
-                _dishButtons[dishId] = button;
+            try {
+                if (sender is Button button && button.Tag is int dishId) {
+                    _dishButtons[dishId] = button;
 
-                var dish = _allDishes.FirstOrDefault(d => d.DishID == dishId);
-                if (dish != null) {
-                    var existingItem = _cartItems.FirstOrDefault(i => i.Dish.DishID == dishId);
-                    if (existingItem != null) {
-                        MessageBox.Show("This dish is already in your cart.", "Already Added", MessageBoxButton.OK, MessageBoxImage.Information);
-                        return;
-                    }
-                    else {
-                        _cartItems.Add(new CartItem { Dish = dish, Quantity = 1 });
-                    }
-                    UpdateCartTotal();
+                    var dish = _allDishes.FirstOrDefault(d => d.DishID == dishId);
+                    if (dish != null) {
+                        var existingItem = _cartItems.FirstOrDefault(i => i.Dish.DishID == dishId);
+                        if (existingItem != null) {
+                            MessageBox.Show("This dish is already in your cart.", "Already Added", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                        }
+                        else {
+                            _cartItems.Add(new CartItem { Dish = dish, Quantity = 1 });
+                        }
+                        UpdateCartTotal();
 
-                    // Disable the add button for this dish
-                    button.IsEnabled = false;
-                    button.Content = "In Cart";
+                        // Disable the add button for this dish
+                        button.IsEnabled = false;
+                        button.Content = "In Cart";
+                    }
                 }
+                Logger.Success("Added item in the cart");
+            }
+            catch (Exception ex) {
+                Logger.Error(ex.ToString());
             }
         }
 
@@ -1242,7 +1544,6 @@ namespace LivingParisApp {
                     }
                     catch (Exception ex) {
                         Logger.Log($"Error deleting dish: {ex.Message}");
-                        MessageBox.Show($"Error deleting dish: {ex.Message}");
                     }
                 }
             }
@@ -1297,7 +1598,7 @@ namespace LivingParisApp {
                     string? chefMetro = _mySQLManager.ExecuteScalar(chefCommand)?.ToString();
 
                     if (string.IsNullOrWhiteSpace(clientMetro) || string.IsNullOrWhiteSpace(chefMetro)) {
-                        MessageBox.Show("Cannot display route: Client or Chef's closest metro station is not set.");
+                        Logger.Warning("Cannot display route: Client or Chef's closest metro station is not set.");
                         return;
                     }
 
@@ -1308,7 +1609,7 @@ namespace LivingParisApp {
                         .FirstOrDefault(v => v.Object?.LibelleStation == chefMetro);
 
                     if (clientNode == null || chefNode == null) {
-                        MessageBox.Show("Cannot display route: Client or Chef's metro station not found in the map.");
+                        Logger.Warning("Cannot display route: Client or Chef's metro station not found in the map.");
                         return;
                     }
 
@@ -1334,12 +1635,12 @@ namespace LivingParisApp {
                     var (path, totalLength) = dijkstra.GetPath(clientNode);
 
                     if (path == null || path.Count == 0) {
-                        MessageBox.Show($"No path found between the client's ({clientNode.Object.LibelleStation}) and chef's ({chefNode.Object.LibelleStation}) metro stations.");
+                        Logger.Warning($"No path found between the client's ({clientNode.Object.LibelleStation}) and chef's ({chefNode.Object.LibelleStation}) metro stations.");
                         return;
                     }
 
                     // Step 6: Redraw the map with the path highlighted
-                    DrawNodes(path);
+                    RenderMap(path);
 
                     // Step 7: Switch to the Map tab to show the path
                     if (metroMap.Parent is TabControl tabControl) {
@@ -1348,8 +1649,75 @@ namespace LivingParisApp {
                 }
                 catch (Exception ex) {
                     Logger.Log($"Error viewing order details: {ex.Message}");
-                    MessageBox.Show($"Error viewing order details: {ex.Message}");
                 }
+            }
+        }
+
+        public void BtnViewDishDetails_Click(object sender = null, RoutedEventArgs e = null) {
+            Logger.Log("View DishDetails details button clicked");
+
+            if (sender is Button button && button.DataContext is Dish selectedDish) {
+                try {
+                    Logger.Log("selected dish id: ", selectedDish.DishID);
+                    // Step 1: Retrieve the list of ingredients in the dish
+                    var ingredients = new List<(string Name, int Quantity, string MeasurementType)>();
+                    string query = @"
+                        SELECT i.Name, 
+                            CASE 
+                                WHEN di.Grams IS NOT NULL THEN di.Grams
+                                WHEN di.Pieces IS NOT NULL THEN di.Pieces
+                                ELSE NULL
+                            END AS Quantity,
+                            CASE 
+                                WHEN di.Grams IS NOT NULL THEN 'Grams'
+                                WHEN di.Pieces IS NOT NULL THEN 'Pieces'
+                                ELSE NULL
+                            END AS MeasurementType
+                        FROM Dishes d
+                        JOIN DishIngredients di ON d.DishID = di.DishID
+                        JOIN Ingredients i ON di.IngredientID = i.IngredientID
+                        WHERE d.DishID = @DishID;";
+                    var command = new MySqlCommand(query);
+                    command.Parameters.AddWithValue("@DishID", selectedDish.DishID);
+
+                    using (var reader = _mySQLManager.ExecuteReader(command)) {
+                        while (reader.Read()) {
+                            ingredients.Add((
+                                Name: reader.GetString("Name"),
+                                Quantity: reader.GetInt32("Quantity"),
+                                MeasurementType: reader.GetString("MeasurementType")
+                            ));
+                        }
+                    }
+                    Logger.Log(ingredients.Count);
+                    // Step 2: Display dish details
+                    string details = $"Name: {selectedDish.Name:dd/MM/yyyy}\n" +
+                                    "Ingredients:\n";
+                    if (ingredients.Count == 0) {
+                        details += "Not Specified";
+                    }
+                    else {
+                        foreach (var ingredient in ingredients) {
+                            details += $"{ingredient.Quantity} {ingredient.MeasurementType} of {ingredient.Name}\n";
+                        }
+                    }
+
+                    MessageBox.Show(details, "Dish Details");
+                }
+                catch (Exception ex) {
+                    Logger.Error(ex);
+                }
+            }
+        }
+        public void TxtSearchDishName_KeyDown(object sender, KeyEventArgs e) {
+            //Logger.Log($"Key pressed: {e.Key}");
+            BtnClearFiltersDishes_Click(sender, e); // Call the existing click handler
+        }
+
+        private void TxtSearchDishName_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Back) {
+                //Logger.Log($"Key pressed: {e.Key}");
+                BtnClearFiltersDishes_Click(sender, e); // Call the existing click handler
             }
         }
 
@@ -1359,6 +1727,11 @@ namespace LivingParisApp {
             /// </summary>
             /// <param name="sender"></param>
             /// <param name="e"></param>
+
+            if (cmbDishType == null || cmbDiet == null || cmbOrigin == null) {
+                Logger.Warning("Filter cont rols are not accessible");
+                return;
+            }
 
             _filteredAvailableDishes.Clear();
 
@@ -1389,6 +1762,25 @@ namespace LivingParisApp {
                 filteredAvailableDishes = _allDishes;
             }
 
+            // then search by name
+            string searchDish = txtSearchDishName.Text.Trim().ToLower();
+
+            if (!string.IsNullOrEmpty(searchDish)) {
+                // Fuzzy match using Levenshtein distance
+                filteredAvailableDishes = filteredAvailableDishes
+                    .Where(dish => {
+                        string dishName = dish.Name.ToLower();
+
+                        // Match if:
+                        // 1. Dish name contains the search term (most intuitive)
+                        // 2. OR Levenshtein distance is small enough for typo tolerance
+                        return dishName.Contains(searchDish) ||
+                            CalculateLevenshteinDistance(searchDish, dishName) <= Math.Min(3, searchDish.Length);
+                    })
+                    .OrderBy(dish => dish.Name.ToLower().Contains(searchDish) ? 0 : 1) // Exact substring matches first
+                    .ThenBy(dish => dish.Name); // Then alphabetically
+            }
+
             // Remove duplicates that might have matched multiple criteria
             filteredAvailableDishes = filteredAvailableDishes.Where(d => d.Status == "Available");
             filteredAvailableDishes = filteredAvailableDishes.Distinct();
@@ -1402,7 +1794,8 @@ namespace LivingParisApp {
                 Logger.Warning("No dishes found with these filters");
             }
         }
-        public void BtnClearFiltersDishes_Click(object sender, RoutedEventArgs e) {
+
+        public void BtnClearFiltersDishes_Click(object sender = null, RoutedEventArgs e = null) {
             cmbDishType.SelectedIndex = 0;
             cmbDiet.SelectedIndex = 0;
             cmbOrigin.SelectedIndex = 0;
@@ -1415,7 +1808,11 @@ namespace LivingParisApp {
         #region Admin
         // Admin Tab - User Management
         private void TxtSearchUser_KeyDown(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Enter) {
+            BtnSearchUser_Click(sender, e);
+        }
+
+        private void TxtSearchUser_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Back) {
                 // Trigger the search button's click event
                 BtnSearchUser_Click(sender, e);
             }
@@ -1456,7 +1853,7 @@ namespace LivingParisApp {
 
             // Show message if no results found
             if (!_filteredUsers.Any()) {
-                MessageBox.Show("No users found matching the search criteria.", "Search Results", MessageBoxButton.OK, MessageBoxImage.Information);
+                Logger.Warning("No users found matching the search criteria.");
             }
         }
 
@@ -1506,7 +1903,6 @@ namespace LivingParisApp {
                     }
                     catch (Exception ex) {
                         Logger.Log($"Error deleting user: {ex.Message}");
-                        MessageBox.Show($"Error deleting user: {ex.Message}");
                     }
                 }
             }
@@ -1514,8 +1910,11 @@ namespace LivingParisApp {
 
         // Admin Tab - Dish Management
         private void TxtSearchDish_KeyDown(object sender, KeyEventArgs e) {
-            if (e.Key == Key.Enter) {
-                // Trigger the search button's click event
+            BtnSearchDish_Click(sender, e);
+        }
+
+        private void TxtSearchDish_KeyUp(object sender, KeyEventArgs e) {
+            if (e.Key == Key.Back) {
                 BtnSearchDish_Click(sender, e);
             }
         }
@@ -1551,9 +1950,8 @@ namespace LivingParisApp {
                 _filteredDishes.Add(dish);
             }
 
-            // Show message if no results found
             if (!filteredDishes.Any()) {
-                MessageBox.Show("No dishes found matching the search criteria.", "Search Results", MessageBoxButton.OK, MessageBoxImage.Information);
+                Logger.Warning("No dishes found matching the search criteria.");
             }
         }
 
@@ -1625,7 +2023,7 @@ namespace LivingParisApp {
 
             // Show message if no results found
             if (!filteredOrders.Any()) {
-                MessageBox.Show("No orders found matching the search criteria.", "Search Results", MessageBoxButton.OK, MessageBoxImage.Information);
+                Logger.Warning("No orders found matching the search criteria.");
             }
             else {
                 Logger.Log($"Loaded {_filteredOrders.Count} orders after filter");
@@ -1706,7 +2104,7 @@ namespace LivingParisApp {
 
         #endregion
 
-        #region Actions
+        #region Collection Macros 
 
         private void RemoveUserFromCollections(int userId) {
             var userToRemoveAllUsers = _allUsers.FirstOrDefault(d => d.UserID == userId);
