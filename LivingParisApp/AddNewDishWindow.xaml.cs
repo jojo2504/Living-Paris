@@ -124,48 +124,50 @@ namespace LivingParisApp {
                     }
 
                     // Process ingredients
-                    foreach (var ingredientRow in ingredientsPanel.Children.OfType<StackPanel>().ToList()) {
+                    foreach (var ingredientRow in ingredientsPanel.Children.OfType<Grid>().ToList()) {
+
+                        Logger.Log("ingredientRow", ingredientRow.ToString());
+
                         // Skip the button at the end
                         if (ingredientRow.Children.Count < 2)
                             continue;
 
-                        var nameBox = ingredientRow.Children[0] as TextBox;
-                        var amountBox = ingredientRow.Children[1] as TextBox;
-                        var measureTypeComboBox = ingredientRow.Children[2] as ComboBox;
-
-                        if (nameBox == null || amountBox == null || measureTypeComboBox == null)
+                        var nameTextBox = ingredientRow.Children.OfType<TextBox>().FirstOrDefault(tb => tb.Name?.StartsWith("txtIngredientName") == true);
+                        var amountTextBox = ingredientRow.Children.OfType<TextBox>().FirstOrDefault(tb => tb.Name?.StartsWith("txtIngredientAmount") == true);
+                        var measureTypeComboBox = ingredientRow.Children.OfType<ComboBox>().FirstOrDefault(cb => cb.Name?.StartsWith("cmbMeasureType") == true);
+                        
+                        if (nameTextBox == null || amountTextBox == null || measureTypeComboBox == null)
                             continue;
 
                         // Skip empty ingredients
-                        if (string.IsNullOrWhiteSpace(nameBox.Text) || string.IsNullOrWhiteSpace(amountBox.Text))
+                        if (string.IsNullOrWhiteSpace(nameTextBox.Text) || string.IsNullOrWhiteSpace(amountTextBox.Text))
                             continue;
 
                         // Get or create ingredient
-                        var ingredientId = EnsureIngredientExists(nameBox.Text);
+                        var ingredientId = EnsureIngredientExists(nameTextBox.Text);
 
                         // Parse amount
-                        if (!int.TryParse(amountBox.Text, out int amount))
+                        if (!int.TryParse(amountTextBox.Text, out int amount))
                             continue;
 
                         // Add to DishIngredients
                         var measureType = (measureTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
 
-                        var addIngredientCommand = new MySqlCommand(@"
-                    INSERT INTO DishIngredients (IngredientID, DishID, Gramme, Pieces) 
-                    VALUES (@IngredientID, @DishID, @Gramme, @Pieces)");
-
-                        addIngredientCommand.Parameters.AddWithValue("@IngredientID", ingredientId);
-                        addIngredientCommand.Parameters.AddWithValue("@DishID", dishId);
-
+                        string ingredientQuery = @"
+                            INSERT INTO DishIngredients (IngredientID, DishID, Grams, Pieces) 
+                            VALUES (@IngredientID, @DishID, @Grams, @Pieces)";;
+                        var addIngredientCommand = new MySqlCommand(ingredientQuery);
                         // Set either Gramme or Pieces based on the selected measure type
                         if (measureType == "Grams") {
-                            addIngredientCommand.Parameters.AddWithValue("@Gramme", amount);
+                            addIngredientCommand.Parameters.AddWithValue("@Grams", amount);
                             addIngredientCommand.Parameters.AddWithValue("@Pieces", DBNull.Value);
                         }
                         else {
-                            addIngredientCommand.Parameters.AddWithValue("@Gramme", DBNull.Value);
+                            addIngredientCommand.Parameters.AddWithValue("@Grams", DBNull.Value);
                             addIngredientCommand.Parameters.AddWithValue("@Pieces", amount);
                         }
+                        addIngredientCommand.Parameters.AddWithValue("@IngredientID", ingredientId);
+                        addIngredientCommand.Parameters.AddWithValue("@DishID", dishId);
 
                         _mySQLManager.ExecuteNonQuery(addIngredientCommand);
                     }

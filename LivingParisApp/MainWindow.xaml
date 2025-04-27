@@ -280,6 +280,13 @@
                                         <DataGridTextColumn Header="Expires" Binding="{Binding PeremptionDate, StringFormat={}{0:d}}" Width="*"/>
                                         <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
                                         <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
+                                        <DataGridTemplateColumn Header="View" Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View" Click="BtnViewDishDetails_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -478,6 +485,13 @@
                                         <DataGridTextColumn Header="Diet" Binding="{Binding Diet}" Width="*"/>
                                         <DataGridTextColumn Header="Origin" Binding="{Binding Origin}" Width="*"/>
                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                                        <DataGridTemplateColumn Header="View" Width="60">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="View" Click="BtnViewDishDetails_Click" Padding="5,0" Margin="2" Tag="{Binding DishID}" Style="{StaticResource CroissantButton}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTemplateColumn Header="Actions" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>

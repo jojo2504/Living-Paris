@@ -1693,8 +1693,13 @@ namespace LivingParisApp {
                     // Step 2: Display dish details
                     string details = $"Name: {selectedDish.Name:dd/MM/yyyy}\n" +
                                     "Ingredients:\n";
-                    foreach (var ingredient in ingredients) {
-                        details += $"{ingredient.Quantity} {ingredient.MeasurementType} of {ingredient.Name}\n";
+                    if (ingredients.Count == 0) {
+                        details += "Not Specified";
+                    }
+                    else {
+                        foreach (var ingredient in ingredients) {
+                            details += $"{ingredient.Quantity} {ingredient.MeasurementType} of {ingredient.Name}\n";
+                        }
                     }
 
                     MessageBox.Show(details, "Dish Details");
