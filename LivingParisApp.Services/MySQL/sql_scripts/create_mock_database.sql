@@ -13,12 +13,12 @@ TRUNCATE TABLE Ingredients;
 TRUNCATE TABLE Users;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 1. Insert Users (both clients and chefs)
-INSERT INTO Users (LastName, FirstName, Street, StreetNumber, Postcode, City, PhoneNumber, Mail, ClosestMetro, Password, IsClient, IsChef) VALUES
-
+INSERT INTO Users (LastName, FirstName, Street, StreetNumber, Postcode, City, PhoneNumber, Mail, ClosestMetro, Password, IsClient, IsChef, IsAdmin) VALUES
 -- Admin (1)
-('Admin', 'Admin', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'admin', 'Louvre-Rivoli', 'admin', 1, 1),
+('Admin', 'Admin', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'admin', 'Louvre-Rivoli', 'admin', 1, 1, 1);
 
+INSERT INTO Users (LastName, FirstName, Street, StreetNumber, Postcode, City, PhoneNumber, Mail, ClosestMetro, Password, IsClient, IsChef) VALUES
+-- 1. Insert Users (both clients and chefs)
 -- Chefs (10)
 ('Dubois', 'Marie', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'marie.dubois@email.com', 'Louvre-Rivoli', 'chef_password1', 0, 1),
 ('Martin', 'Jean', 'Avenue des Champs-Élysées', 120, '75008', 'Paris', '2234567890', 'jean.martin@email.com', 'George V', 'chef_password2', 0, 1),

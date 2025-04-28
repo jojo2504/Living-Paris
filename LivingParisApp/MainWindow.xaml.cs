@@ -233,7 +233,7 @@ namespace LivingParisApp {
                 // Query to get the user ID using the email
                 string userQuery = @"
                     SELECT p.UserID, p.FirstName, p.LastName, p.Mail, p.Street, p.StreetNumber, 
-                           p.Postcode, p.City, p.PhoneNumber, p.ClosestMetro, p.TotalMoneySpent, p.IsClient, p.IsChef
+                           p.Postcode, p.City, p.PhoneNumber, p.ClosestMetro, p.TotalMoneySpent, p.IsClient, p.IsChef, p.IsAdmin
                     FROM Users p
                     WHERE p.Mail = @Email";
 
@@ -279,7 +279,8 @@ namespace LivingParisApp {
                             TotalMoneySpent = (decimal)userReader["TotalMoneySpent"],
                             ClosestMetro = (string)userReader["ClosestMetro"],
                             IsChef = (int)userReader["IsChef"],
-                            IsClient = (int)userReader["IsClient"]
+                            IsClient = (int)userReader["IsClient"],
+                            IsAdmin = (int)userReader["IsAdmin"]
                         };
                         UpdateUIForLoggedInUser();
                         // Switch to the Sign In tab (assuming TabControl is the main control)
@@ -386,18 +387,6 @@ namespace LivingParisApp {
         }
 
         private void ResetSignUpBoxes() {
-            Logger.Log(txtFirstName.Text);
-            Logger.Log(txtLastName.Text);
-            Logger.Log(txtEmail.Text);
-            Logger.Log(pwdSignUp.Password);
-            Logger.Log(pwdConfirm.Password);
-            Logger.Log(txtPhone.Text);
-            Logger.Log(txtStreet.Text);
-            Logger.Log(txtStreetNumber.Text);
-            Logger.Log(txtPostcode.Text);
-            Logger.Log(txtCity.Text);
-            Logger.Log(cmbMetro.Text);
-
             txtFirstName.Text = "";
             txtLastName.Text = "";
             txtEmail.Text = "";
