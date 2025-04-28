@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS Users (
     TotalOrderCompleted DOUBLE DEFAULT 0 NOT NULL,
     IsClient INT NOT NULL DEFAULT 0,
     IsChef INT NOT NULL DEFAULT 0,
+    IsAdmin INT NOT NULL DEFAULT 0,
     PRIMARY KEY (UserID),
     CHECK (CHAR_LENGTH(PhoneNumber) = 10)
 );

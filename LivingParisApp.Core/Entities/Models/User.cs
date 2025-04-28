@@ -18,6 +18,7 @@ namespace LivingParisApp.Core.Entities.Models {
         private double _totalOrderCompleted;
         private int _isClient;
         private int _isChef;
+        private int _isAdmin;
 
         [Key]
         public int UserID {
@@ -196,6 +197,18 @@ namespace LivingParisApp.Core.Entities.Models {
             }
         }
 
+        [Required]
+        public int IsAdmin {
+            get => _isAdmin;
+            set {
+                if (_isAdmin != value) {
+                    _isAdmin = value;
+                    OnPropertyChanged(nameof(IsAdmin));
+                    OnPropertyChanged(nameof(Roles));
+                }
+            }
+        }
+
         // Computed property for FullName
         public string FullName => $"{FirstName} {LastName}".Trim();
 
@@ -203,6 +216,7 @@ namespace LivingParisApp.Core.Entities.Models {
         public string Roles {
             get {
                 var roles = new List<string>();
+                if (IsChef == 1) roles.Add("Admin");
                 if (IsClient == 1) roles.Add("Client");
                 if (IsChef == 1) roles.Add("Chef");
                 return string.Join(", ", roles);

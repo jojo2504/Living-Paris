@@ -151,11 +151,10 @@ namespace LivingParisApp {
             metroMap.Visibility = Visibility.Visible;
 
             adminTab.Visibility = Visibility.Collapsed;
-            if (_currentUser.UserID == 1) {
+            if (_currentUser.IsAdmin == 1) {
                 adminTab.Visibility = Visibility.Visible;
                 AdminAdditionalLoad(); //Additional admin loads
             }
-
 
             //food services tab based on roles
             if (_currentUser.IsChef == 0) {
