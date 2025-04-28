@@ -216,7 +216,7 @@ namespace LivingParisApp.Core.Entities.Models {
         public string Roles {
             get {
                 var roles = new List<string>();
-                if (IsChef == 1) roles.Add("Admin");
+                if (IsAdmin == 1) roles.Add("Admin");
                 if (IsClient == 1) roles.Add("Client");
                 if (IsChef == 1) roles.Add("Chef");
                 return string.Join(", ", roles);
