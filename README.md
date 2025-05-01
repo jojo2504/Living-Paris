@@ -39,7 +39,7 @@ This project aims to explore graphs and their functionality, particularly in opt
     - run.test
      
 ## Entity-Relationship Diagram
-![Entity Association Diagram](/markdownassets/Image/EA-diagram.png)
+![Entity Association Diagram](markdownassets\Image\EA-diagram.png)
 
 ## Known Issues
 - Xaml style is not consistent across tabs.
