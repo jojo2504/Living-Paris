@@ -32,7 +32,6 @@ namespace LivingParisApp {
                 }
 
                 Logger.Log($"{bools[0]} {bools[1]} {bools[2]}");
-
                 MySQLManager mySQLManager = new MySQLManager(bools);
 
                 Logger.Log("generating the map...");
@@ -40,25 +39,7 @@ namespace LivingParisApp {
                     Path.Combine(CsvAssetsPath, "MetroParisNoeuds.csv"),
                     Path.Combine(CsvAssetsPath, "MetroParisArcs.csv")
                 );
-
-                //Logger.Log(map.ToString());
-
-                //map all the relationship between chefs and clients based on their respectives ID
-                RelationshipMap<int> relationshipMap = new();
-                var query = @"SELECT DISTINCT ClientID, ChefID FROM Orders;";
-                var command = new MySqlCommand(query);
-                using (var reader = mySQLManager.ExecuteReader(command)) {
-                    while (reader.Read()) {
-                        relationshipMap.AddBidirectionalEdge(reader.GetInt32("ClientID"), reader.GetInt32("ChefID"));
-                    }
-                }
-
-                var color = new WelshPowell<int>(relationshipMap);
-                Logger.Log(color.GetColorCount());
-                Logger.Log(color.IsBipartite());
-                Logger.Log(color.IsPlanar());
-                Logger.Log(color.GetNodesGroupedByColor().Select(x => x.ToString()).ToArray());
-
+                
                 MainWindow window = new MainWindow(mySQLManager, map);
                 window.Show();
             }
