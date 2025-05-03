@@ -2013,7 +2013,7 @@ namespace LivingParisApp {
             /// <param name="e"></param>
 
             if (cmbDishType == null || cmbDiet == null || cmbOrigin == null) {
-                Logger.Warning("Filter cont rols are not accessible");
+                Logger.Warning("Filter controls are not accessible");
                 return;
             }
 
