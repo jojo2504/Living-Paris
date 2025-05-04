@@ -43,18 +43,26 @@ namespace LivingParisApp {
                 // Validate inputs
                 if (string.IsNullOrEmpty(txtName.Text) ||
                     string.IsNullOrEmpty(cmbType.Text) ||
-                    string.IsNullOrEmpty(txtPrice.Text) ||
-                    string.IsNullOrEmpty(txtDiet.Text) ||
-                    string.IsNullOrEmpty(txtOrigin.Text)) {
-                    MessageBox.Show("Please fill in all required fields (Name, Type, Price, Diet, Origin)",
+                    string.IsNullOrEmpty(txtPrice.Text)) {
+                    MessageBox.Show("Please fill in all required fields (Name, Type, Price)",
                                   "Validation Error",
                                   MessageBoxButton.OK,
                                   MessageBoxImage.Warning);
                     return;
                 }
 
-                if (!decimal.TryParse(txtPrice.Text, out decimal price)) {
-                    MessageBox.Show("Please enter a valid price",
+                // Validate Type to match database constraint
+                if (!new[] { "entree", "main dish", "dessert" }.Contains(cmbType.Text.ToLower())) {
+                    MessageBox.Show("Type must be one of: entree, main dish, dessert",
+                                  "Validation Error",
+                                  MessageBoxButton.OK,
+                                  MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Validate Price is numeric and non-negative
+                if (!decimal.TryParse(txtPrice.Text, out decimal price) || price < 0) {
+                    MessageBox.Show("Price must be a valid non-negative number",
                                   "Validation Error",
                                   MessageBoxButton.OK,
                                   MessageBoxImage.Warning);
@@ -135,7 +143,7 @@ namespace LivingParisApp {
                         var nameTextBox = ingredientRow.Children.OfType<TextBox>().FirstOrDefault(tb => tb.Name?.StartsWith("txtIngredientName") == true);
                         var amountTextBox = ingredientRow.Children.OfType<TextBox>().FirstOrDefault(tb => tb.Name?.StartsWith("txtIngredientAmount") == true);
                         var measureTypeComboBox = ingredientRow.Children.OfType<ComboBox>().FirstOrDefault(cb => cb.Name?.StartsWith("cmbMeasureType") == true);
-                        
+
                         if (nameTextBox == null || amountTextBox == null || measureTypeComboBox == null)
                             continue;
 
@@ -155,7 +163,7 @@ namespace LivingParisApp {
 
                         string ingredientQuery = @"
                             INSERT INTO DishIngredients (IngredientID, DishID, Grams, Pieces) 
-                            VALUES (@IngredientID, @DishID, @Grams, @Pieces)";;
+                            VALUES (@IngredientID, @DishID, @Grams, @Pieces)"; ;
                         var addIngredientCommand = new MySqlCommand(ingredientQuery);
                         // Set either Gramme or Pieces based on the selected measure type
                         if (measureType == "Grams") {

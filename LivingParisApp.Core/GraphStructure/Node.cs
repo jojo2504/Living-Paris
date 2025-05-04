@@ -25,5 +25,14 @@ namespace LivingParisApp.Core.GraphStructure {
                 return EqualityComparer<T>.Default.Equals(Object, other.Object);
             return false;
         }
+
+        /// <summary>
+        /// Returns a hash code for the current node.
+        /// </summary>
+        /// <returns>A hash code based on the node's Object property.</returns>
+        public override int GetHashCode()
+        {
+            return Object is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Object);
+        }
     }
 }

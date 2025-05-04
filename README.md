@@ -16,7 +16,7 @@
   - [Summary](#summary)
   - [Introduction](#introduction)
   - [Getting Started (For Custom Building)](#getting-started-for-custom-building)
-  - [Entity-Relationship Diagram (Outdated)](#entity-relationship-diagram-outdated)
+  - [Entity-Relationship Diagram](#entity-relationship-diagram)
   - [Known Issues](#known-issues)
   - [To Implement](#to-implement)
 
@@ -38,17 +38,12 @@ This project aims to explore graphs and their functionality, particularly in opt
 4. To run the tests :
     - run.test
      
-## Entity-Relationship Diagram (Outdated)
-![Entity Association Diagram](/markdownassets/Image/Entity_Association_Diagram.png)
-This diagram will evolve in the future as we add more functionalities to the app. \
-The diagram is under update.
+## Entity-Relationship Diagram
+![Entity Association Diagram](/markdownassets/Image/EA-diagram.png)
 
 ## Known Issues
-- The map is not interactable.
 - Xaml style is not consistent across tabs.
 - Dijkstra is broken | Not critical since we are using A*.
 
 ## To Implement
-- Display Vertex Cover
-- Display `RelationshipMap` coloration graph
 - Tests for : vertex cover, graph coloration

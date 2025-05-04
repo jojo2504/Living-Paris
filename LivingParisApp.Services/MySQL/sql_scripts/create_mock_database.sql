@@ -15,12 +15,12 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 INSERT INTO Users (LastName, FirstName, Street, StreetNumber, Postcode, City, PhoneNumber, Mail, ClosestMetro, Password, IsClient, IsChef, IsAdmin) VALUES
 -- Admin (1)
-('Admin', 'Admin', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'admin', 'Louvre-Rivoli', 'admin', 1, 1, 1);
+('Admin', 'Admin', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'admin', 'Porte Maillot', 'admin', 1, 1, 1);
 
 INSERT INTO Users (LastName, FirstName, Street, StreetNumber, Postcode, City, PhoneNumber, Mail, ClosestMetro, Password, IsClient, IsChef) VALUES
 -- 1. Insert Users (both clients and chefs)
 -- Chefs (10)
-('Dubois', 'Marie', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'marie.dubois@email.com', 'Louvre-Rivoli', 'chef_password1', 0, 1),
+('Dubois', 'Marie', 'Rue de Rivoli', 45, '75001', 'Paris', '1234567890', 'marie.dubois@email.com', 'Argentine', 'chef_password1', 0, 1),
 ('Martin', 'Jean', 'Avenue des Champs-Élysées', 120, '75008', 'Paris', '2234567890', 'jean.martin@email.com', 'George V', 'chef_password2', 0, 1),
 ('Leroy', 'Sophie', 'Boulevard Saint-Germain', 78, '75006', 'Paris', '3234567890', 'sophie.leroy@email.com', 'Saint-Germain-des-Prés', 'chef_password3', 0, 1),
 ('Moreau', 'Pierre', 'Rue Montorgueil', 25, '75002', 'Paris', '4234567890', 'pierre.moreau@email.com', 'Étienne Marcel', 'chef_password4', 0, 1),

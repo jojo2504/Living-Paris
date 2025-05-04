@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
@@ -16,5 +15,9 @@
   <ItemGroup>
     <ProjectReference Include="..\LivingParisApp.Services\LivingParisApp.Services.csproj" />
     <ProjectReference Include="..\LivingParisApp.Core\LivingParisApp.Core.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="XAML.MapControl.WPF" Version="13.4.0" />
   </ItemGroup>
 </Project>

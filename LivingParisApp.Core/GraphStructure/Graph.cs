@@ -32,6 +32,21 @@ namespace LivingParisApp.Core.GraphStructure {
             AdjacencyList[Anode].Add(Tuple.Create(Bnode, weight));
             AdjacencyList[Bnode].Add(Tuple.Create(Anode, weight));
         }
+
+        public void AddBidirectionalEdge(Node<T> A, Node<T> B, double weight = 0) {
+            var Anode = A;
+            var Bnode = B;
+
+            // Ensure both nodes exist in the adjacency list
+            if (!AdjacencyList.ContainsKey(Anode))
+                AdjacencyList[Anode] = new List<Tuple<Node<T>, double>>();
+            if (!AdjacencyList.ContainsKey(Bnode))
+                AdjacencyList[Bnode] = new List<Tuple<Node<T>, double>>();
+
+            // Add the edge
+            AdjacencyList[Anode].Add(Tuple.Create(Bnode, weight));
+            AdjacencyList[Bnode].Add(Tuple.Create(Anode, weight));
+        }
         
         public abstract override string ToString();
     }

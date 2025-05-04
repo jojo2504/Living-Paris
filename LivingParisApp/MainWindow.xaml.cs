@@ -14,22 +14,23 @@ using System.Collections.ObjectModel;
 using LivingParisApp.Core.Engines.ShortestPaths;
 using LivingParisApp.Core.Entities.Station;
 using System.Windows.Media.Effects;
+using LivingParisApp.Core.Engines.GraphColoration;
+using System.IO;
+using static LivingParisApp.Services.Environment.Constants;
+using MapControl;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
         MySQLManager _mySQLManager;
         private User _currentUser;
         Map<MetroStation> _map;
+        private Dictionary<string, MapItemsControl> _metroLineLayers = new Dictionary<string, MapItemsControl>();
+        private Dictionary<string, MapItemsControl> _highlightedMetroLineLayers = new Dictionary<string, MapItemsControl>();
+        RelationshipMap<int> relationshipMap;
+        Dictionary<int, Node<int>> nodeCache;
         private double minLat, maxLat, minLon, maxLon;
-        private readonly Dictionary<Node<MetroStation>, Point> stationCoordinates = new Dictionary<Node<MetroStation>, Point>();
 
-        // Zoom/pan variables
         private Point _lastMousePosition;
-        private bool _isDragging = false;
-        private double _scale = 1.0;
-        private readonly TranslateTransform _translateTransform = new TranslateTransform();
-        private readonly ScaleTransform _scaleTransform = new ScaleTransform();
-        private readonly TransformGroup _transformGroup = new TransformGroup();
 
         // State Collections
         private Dictionary<int, Button> _dishButtons = new Dictionary<int, Button>();
@@ -95,15 +96,16 @@ namespace LivingParisApp {
             tabFoodServices.Visibility = Visibility.Collapsed;
             metroMap.Visibility = Visibility.Collapsed;
             adminTab.Visibility = Visibility.Collapsed;
+            relationMap.Visibility = Visibility.Collapsed;
 
-            InitializeMapTransforms();
             LoadInitialData();
 
             cmbDishType.ItemsSource = DishTypes;
             cmbDiet.ItemsSource = Diets;
             cmbOrigin.ItemsSource = Origins;
 
-            this.Loaded += (sender, e) => RenderMap();
+            this.Loaded += (sender, e) => MetroMap_Load();
+            this.Loaded += (sender, e) => DrawRelationshipMap();
         }
 
         private void LoadInitialData() {
@@ -137,6 +139,8 @@ namespace LivingParisApp {
             BtnSearchUser_Click();
             BtnSearchDish_Click();
             BtnFilterOrders_Click();
+
+            relationMap.Visibility = Visibility.Visible;
         }
 
         private void UpdateUIForLoggedInUser() {
@@ -201,6 +205,7 @@ namespace LivingParisApp {
             tabFoodServices.Visibility = Visibility.Collapsed;
             metroMap.Visibility = Visibility.Collapsed;
             adminTab.Visibility = Visibility.Collapsed;
+            relationMap.Visibility = Visibility.Collapsed;
 
             // Clear sign in fields
             txtSignInEmail.Text = string.Empty;
@@ -466,249 +471,32 @@ namespace LivingParisApp {
 
         #endregion
 
-        #region Map
-        private void InitializeMapTransforms() {
-            // Clear existing transforms
-            _transformGroup.Children.Clear();
+        #region Metro Map
 
-            _scaleTransform.ScaleX = _scale;
-            _scaleTransform.ScaleY = _scale;
-            _translateTransform.X = 0;
-            _translateTransform.Y = 0;
-
-            _transformGroup.Children.Add(_scaleTransform);
-            _transformGroup.Children.Add(_translateTransform);
-
-            // We no longer assign transform to metroCanvas here - it will be applied to contentCanvas in DrawNodes
-
-            // Remove existing handlers to avoid duplicates
-            metroCanvas.MouseLeftButtonDown -= MetroCanvas_MouseLeftButtonDown;
-            metroCanvas.MouseLeftButtonUp -= MetroCanvas_MouseLeftButtonUp;
-            metroCanvas.MouseMove -= MetroCanvas_MouseMove;
-            metroCanvas.MouseWheel -= MetroCanvas_MouseWheel;
-
-            // Add new handlers
-            metroCanvas.MouseLeftButtonDown += MetroCanvas_MouseLeftButtonDown;
-            metroCanvas.MouseLeftButtonUp += MetroCanvas_MouseLeftButtonUp;
-            metroCanvas.MouseMove += MetroCanvas_MouseMove;
-            metroCanvas.MouseWheel += MetroCanvas_MouseWheel;
-        }
-
-        private void MetroCanvas_MouseWheel(object sender, MouseWheelEventArgs e) {
-            double zoom = e.Delta > 0 ? 1.1 : 0.9;
-            _scale = Math.Max(0.1, Math.Min(5.0, _scale * zoom));
-
-            Point mousePos = e.GetPosition(metroCanvas);
-
-            // Adjust transform origin based on mouse position
-            _translateTransform.X = mousePos.X - (mousePos.X - _translateTransform.X) * zoom;
-            _translateTransform.Y = mousePos.Y - (mousePos.Y - _translateTransform.Y) * zoom;
-
-            _scaleTransform.ScaleX = _scale;
-            _scaleTransform.ScaleY = _scale;
-
-            e.Handled = true;
-        }
-
-        private void MetroCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-            // Remove the Ellipse check to allow dragging from anywhere on the canvas
-            _lastMousePosition = e.GetPosition(metroCanvas);
-            _isDragging = true;
-            metroCanvas.CaptureMouse();
-            e.Handled = true;
-        }
-
-        private void MetroCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Left && _isDragging) {
-                _isDragging = false;
-                metroCanvas.ReleaseMouseCapture();
-                e.Handled = true;
-            }
-        }
-
-        private void MetroCanvas_MouseMove(object sender, MouseEventArgs e) {
-            if (_isDragging) {
-                Point currentPosition = e.GetPosition(metroCanvas);
-                _translateTransform.X += currentPosition.X - _lastMousePosition.X;
-                _translateTransform.Y += currentPosition.Y - _lastMousePosition.Y;
-                _lastMousePosition = currentPosition;
-                e.Handled = true;
-            }
-        }
-
-        private void RenderMap(LinkedList<Node<MetroStation>> path = null) {
+        private void MetroMap_Load() {
             try {
-                metroCanvas.Children.Clear();
+                ParisMap.Center = new Location(48.8566, 2.3522); // Paris center
+                ParisMap.ZoomLevel = 13;
 
-                if (_map?.AdjacencyList == null || _map.AdjacencyList.Count == 0) {
-                    return;
+                DrawEdges();
+
+                foreach (Node<MetroStation> metroStation in _map.THashSet) {
+                    // IMPORTANT: Create a MapItem instead of a Pushpin
+                    var mapItem = new MapItem();
+                    mapItem.Location = new Location(metroStation.Object.Latitude, metroStation.Object.Longitude);
+
+                    var dataObject = new { Name = metroStation.Object.LibelleStation, Location = new Location(metroStation.Object.Latitude, metroStation.Object.Longitude) };
+                    mapItem.DataContext = dataObject;
+                    // Apply the style - this will now work since the style targets MapItem
+                    mapItem.Style = (Style)FindResource("PushpinItemStyle");
+
+                    // Add the MapItem to the map
+                    ParisMap.Children.Add(mapItem);
                 }
-
-                InitMapBounds();
-
-                // Extract all valid stations with coordinates
-                var stations = _map.AdjacencyList.Keys
-                    .Where(node => node?.Object != null &&
-                          node.Object.Longitude != 0 &&
-                          node.Object.Latitude != 0)
-                    .ToList();
-
-                if (!stations.Any()) {
-                    return;
-                }
-
-                // draw all the nodes
-                foreach (var station in stations) {
-                    DrawNode(station);
-                }
-
-                // draw all the edges
-                DrawEdges(path, stations);
             }
-            catch (Exception ex) {
-                Logger.Error(ex.Message);
+            catch (Exception e) {
+                Logger.Error(e);
             }
-        }
-
-        private void InitMapBounds() {
-            var nodeList = _map.AdjacencyList.Keys.ToList();
-            minLat = maxLat = nodeList[0].Object.Latitude;
-            minLon = maxLon = nodeList[0].Object.Longitude;
-
-            foreach (var node in _map.AdjacencyList.Keys) {
-                minLat = Math.Min(minLat, node.Object.Latitude);
-                maxLat = Math.Max(maxLat, node.Object.Latitude);
-                minLon = Math.Min(minLon, node.Object.Longitude);
-                maxLon = Math.Max(maxLon, node.Object.Longitude);
-            }
-
-            // Add a small buffer
-            double latBuffer = (maxLat - minLat) * 0.05;
-            double lonBuffer = (maxLon - minLon) * 0.05;
-
-            minLat -= latBuffer;
-            maxLat += latBuffer;
-            minLon -= lonBuffer;
-            maxLon += lonBuffer;
-        }
-
-
-        private void DrawNode(Node<MetroStation> node) {
-            try {
-                double x = ScaleLongitude(node.Object.Longitude);
-                double y = ScaleLatitude(node.Object.Latitude);
-
-                // Store position for links
-                stationCoordinates[node] = new Point(x, y);
-
-                // Create station visual with drop shadow
-                var shadowEffect = new DropShadowEffect {
-                    Color = Colors.Black,
-                    Direction = 315,
-                    ShadowDepth = 2,
-                    BlurRadius = 4,
-                    Opacity = 0.6
-                };
-
-                // Station marker with gradient
-                var gradientStops = new GradientStopCollection {
-                    new GradientStop(Colors.White, 0.0),
-                    new GradientStop(GetStationColor(node.Object.LibelleLine), 1.0)
-                };
-
-                Ellipse nodeEllipse = new Ellipse {
-                    Width = 18,
-                    Height = 18,
-                    StrokeThickness = 2,
-                    Stroke = new SolidColorBrush(Colors.White),
-                    Fill = new RadialGradientBrush(gradientStops),
-                    Effect = shadowEffect
-                };
-
-                // Add white border for better contrast
-                Ellipse outerRing = new Ellipse {
-                    Width = 22,
-                    Height = 22,
-                    StrokeThickness = 2,
-                    Stroke = new SolidColorBrush(Colors.Black),
-                    Fill = new SolidColorBrush(Colors.Transparent)
-                };
-
-                // Position the node elements
-                Canvas.SetLeft(outerRing, x - outerRing.Width / 2);
-                Canvas.SetTop(outerRing, y - outerRing.Height / 2);
-                Canvas.SetLeft(nodeEllipse, x - nodeEllipse.Width / 2);
-                Canvas.SetTop(nodeEllipse, y - nodeEllipse.Height / 2);
-                Panel.SetZIndex(outerRing, 5);
-                Panel.SetZIndex(nodeEllipse, 10);
-
-                metroCanvas.Children.Add(outerRing);
-                metroCanvas.Children.Add(nodeEllipse);
-
-                // Create the node label with better visibility
-                TextBlock nodeLabel = new TextBlock {
-                    Text = node.Object.LibelleStation,
-                    FontSize = 11,
-                    FontWeight = FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(Colors.Black),
-                    TextAlignment = TextAlignment.Center,
-                    Background = new SolidColorBrush(Color.FromArgb(180, 255, 255, 255)),
-                    Padding = new Thickness(3, 1, 3, 1)
-                };
-
-                // Create a border for the text to improve readability
-                Border labelBorder = new Border {
-                    Child = nodeLabel,
-                    CornerRadius = new CornerRadius(3),
-                    BorderBrush = new SolidColorBrush(Colors.Gray),
-                    BorderThickness = new Thickness(1)
-                };
-
-                // Position the label
-                Canvas.SetLeft(labelBorder, x + 12);
-                Canvas.SetTop(labelBorder, y - 12);
-                Panel.SetZIndex(labelBorder, 15);
-
-                // Add to canvas
-                metroCanvas.Children.Add(labelBorder);
-
-                // Add mouse hover behavior for better UX
-                AddHoverBehavior(nodeEllipse, labelBorder, node);
-            }
-            catch (Exception ex) {
-                Logger.Fatal(ex);
-            }
-        }
-
-        private void AddHoverBehavior(Ellipse nodeEllipse, Border labelBorder, Node<MetroStation> node) {
-            // Create animation for hover effect
-            nodeEllipse.MouseEnter += (s, e) => {
-                nodeEllipse.Width = 24;
-                nodeEllipse.Height = 24;
-                Canvas.SetLeft(nodeEllipse, Canvas.GetLeft(nodeEllipse) - 3);
-                Canvas.SetTop(nodeEllipse, Canvas.GetTop(nodeEllipse) - 3);
-
-                // Highlight label
-                labelBorder.BorderBrush = new SolidColorBrush(Colors.DarkBlue);
-                labelBorder.Background = new SolidColorBrush(Colors.LightYellow);
-
-                // Show station info tooltip
-                ToolTip tooltip = new ToolTip {
-                    Content = $"Station: {node.Object.LibelleStation}\nLigne: {node.Object.LibelleLine}"
-                };
-                nodeEllipse.ToolTip = tooltip;
-            };
-
-            nodeEllipse.MouseLeave += (s, e) => {
-                nodeEllipse.Width = 18;
-                nodeEllipse.Height = 18;
-                Canvas.SetLeft(nodeEllipse, Canvas.GetLeft(nodeEllipse) + 3);
-                Canvas.SetTop(nodeEllipse, Canvas.GetTop(nodeEllipse) + 3);
-
-                // Restore label
-                labelBorder.BorderBrush = new SolidColorBrush(Colors.Gray);
-                labelBorder.Background = new SolidColorBrush(Color.FromArgb(180, 255, 255, 255));
-            };
         }
 
         // Helper method to get color based on metro line
@@ -716,222 +504,363 @@ namespace LivingParisApp {
             if (string.IsNullOrEmpty(lineCode)) return Colors.RosyBrown;
 
             // Create a color mapping for different metro lines
+            // Create a color mapping for different metro lines
             var colorMap = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase) {
                 { "1", Colors.DarkBlue },
                 { "2", Colors.Red },
                 { "3", Colors.Green },
+                { "3bis", Colors.OliveDrab },
                 { "4", Colors.Purple },
                 { "5", Colors.Orange },
                 { "6", Colors.Teal },
-                { "7", Colors.Pink },
+                { "7", Colors.Aquamarine },
+                { "7bis", Colors.MediumVioletRed },
                 { "8", Colors.YellowGreen },
                 { "9", Colors.Brown },
                 { "10", Colors.DeepSkyBlue },
+                { "11", Colors.Gold },
+                { "12", Colors.Indigo },
+                { "13", Colors.Crimson },
+                { "14", Colors.LimeGreen },
                 // Add more lines as needed
             };
 
             return colorMap.TryGetValue(lineCode, out var color) ? color : Colors.RosyBrown;
         }
 
-        private double ScaleLongitude(double longitude) {
-            double width = metroCanvas.Width;
-            // Basic linear mapping is fine for longitude
-            return (longitude - minLon) / (maxLon - minLon) * width;
+        private void DrawEdges() {
+            try {
+                foreach (MetroStationLink<MetroStation> link in _map.GetAllLinks()) {
+                    // Create a MapPolyline instead of a regular Polyline
+                    var start = link.A.Object;
+                    var end = link.B.Object;
+                    DrawEdge(start, end);
+                }
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
         }
 
-        private double ScaleLatitude(double latitude) {
-            double height = metroCanvas.Height;
-
-            // Convert latitude to Mercator projection
-            double latRad = latitude * Math.PI / 180; // Convert to radians
-            double mercatorY = Math.Log(Math.Tan(Math.PI / 4 + latRad / 2));
-
-            // Calculate the Mercator Y values for min and max latitudes
-            double minLatRad = minLat * Math.PI / 180;
-            double maxLatRad = maxLat * Math.PI / 180;
-            double minMercatorY = Math.Log(Math.Tan(Math.PI / 4 + minLatRad / 2));
-            double maxMercatorY = Math.Log(Math.Tan(Math.PI / 4 + maxLatRad / 2));
-
-            // Scale and invert
-            return height - ((mercatorY - minMercatorY) / (maxMercatorY - minMercatorY)) * height;
-        }
-
-        private void DrawEdges(LinkedList<Node<MetroStation>> path, List<Node<MetroStation>> stations) {
+        private void DrawHighlightedEdges(LinkedList<Node<MetroStation>> path) {
             // Create path edge list for highlighting
-            var pathEdges = new List<(Node<MetroStation> Start, Node<MetroStation> End)>();
             if (path != null && path.Count > 1) {
                 var current = path.First;
                 while (current?.Next != null) {
-                    pathEdges.Add((current.Value, current.Next.Value));
+                    DrawEdge(current.Value.Object, current.Next.Value.Object, true);
                     current = current.Next;
                 }
             }
-
-            // Group connections by line for better visualization
-            var lineConnections = new Dictionary<string, List<(Point Start, Point End, bool IsPath)>>();
-
-            foreach (var stationNode in stations) {
-                if (!stationCoordinates.TryGetValue(stationNode, out Point startPoint))
-                    continue;
-
-                // Get all connected stations
-                var connections = _map.AdjacencyList[stationNode];
-                foreach (var connection in connections) {
-                    var neighborNode = connection.Item1;
-                    if (neighborNode == null || !stationCoordinates.TryGetValue(neighborNode, out Point endPoint))
-                        continue;
-
-                    // Determine if this connection is part of the highlighted path
-                    bool isPathConnection = pathEdges.Any(edge =>
-                        (edge.Start == stationNode && edge.End == neighborNode) ||
-                        (edge.Start == neighborNode && edge.End == stationNode));
-
-                    // Get line code and normalize it
-                    string lineCode = stationNode.Object.LibelleLine ?? "default";
-
-                    // Add to line connections
-                    if (!lineConnections.ContainsKey(lineCode))
-                        lineConnections[lineCode] = new List<(Point, Point, bool)>();
-
-                    lineConnections[lineCode].Add((startPoint, endPoint, isPathConnection));
-                }
-            }
-
-            // Draw connections by line
-            foreach (var linePair in lineConnections) {
-                string lineCode = linePair.Key;
-                var connections = linePair.Value;
-
-                Color baseColor = GetStationColor(lineCode);
-                Brush regularBrush = new SolidColorBrush(baseColor);
-
-                // Create highlighted path brush with glow effect
-                LinearGradientBrush highlightBrush = new LinearGradientBrush {
-                    StartPoint = new Point(0, 0),
-                    EndPoint = new Point(1, 1)
-                };
-                highlightBrush.GradientStops.Add(new GradientStop(Colors.Yellow, 0.0));
-                highlightBrush.GradientStops.Add(new GradientStop(Colors.Orange, 1.0));
-
-                foreach (var (start, end, isPath) in connections) {
-                    // Create beautiful curved line with appropriate styling
-                    Path linePath = new Path();
-
-                    // Define geometry for bezier curve
-                    PathGeometry geometry = new PathGeometry();
-                    PathFigure figure = new PathFigure { StartPoint = start };
-
-                    // Calculate control points for slight curve
-                    Vector direction = end - start;
-                    double distance = direction.Length;
-                    Vector perpendicular = new Vector(-direction.Y, direction.X);
-                    perpendicular.Normalize();
-                    perpendicular *= distance * 0.05; // Curve amount
-
-                    Point controlPoint1 = start + (direction * 0.33) + perpendicular;
-                    Point controlPoint2 = start + (direction * 0.66) - perpendicular;
-
-                    figure.Segments.Add(new BezierSegment(controlPoint1, controlPoint2, end, true));
-                    geometry.Figures.Add(figure);
-
-                    linePath.Data = geometry;
-                    linePath.Stroke = isPath ? highlightBrush : regularBrush;
-                    linePath.StrokeThickness = isPath ? 6 : 4;
-                    linePath.StrokeStartLineCap = PenLineCap.Round;
-                    linePath.StrokeEndLineCap = PenLineCap.Round;
-
-                    if (isPath) {
-                        // Add glow effect for highlighted path
-                        linePath.Effect = new DropShadowEffect {
-                            Color = Colors.Gold,
-                            Direction = 0,
-                            ShadowDepth = 0,
-                            BlurRadius = 10,
-                            Opacity = 0.7
-                        };
-                    }
-
-                    Panel.SetZIndex(linePath, isPath ? 3 : 1);
-                    metroCanvas.Children.Add(linePath);
-                }
-            }
-
-            // Add legend for metro lines (optional)
-            CreateLineLegend(lineConnections.Keys.ToList());
         }
 
-        private void CreateLineLegend(List<string> lineNames) {
-            // Remove any existing legend
-            var existingLegend = metroCanvas.Children.OfType<Border>().FirstOrDefault(b => b.Name == "LineLegend");
-            if (existingLegend != null)
-                metroCanvas.Children.Remove(existingLegend);
+        private void DrawEdge(MetroStation start, MetroStation end, bool isHighlighted = false) {
+            // Create a MapPolyline instead of a regular Polyline
+            var mapPolyline = new MapPolyline();
+            Color baseColor = GetStationColor(start.LibelleLine);
 
-            // Create legend panel
-            StackPanel legendPanel = new StackPanel {
-                Orientation = Orientation.Vertical,
-                Background = new SolidColorBrush(Color.FromArgb(220, 255, 255, 255))
+            // Create a LocationCollection for the points
+            var locations = new LocationCollection {
+                new Location(start.Latitude, start.Longitude),
+                new Location(end.Latitude, end.Longitude)
             };
 
-            // Add legend title
-            TextBlock legendTitle = new TextBlock {
-                Text = "Metro Line",
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(5),
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-            legendPanel.Children.Add(legendTitle);
+            // Set the locations to the polyline
+            mapPolyline.Locations = locations;
 
-            // Add separator
-            legendPanel.Children.Add(new Separator { Margin = new Thickness(0, 0, 0, 5) });
-
-            // Add line entries
-            foreach (var line in lineNames.OrderBy(l => l)) {
-                StackPanel lineEntry = new StackPanel {
-                    Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(5)
-                };
-
-                Rectangle colorBox = new Rectangle {
-                    Width = 15,
-                    Height = 15,
-                    Fill = new SolidColorBrush(GetStationColor(line)),
-                    Margin = new Thickness(0, 0, 5, 0),
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                TextBlock lineLabel = new TextBlock {
-                    Text = $"Line {line}",
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                lineEntry.Children.Add(colorBox);
-                lineEntry.Children.Add(lineLabel);
-                legendPanel.Children.Add(lineEntry);
+            // Style the mapPolyline
+            if (isHighlighted) {
+                mapPolyline.Stroke = new SolidColorBrush(Colors.DarkGoldenrod);
+                mapPolyline.StrokeThickness = 10;
+                mapPolyline.Opacity = 1;
+            }   
+            else {
+                mapPolyline.Stroke = new SolidColorBrush(baseColor);
+                mapPolyline.StrokeThickness = 3;
+                mapPolyline.Opacity = 0.7;
             }
 
-            // Create border for legend
-            Border legendBorder = new Border {
-                Name = "LineLegend",
-                Child = legendPanel,
-                BorderBrush = new SolidColorBrush(Colors.Gray),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(5),
-                Padding = new Thickness(5),
-                Effect = new DropShadowEffect {
-                    Color = Colors.Gray,
-                    Direction = 315,
-                    ShadowDepth = 3,
-                    BlurRadius = 5,
-                    Opacity = 0.5
-                }
+            // Add the polyline to the map
+            ParisMap.Children.Add(mapPolyline);
+        }
+
+        #endregion
+
+        #region Relation Map Graph Coloration
+        private void DrawRelationshipMap() {
+            // Clear any existing elements
+            relationCanvas.Children.Clear();
+
+            // Get the relationship map between clients and chefs
+            relationshipMap = GetClientChefRelationships();
+
+            // Apply Welsh-Powell coloring algorithm
+            var welshPowell = new WelshPowell<int>(relationshipMap);
+            var colorAssignment = welshPowell.ColorGraph();
+            int colorCount = welshPowell.GetColorCount();
+
+            // Define colors for nodes based on the coloration result
+            var colorBrushes = new List<SolidColorBrush> {
+                new SolidColorBrush(Colors.Red),
+                new SolidColorBrush(Colors.Blue),
+                new SolidColorBrush(Colors.Green),
+                new SolidColorBrush(Colors.Orange),
+                new SolidColorBrush(Colors.Purple),
+                new SolidColorBrush(Colors.Cyan),
+                new SolidColorBrush(Colors.Magenta),
+                new SolidColorBrush(Colors.Yellow),
+                new SolidColorBrush(Colors.LimeGreen),
+                new SolidColorBrush(Colors.Brown)
             };
 
-            // Position legend in top-right corner
-            Canvas.SetRight(legendBorder, -50);
-            Canvas.SetTop(legendBorder, 10);
-            Panel.SetZIndex(legendBorder, 100);
+            // Ensure we have enough colors
+            while (colorBrushes.Count < colorCount) {
+                // Generate additional colors if needed
+                var rnd = new Random();
+                colorBrushes.Add(new SolidColorBrush(Color.FromRgb(
+                    (byte)rnd.Next(100, 255),
+                    (byte)rnd.Next(100, 255),
+                    (byte)rnd.Next(100, 255))));
+            }
 
-            metroCanvas.Children.Add(legendBorder);
+            // Calculate positions for nodes using a force-directed layout algorithm
+            Dictionary<Node<int>, Point> nodePositions = CalculateNodePositions(relationshipMap.AdjacencyList);
+
+            // Draw edges first (so they appear behind nodes)
+            foreach (var node in relationshipMap.AdjacencyList.Keys) {
+                foreach (var adjacentNodeTuple in relationshipMap.AdjacencyList[node]) {
+                    var adjacentNode = adjacentNodeTuple.Item1;
+
+                    // Only draw each edge once (since we have bidirectional edges)
+                    if (node.Object < adjacentNode.Object) {
+                        var line = new Line {
+                            X1 = nodePositions[node].X,
+                            Y1 = nodePositions[node].Y,
+                            X2 = nodePositions[adjacentNode].X,
+                            Y2 = nodePositions[adjacentNode].Y,
+                            Stroke = new SolidColorBrush(Colors.Gray),
+                            StrokeThickness = 1.5
+                        };
+
+                        relationCanvas.Children.Add(line);
+                    }
+                }
+            }
+
+            // Draw nodes (clients and chefs)
+            foreach (var node in relationshipMap.AdjacencyList.Keys) {
+                // Create ellipse for the node
+                var nodeColor = colorAssignment.ContainsKey(node) ? colorBrushes[colorAssignment[node]] : new SolidColorBrush(Colors.Gray);
+
+                var ellipse = new Ellipse {
+                    Width = 30,
+                    Height = 30,
+                    Fill = nodeColor,
+                    Stroke = new SolidColorBrush(Colors.Black),
+                    StrokeThickness = 1
+                };
+
+                // Position the ellipse
+                Canvas.SetLeft(ellipse, nodePositions[node].X - ellipse.Width / 2);
+                Canvas.SetTop(ellipse, nodePositions[node].Y - ellipse.Height / 2);
+
+                // Add node label (ID)
+                var textBlock = new TextBlock {
+                    Text = node.Object.ToString(),
+                    FontSize = 12,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = new SolidColorBrush(Colors.White)
+                };
+
+                // Center the text in the node
+                Canvas.SetLeft(textBlock, nodePositions[node].X - textBlock.ActualWidth / 2);
+                Canvas.SetTop(textBlock, nodePositions[node].Y - textBlock.ActualHeight / 2);
+
+                var tooltip = new ToolTip { Content = $"ID: {node.Object}" };
+                ToolTipService.SetToolTip(ellipse, tooltip);
+
+                // Add elements to canvas
+                relationCanvas.Children.Add(ellipse);
+                relationCanvas.Children.Add(textBlock);
+            }
+
+            // Add legend for colors
+            DrawLegend(colorCount, colorBrushes);
+        }
+
+        // Force-directed layout algorithm to position nodes
+        private Dictionary<Node<int>, Point> CalculateNodePositions(Dictionary<Node<int>, List<Tuple<Node<int>, double>>> adjacencyList) {
+            var nodePositions = new Dictionary<Node<int>, Point>();
+
+            // Initialize random positions
+            var random = new Random();
+            foreach (var node in adjacencyList.Keys) {
+                nodePositions[node] = new Point(
+                    random.Next(50, (int)relationCanvas.Width - 50),
+                    random.Next(50, (int)relationCanvas.Height - 50)
+                );
+            }
+
+            // Apply force-directed algorithm (Fruchterman-Reingold)
+            const double k = 50.0; // Optimal distance
+            const double iterations = 100;
+            const double temperature = 0.1; // Controls movement
+
+            for (int i = 0; i < iterations; i++) {
+                // Calculate repulsive forces between all nodes
+                var displacements = new Dictionary<Node<int>, Vector>();
+                foreach (var node in adjacencyList.Keys) {
+                    displacements[node] = new Vector(0, 0);
+                }
+
+                foreach (var node1 in adjacencyList.Keys) {
+                    foreach (var node2 in adjacencyList.Keys) {
+                        if (!node1.Equals(node2)) {
+                            var pos1 = nodePositions[node1];
+                            var pos2 = nodePositions[node2];
+
+                            // Calculate repulsive force
+                            var delta = new Vector(pos1.X - pos2.X, pos1.Y - pos2.Y);
+                            double distance = Math.Max(0.1, Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y));
+
+                            if (distance > 0) {
+                                double repulsiveForce = k * k / distance;
+                                displacements[node1] += (delta / distance) * repulsiveForce;
+                            }
+                        }
+                    }
+                }
+
+                // Calculate attractive forces between connected nodes
+                foreach (var node in adjacencyList.Keys) {
+                    foreach (var adjacent in adjacencyList[node]) {
+                        var adjacentNode = adjacent.Item1;
+
+                        var pos1 = nodePositions[node];
+                        var pos2 = nodePositions[adjacentNode];
+
+                        var delta = new Vector(pos1.X - pos2.X, pos1.Y - pos2.Y);
+                        double distance = Math.Max(0.1, Math.Sqrt(delta.X * delta.X + delta.Y * delta.Y));
+
+                        if (distance > 0) {
+                            double attractiveForce = distance * distance / k;
+                            displacements[node] -= (delta / distance) * attractiveForce;
+                            displacements[adjacentNode] += (delta / distance) * attractiveForce;
+                        }
+                    }
+                }
+
+                // Apply displacements with temperature (cooling)
+                double coolingFactor = 1.0 - (i / iterations);
+
+                foreach (var node in adjacencyList.Keys) {
+                    var displacement = displacements[node];
+                    double magnitude = Math.Sqrt(displacement.X * displacement.X + displacement.Y * displacement.Y);
+
+                    if (magnitude > 0) {
+                        displacement = displacement / magnitude * Math.Min(magnitude, temperature * coolingFactor);
+
+                        var pos = nodePositions[node];
+                        pos.X += displacement.X;
+                        pos.Y += displacement.Y;
+
+                        // Keep nodes within canvas bounds
+                        pos.X = Math.Max(30, Math.Min(relationCanvas.Width - 30, pos.X));
+                        pos.Y = Math.Max(30, Math.Min(relationCanvas.Height - 30, pos.Y));
+
+                        nodePositions[node] = pos;
+                    }
+                }
+            }
+
+            return nodePositions;
+        }
+
+        // Draw a color legend
+        private void DrawLegend(int colorCount, List<SolidColorBrush> colorBrushes) {
+            double startX = relationCanvas.Width - 150;
+            double startY = 20;
+
+            // Add legend title
+            var legendTitle = new TextBlock {
+                Text = "Graph Coloration",
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Colors.Black)
+            };
+            Canvas.SetLeft(legendTitle, startX);
+            Canvas.SetTop(legendTitle, startY);
+            relationCanvas.Children.Add(legendTitle);
+
+            // Add color samples
+            for (int i = 0; i < colorCount; i++) {
+                var colorRect = new Rectangle {
+                    Width = 20,
+                    Height = 20,
+                    Fill = colorBrushes[i],
+                    Stroke = new SolidColorBrush(Colors.Black),
+                    StrokeThickness = 1
+                };
+
+                var colorLabel = new TextBlock {
+                    Text = $"Color {i}",
+                    Foreground = new SolidColorBrush(Colors.Black)
+                };
+
+                Canvas.SetLeft(colorRect, startX);
+                Canvas.SetTop(colorRect, startY + 25 + (i * 25));
+
+                Canvas.SetLeft(colorLabel, startX + 25);
+                Canvas.SetTop(colorLabel, startY + 25 + (i * 25));
+
+                relationCanvas.Children.Add(colorRect);
+                relationCanvas.Children.Add(colorLabel);
+            }
+
+            // Add chromatic number information
+            var chromaticInfo = new TextBlock {
+                Text = $"Chromatic Number: {colorCount}",
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Colors.Black)
+            };
+            Canvas.SetLeft(chromaticInfo, startX);
+            Canvas.SetTop(chromaticInfo, startY + 30 + (colorCount * 25));
+            relationCanvas.Children.Add(chromaticInfo);
+        }
+
+        // Method to get client-chef relationships
+        public RelationshipMap<int> GetClientChefRelationships() {
+            relationshipMap = new RelationshipMap<int>();
+            nodeCache = new Dictionary<int, Node<int>>();
+
+            try {
+                var query = @"SELECT DISTINCT ClientID, ChefID FROM Orders;";
+                var command = new MySqlCommand(query);
+                using (var reader = _mySQLManager.ExecuteReader(command)) {
+                    while (reader.Read()) {
+                        int clientId = reader.GetInt32("ClientID");
+                        int chefId = reader.GetInt32("ChefID");
+
+                        // Get or create nodes from cache to ensure we use the same node instance
+                        if (!nodeCache.TryGetValue(clientId, out Node<int> clientNode)) {
+                            clientNode = new Node<int>(clientId);
+                            nodeCache[clientId] = clientNode;
+                        }
+
+                        if (!nodeCache.TryGetValue(chefId, out Node<int> chefNode)) {
+                            chefNode = new Node<int>(chefId);
+                            nodeCache[chefId] = chefNode;
+                        }
+
+                        // Add edge using the cached node instances
+                        relationshipMap.AddBidirectionalEdge(clientNode, chefNode);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                // Handle exceptions (e.g., log error, show message box)
+                MessageBox.Show($"Error loading relationship data: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            return relationshipMap;
         }
 
         #endregion
@@ -1269,6 +1198,26 @@ namespace LivingParisApp {
                     int chefId = chefGroup.Key;
                     var chefItems = chefGroup.ToList();
                     List<CartItem> processedItems = new List<CartItem>();
+
+                    //update relationMap and Json export
+                    if (!nodeCache.TryGetValue(_currentUser.UserID, out Node<int> clientNode)) {
+                        clientNode = new Node<int>(_currentUser.UserID);
+                        nodeCache[_currentUser.UserID] = clientNode;
+                    }
+
+                    if (!nodeCache.TryGetValue(chefId, out Node<int> chefNode)) {
+                        chefNode = new Node<int>(chefId);
+                        nodeCache[chefId] = chefNode;
+                    }
+                    relationshipMap.AddBidirectionalEdge(clientNode, chefNode);
+                    var algorithm = new WelshPowell<int>(relationshipMap);
+                    var exporter = new GraphColorationExporter<int>(algorithm);
+                    string json = exporter.ExportToJson();
+
+                    string outputPath = System.IO.Path.Combine(GetSolutionDirectoryInfo().FullName, "LivingParisApp", "exported-data", "graph-export.json");
+                    File.WriteAllText(outputPath, json);
+
+                    DrawRelationshipMap();
 
                     // Calculate the order total for this chef
                     decimal orderTotal = chefItems.Sum(item => item.TotalPrice);
@@ -1614,13 +1563,9 @@ namespace LivingParisApp {
                         .ToList();
 
                     Logger.Log($"clientNode ({clientNode.Object.LibelleStation}) neighbours: {string.Join(", ", adjacentStationNames2)}");
-                    /*// Step 5: Use A* to find the shortest path
+                    // Step 5: Use A* to find the shortest path
                     var aStar = new Astar<MetroStation>();
                     var (path, totalLength) = aStar.Run(_map, chefNode, clientNode);
-                    */
-                    var dijkstra = new Dijkstra<MetroStation>();
-                    dijkstra.Init(_map, chefNode);
-                    var (path, totalLength) = dijkstra.GetPath(clientNode);
 
                     if (path == null || path.Count == 0) {
                         Logger.Warning($"No path found between the client's ({clientNode.Object.LibelleStation}) and chef's ({chefNode.Object.LibelleStation}) metro stations.");
@@ -1628,12 +1573,7 @@ namespace LivingParisApp {
                     }
 
                     // Step 6: Redraw the map with the path highlighted
-                    RenderMap(path);
-
-                    // Step 7: Switch to the Map tab to show the path
-                    if (metroMap.Parent is TabControl tabControl) {
-                        tabControl.SelectedItem = metroMap;
-                    }
+                    DrawHighlightedEdges(path);
                 }
                 catch (Exception ex) {
                     Logger.Log($"Error viewing order details: {ex.Message}");
@@ -1717,7 +1657,7 @@ namespace LivingParisApp {
             /// <param name="e"></param>
 
             if (cmbDishType == null || cmbDiet == null || cmbOrigin == null) {
-                Logger.Warning("Filter cont rols are not accessible");
+                Logger.Warning("Filter controls are not accessible");
                 return;
             }
 
