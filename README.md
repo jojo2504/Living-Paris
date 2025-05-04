@@ -59,7 +59,7 @@ This project aims to explore graphs and their functionality, particularly in opt
 
 ## Getting started
 
-### From release
+### From release (Not Implemented Yet)
 
 Download a release (`.zip` format) and run `LivingParisApp.exe`.
 
