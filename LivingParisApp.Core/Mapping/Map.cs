@@ -1,4 +1,7 @@
+using System;
 using System.Text;
+using System.Linq;
+using System.Collections.Generic;
 using LivingParisApp.Core.Entities.Station;
 using LivingParisApp.Core.GraphStructure;
 using LivingParisApp.Services.FileHandling;
@@ -6,8 +9,15 @@ using LivingParisApp.Services.Logging;
 
 namespace LivingParisApp.Core.Mapping {
     public class Map<T> : Graph<T> where T : IStation<T> {
+        // Dictionary to map station ID to its Node
         private readonly Dictionary<string, Node<T>> stationIdToNode = new Dictionary<string, Node<T>>();
-        private readonly Dictionary<string, Node<T>> stationNameToNode = new Dictionary<string, Node<T>>();
+        private readonly Dictionary<string, List<Node<T>>> seenNodes = [];
+
+        // HashSet containing all nodes including duplicates for stations on multiple lines
+        public HashSet<Node<T>> THashSet = new HashSet<Node<T>>();
+
+        // Dictionary to store station links
+        private HashSet<MetroStationLink<T>> stationLinks = new HashSet<MetroStationLink<T>>();
 
         public Map() {
         }
@@ -20,106 +30,181 @@ namespace LivingParisApp.Core.Mapping {
         public void ParseNodes(string filePathNode) {
             // Step 1: Parse nodes (stations) from the first file
             FileReader nodeInitReader = new FileReader(filePathNode);
-            
-            // First pass: collect all stations and map station names to nodes
+
+            // First pass: collect all stations
             foreach (string line in nodeInitReader.ReadLines()) {
                 var parts = line.Split(',');
                 if (parts.Length < 7 || parts[0] == "ID Station") continue; // Skip header or malformed lines
 
                 T station = T.FromParts(parts);
                 string stationId = parts[0];
-                string stationName = station.LibelleStation;
-                
+
                 var node = new Node<T>(station);
-                
-                // Store the node by ID
+                THashSet.Add(node); // Add to THashSet (keeps all stations including those on multiple lines)
+
+                // Store the node by ID - if station exists on multiple lines, we keep the last one
+                // This is fine since we'll use THashSet to find line information later
                 stationIdToNode[stationId] = node;
-                
-                // Store the node by name (keeping only one node per station name)
-                if (!stationNameToNode.ContainsKey(stationName)) {
-                    stationNameToNode[stationName] = node;
-                }
             }
-            
-            // Now add all unique nodes to the adjacency list
-            foreach (var node in stationNameToNode.Values) {
-                if (!AdjacencyList.ContainsKey(node)) {
-                    AdjacencyList[node] = new List<Tuple<Node<T>, double>>();
-                }
+
+            // Initialize adjacency list with all unique stations
+            foreach (var node in THashSet) {
+                AdjacencyList[node] = new List<Tuple<Node<T>, double>>();
             }
         }
 
         public void ParseArcs(string filePathArcs) {
-            // Step 2: Parse arcs file and build the adjacency list
+            // Step 2: Parse arcs file and build station links
             FileReader arcInitReader = new FileReader(filePathArcs);
-
-            // Create a set to track connections we've already made
-            var processedConnections = new HashSet<string>();
+            stationLinks = new HashSet<MetroStationLink<T>>();
+            HashSet<Tuple<Node<T>, Node<T>>> processedLink = [];
 
             foreach (string line in arcInitReader.ReadLines()) {
                 var parts = line.Split(',');
                 if (parts.Length < 6 || parts[0] == "Station Id") continue; // Skip header or malformed lines
 
                 string id = parts[0];              // Current station ID
-                string previousId = parts[2];      // Précédent (previous station ID)
-                string nextId = parts[3];          // Suivant (next station ID)
+                string previousId = parts[2];      // Previous station ID
+                string nextId = parts[3];          // Next station ID
                 double travelTime = string.IsNullOrEmpty(parts[4]) ? 0 : Convert.ToDouble(parts[4]); // Time from current to next or previous
                 double changeTime = string.IsNullOrEmpty(parts[5]) ? 0 : Convert.ToDouble(parts[5]);
 
                 // Skip if station not in nodes file
-                if (!stationIdToNode.ContainsKey(id)) continue;
-                
-                // Get the canonical node by station name
-                var currentStationName = stationIdToNode[id].Object.LibelleStation;
-                var currentNode = stationNameToNode[currentStationName];
+                if (!stationIdToNode.ContainsKey(id)) {
+                    Logger.Log(stationIdToNode[id].Object.ToString(), "doesnt exist");
+                    continue;
+                }
+
+                var currentNode = stationIdToNode[id];
+                var StationName = currentNode.Object.LibelleStation;
+                if (seenNodes.ContainsKey(StationName)) {
+                    CreateLinksWithAllSelf(seenNodes[StationName], currentNode);
+                    seenNodes[StationName].Add(currentNode); // add self after all otherline self
+                }   
+                else {
+                    Logger.Log("creating new :", StationName);
+                    seenNodes.Add(StationName, new List<Node<T>>() { currentNode });
+                }
 
                 // Process connection to previous station
                 if (!string.IsNullOrEmpty(previousId) && stationIdToNode.ContainsKey(previousId)) {
-                    var prevStationName = stationIdToNode[previousId].Object.LibelleStation;
-                    var prevNode = stationNameToNode[prevStationName];
+                    var prevNode = stationIdToNode[previousId];
 
-                    // Create a unique connection identifier using station names
-                    string connectionId = string.Compare(currentStationName, prevStationName) < 0
-                        ? $"{currentStationName}-{prevStationName}"
-                        : $"{prevStationName}-{currentStationName}";
+                    var tupleLink = Tuple.Create(prevNode, currentNode);
+                    if (!processedLink.Contains(tupleLink)) {
+                        processedLink.Add(tupleLink);
+                        // Find common line between these stations
+                        string commonLine = FindCommonLine(currentNode, prevNode);
 
-                    // Only add if we haven't processed this connection yet
-                    if (!processedConnections.Contains(connectionId)) {
-                        // Add bidirectional connection
-                        AdjacencyList[currentNode].Add(Tuple.Create(prevNode, travelTime + changeTime));
-                        AdjacencyList[prevNode].Add(Tuple.Create(currentNode, travelTime + changeTime));
-
-                        processedConnections.Add(connectionId);
+                        // Create bidirectional links
+                        var weight = travelTime + changeTime;
+                        CreateBidirectionalLinks(currentNode, prevNode, weight, commonLine);
                     }
                 }
 
                 // Process connection to next station
                 if (!string.IsNullOrEmpty(nextId) && stationIdToNode.ContainsKey(nextId)) {
-                    var nextStationName = stationIdToNode[nextId].Object.LibelleStation;
-                    var nextNode = stationNameToNode[nextStationName];
+                    var nextNode = stationIdToNode[nextId];
 
-                    // Create a unique connection identifier using station names
-                    string connectionId = string.Compare(currentStationName, nextStationName) < 0
-                        ? $"{currentStationName}-{nextStationName}"
-                        : $"{nextStationName}-{currentStationName}";
+                    var tupleLink = Tuple.Create(nextNode, currentNode);
+                    if (!processedLink.Contains(tupleLink)) {
+                        processedLink.Add(tupleLink);
 
-                    // Only add if we haven't processed this connection yet
-                    if (!processedConnections.Contains(connectionId)) {
-                        // Add bidirectional connection
-                        AdjacencyList[currentNode].Add(Tuple.Create(nextNode, travelTime + changeTime));
-                        AdjacencyList[nextNode].Add(Tuple.Create(currentNode, travelTime + changeTime));
+                        // Find common line between these stations
+                        string commonLine = FindCommonLine(currentNode, nextNode);
 
-                        processedConnections.Add(connectionId);
+                        // Create bidirectional links
+                        var weight = travelTime + changeTime;
+                        CreateBidirectionalLinks(currentNode, nextNode, weight, commonLine);
                     }
                 }
             }
+
+            // Now populate the adjacency list with the links
+            BuildAdjacencyListFromLinks();
         }
 
-        public void AddBidirectionalEdge(T A, T B, double weight = 0) {
+        private void CreateLinksWithAllSelf(List<Node<T>> stationsToLink, Node<T>? currentNode) {
+            foreach (var node in stationsToLink) {
+                CreateBidirectionalLinks(node, currentNode, 1);
+            }
+        }
+
+        // Helper method to create bidirectional links between stations
+        private void CreateBidirectionalLinks(Node<T> nodeA, Node<T> nodeB, double weight, string line = "") {
+            // Create forward link (A and B)
+            MetroStationLink<T> linkAandB = new MetroStationLink<T>(
+                nodeA,
+                nodeB,
+                Direction.Bidirectional,
+                weight,
+                line
+            );
+            // Add to our collection of links
+            stationLinks.Add(linkAandB);
+            //stationLinks.Add(linkBtoA);
+        }
+
+        // Helper method to find a common line between two stations
+        private string FindCommonLine(Node<T> stationA, Node<T> stationB) {
+            var linesA = GetStationLines(stationA.Object.LibelleStation);
+            var linesB = GetStationLines(stationB.Object.LibelleStation);
+
+            // Find the common lines
+            var commonLines = linesA.Intersect(linesB).ToList();
+
+            if (commonLines.Count > 0) {
+                // If there are multiple common lines, we take the first one
+                // You could implement more sophisticated logic here if needed
+                return commonLines[0];
+            }
+
+            // If no common line found (this shouldn't happen in a well-formed metro system)
+            return "Unknown";
+        }
+
+        // Helper method to get all lines a station is on
+        private List<string> GetStationLines(string stationName) {
+            List<string> lines = new List<string>();
+
+            // Look through THashSet for all instances of this station name
+            foreach (var node in THashSet) {
+                if (node.Object.LibelleStation == stationName) {
+                    // Assuming IStation has a Line property - adjust this based on your implementation
+                    string line = node.Object.LibelleLine;
+                    lines.Add(line);
+                }
+            }
+
+            return lines;
+        }
+
+        // Helper method to build the adjacency list from the links
+        private void BuildAdjacencyListFromLinks() {
+            // Clear existing adjacency list
+            AdjacencyList.Clear();
+
+            // Add all links to the adjacency list
+            foreach (var link in stationLinks) {
+                Node<T> fromNode = link.A;
+                Node<T> toNode = link.B;
+                double weight = link.Weight;
+
+                // Ensure the from node is in the adjacency list
+                if (!AdjacencyList.ContainsKey(fromNode)) {
+                    AdjacencyList[fromNode] = new List<Tuple<Node<T>, double>>();
+                }
+
+                // Add the connection
+                AddBidirectionalEdge(fromNode, toNode, 1);
+            }   
+        }
+
+        public void AddBidirectionalEdge(T A, T B, double weight = 0, string line = "Unknown") {
             // Look for existing nodes or create new ones
             Node<T> Anode = null;
             Node<T> Bnode = null;
-            
+
             // Try to find existing nodes first
             foreach (var node in AdjacencyList.Keys) {
                 if (node.Object.ID == A.ID)
@@ -127,18 +212,21 @@ namespace LivingParisApp.Core.Mapping {
                 if (node.Object.ID == B.ID)
                     Bnode = node;
             }
-            
+
             // Create new nodes if not found
             if (Anode == null) Anode = new Node<T>(A);
             if (Bnode == null) Bnode = new Node<T>(B);
 
-            // Ensure both nodes exist in the adjacency list
+            // Create the links
+            CreateBidirectionalLinks(Anode, Bnode, weight, line);
+
+            // Update the adjacency list
             if (!AdjacencyList.ContainsKey(Anode))
                 AdjacencyList[Anode] = new List<Tuple<Node<T>, double>>();
             if (!AdjacencyList.ContainsKey(Bnode))
                 AdjacencyList[Bnode] = new List<Tuple<Node<T>, double>>();
 
-            // Add the edge
+            // Add the edges
             AdjacencyList[Anode].Add(Tuple.Create(Bnode, weight));
             AdjacencyList[Bnode].Add(Tuple.Create(Anode, weight));
         }
@@ -146,9 +234,9 @@ namespace LivingParisApp.Core.Mapping {
         public override string ToString() {
             StringBuilder stringBuilder = new StringBuilder();
             foreach (KeyValuePair<Node<T>, List<Tuple<Node<T>, double>>> kpv in AdjacencyList) {
-                stringBuilder.Append($"{kpv.Key.Object.LibelleStation} => ");
+                stringBuilder.Append($"{kpv.Key.Object.LibelleStation}({kpv.Key.Object.LibelleLine}) => ");
                 foreach (var node in kpv.Value) {
-                    stringBuilder.Append($"{node.Item1.Object.LibelleStation}({node.Item2}), ");
+                    stringBuilder.Append($"{node.Item1.Object.LibelleStation}({node.Item1.Object.LibelleLine}), ");
                 }
                 if (kpv.Value.Count > 0) {
                     stringBuilder.Length -= 2; // Remove trailing comma and space
@@ -156,6 +244,11 @@ namespace LivingParisApp.Core.Mapping {
                 stringBuilder.AppendLine();
             }
             return stringBuilder.ToString().TrimEnd();
+        }
+
+        // Method to get all links
+        public HashSet<MetroStationLink<T>> GetAllLinks() {
+            return stationLinks;
         }
     }
 }

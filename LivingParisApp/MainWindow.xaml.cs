@@ -17,26 +17,20 @@ using System.Windows.Media.Effects;
 using LivingParisApp.Core.Engines.GraphColoration;
 using System.IO;
 using static LivingParisApp.Services.Environment.Constants;
+using MapControl;
 
 namespace LivingParisApp {
     public partial class MainWindow : Window {
         MySQLManager _mySQLManager;
         private User _currentUser;
         Map<MetroStation> _map;
+        private Dictionary<string, MapItemsControl> _metroLineLayers = new Dictionary<string, MapItemsControl>();
+        private Dictionary<string, MapItemsControl> _highlightedMetroLineLayers = new Dictionary<string, MapItemsControl>();
         RelationshipMap<int> relationshipMap;
         Dictionary<int, Node<int>> nodeCache;
         private double minLat, maxLat, minLon, maxLon;
-        private readonly Dictionary<Node<MetroStation>, Point> stationCoordinates = new Dictionary<Node<MetroStation>, Point>();
 
-        // Zoom/pan variables
         private Point _lastMousePosition;
-        private bool _isDragging = false;
-        private double _scale = 1.0;
-        private TranslateTransform _translateTransform = new TranslateTransform();
-        private ScaleTransform _scaleTransform = new ScaleTransform();
-        private TransformGroup _transformGroup = new TransformGroup();
-        private Point _startDragPoint;
-        private TranslateTransform _startTranslate;
 
         // State Collections
         private Dictionary<int, Button> _dishButtons = new Dictionary<int, Button>();
@@ -104,14 +98,13 @@ namespace LivingParisApp {
             adminTab.Visibility = Visibility.Collapsed;
             relationMap.Visibility = Visibility.Collapsed;
 
-            InitializeMapTransforms();
             LoadInitialData();
 
             cmbDishType.ItemsSource = DishTypes;
             cmbDiet.ItemsSource = Diets;
             cmbOrigin.ItemsSource = Origins;
 
-            this.Loaded += (sender, e) => RenderMap();
+            this.Loaded += (sender, e) => MetroMap_Load();
             this.Loaded += (sender, e) => DrawRelationshipMap();
         }
 
@@ -479,235 +472,31 @@ namespace LivingParisApp {
         #endregion
 
         #region Metro Map
-        private void InitializeMapTransforms() {
-            // Clear existing transforms
-            _scaleTransform = new ScaleTransform(_scale, _scale);
-            _translateTransform = new TranslateTransform(0, 0);
-            _transformGroup = new TransformGroup();
 
-            _scaleTransform.ScaleX = _scale;
-            _scaleTransform.ScaleY = _scale;
-            _translateTransform.X = 0;
-            _translateTransform.Y = 0;
-
-            _transformGroup.Children.Add(_scaleTransform);
-            _transformGroup.Children.Add(_translateTransform);
-
-            // We no longer assign transform to metroCanvas here - it will be applied to contentCanvas in DrawNodes
-            metroCanvas.RenderTransform = _transformGroup;
-
-            // Remove existing handlers to avoid duplicates
-            metroCanvas.MouseLeftButtonDown -= MetroCanvas_MouseLeftButtonDown;
-            metroCanvas.MouseLeftButtonUp -= MetroCanvas_MouseLeftButtonUp;
-            metroCanvas.MouseMove -= MetroCanvas_MouseMove;
-            metroCanvas.MouseWheel -= MetroCanvas_MouseWheel;
-
-            // Add new handlers
-            metroCanvas.MouseLeftButtonDown += MetroCanvas_MouseLeftButtonDown;
-            metroCanvas.MouseLeftButtonUp += MetroCanvas_MouseLeftButtonUp;
-            metroCanvas.MouseMove += MetroCanvas_MouseMove;
-            metroCanvas.MouseWheel += MetroCanvas_MouseWheel;
-        }
-
-        private void MetroCanvas_MouseWheel(object sender, MouseWheelEventArgs e) {
-            double zoom = e.Delta > 0 ? 1.1 : 0.9;
-            _scale = Math.Max(0.1, Math.Min(5.0, _scale * zoom));
-
-            Point mousePos = e.GetPosition(metroCanvas);
-
-            // Adjust transform origin based on mouse position
-            _translateTransform.X = mousePos.X - (mousePos.X - _translateTransform.X) * zoom;
-            _translateTransform.Y = mousePos.Y - (mousePos.Y - _translateTransform.Y) * zoom;
-
-            _scaleTransform.ScaleX = _scale;
-            _scaleTransform.ScaleY = _scale;
-
-            e.Handled = true;
-        }
-
-        private void MetroCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-            _isDragging = true;
-            _startDragPoint = e.GetPosition(metroCanvas);
-            // Save the current translate values
-            _startTranslate = new TranslateTransform(_translateTransform.X, _translateTransform.Y);
-            metroCanvas.CaptureMouse();
-            e.Handled = true;
-        }
-
-        private void MetroCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton == MouseButton.Left && _isDragging) {
-                _isDragging = false;
-                metroCanvas.ReleaseMouseCapture();
-                e.Handled = true;
-            }
-        }
-
-        private void MetroCanvas_MouseMove(object sender, MouseEventArgs e) {
-            if (_isDragging) {
-                // Get the current mouse position
-                Point currentPosition = e.GetPosition(metroCanvas);
-
-                // Calculate the absolute offset from the start point
-                Vector offset = currentPosition - _startDragPoint;
-
-                // Set the transform directly based on the starting position plus offset
-                // This avoids accumulating small errors that can cause oscillation
-                _translateTransform.X = _startTranslate.X + offset.X;
-                _translateTransform.Y = _startTranslate.Y + offset.Y;
-
-                e.Handled = true;
-            }
-        }
-
-        private void RenderMap(LinkedList<Node<MetroStation>> path = null) {
+        private void MetroMap_Load() {
             try {
-                metroCanvas.Children.Clear();
+                ParisMap.Center = new Location(48.8566, 2.3522); // Paris center
+                ParisMap.ZoomLevel = 13;
 
-                if (_map?.AdjacencyList == null || _map.AdjacencyList.Count == 0) {
-                    return;
+                DrawEdges();
+
+                foreach (Node<MetroStation> metroStation in _map.THashSet) {
+                    // IMPORTANT: Create a MapItem instead of a Pushpin
+                    var mapItem = new MapItem();
+                    mapItem.Location = new Location(metroStation.Object.Latitude, metroStation.Object.Longitude);
+
+                    var dataObject = new { Name = metroStation.Object.LibelleStation, Location = new Location(metroStation.Object.Latitude, metroStation.Object.Longitude) };
+                    mapItem.DataContext = dataObject;
+                    // Apply the style - this will now work since the style targets MapItem
+                    mapItem.Style = (Style)FindResource("PushpinItemStyle");
+
+                    // Add the MapItem to the map
+                    ParisMap.Children.Add(mapItem);
                 }
-
-                InitMapBounds();
-
-                // Extract all valid stations with coordinates
-                var stations = _map.AdjacencyList.Keys
-                    .Where(node => node?.Object != null &&
-                          node.Object.Longitude != 0 &&
-                          node.Object.Latitude != 0)
-                    .ToList();
-
-                if (!stations.Any()) {
-                    return;
-                }
-
-                // draw all the nodes
-                foreach (var station in stations) {
-                    DrawNode(station);
-                }
-
-                // draw all the edges
-                DrawEdges(path, stations);
             }
-            catch (Exception ex) {
-                Logger.Error(ex.Message);
+            catch (Exception e) {
+                Logger.Error(e);
             }
-        }
-
-        private void InitMapBounds() {
-            var nodeList = _map.AdjacencyList.Keys.ToList();
-            minLat = maxLat = nodeList[0].Object.Latitude;
-            minLon = maxLon = nodeList[0].Object.Longitude;
-
-            foreach (var node in _map.AdjacencyList.Keys) {
-                minLat = Math.Min(minLat, node.Object.Latitude);
-                maxLat = Math.Max(maxLat, node.Object.Latitude);
-                minLon = Math.Min(minLon, node.Object.Longitude);
-                maxLon = Math.Max(maxLon, node.Object.Longitude);
-            }
-
-            // Add a small buffer
-            double latBuffer = (maxLat - minLat) * 0.05;
-            double lonBuffer = (maxLon - minLon) * 0.05;
-
-            minLat -= latBuffer;
-            maxLat += latBuffer;
-            minLon -= lonBuffer;
-            maxLon += lonBuffer;
-        }
-
-        private void DrawNode(Node<MetroStation> node) {
-            try {
-                double x = ScaleLongitude(node.Object.Longitude);
-                double y = ScaleLatitude(node.Object.Latitude);
-
-                // Store position for links
-                stationCoordinates[node] = new Point(x, y);
-
-                // Station marker with gradient
-                var gradientStops = new GradientStopCollection {
-                    new GradientStop(Colors.White, 0.0),
-                    new GradientStop(GetStationColor(node.Object.LibelleLine), 1.0)
-                };
-
-                Ellipse nodeEllipse = new Ellipse {
-                    Width = 18,
-                    Height = 18,
-                    StrokeThickness = 2,
-                    Stroke = new SolidColorBrush(Colors.White),
-                    Fill = new RadialGradientBrush(gradientStops)
-                };
-
-                // Position the node elements
-                Canvas.SetLeft(nodeEllipse, x - nodeEllipse.Width / 2);
-                Canvas.SetTop(nodeEllipse, y - nodeEllipse.Height / 2);
-                Panel.SetZIndex(nodeEllipse, 10);
-
-                metroCanvas.Children.Add(nodeEllipse);
-
-                // Create the node label with better visibility
-                TextBlock nodeLabel = new TextBlock {
-                    Text = node.Object.LibelleStation,
-                    FontSize = 11,
-                    FontWeight = FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(Colors.Black),
-                    TextAlignment = TextAlignment.Center,
-                    Background = new SolidColorBrush(Color.FromArgb(180, 255, 255, 255)),
-                    Padding = new Thickness(3, 1, 3, 1)
-                };
-
-                // Create a border for the text to improve readability
-                Border labelBorder = new Border {
-                    Child = nodeLabel,
-                    CornerRadius = new CornerRadius(3),
-                    BorderBrush = new SolidColorBrush(Colors.Gray),
-                    BorderThickness = new Thickness(1)
-                };
-
-                // Position the label
-                Canvas.SetLeft(labelBorder, x + 12);
-                Canvas.SetTop(labelBorder, y - 12);
-                Panel.SetZIndex(labelBorder, 15);
-
-                // Add to canvas
-                metroCanvas.Children.Add(labelBorder);
-
-                // Add mouse hover behavior for better UX
-                AddHoverBehavior(nodeEllipse, labelBorder, node);
-            }
-            catch (Exception ex) {
-                Logger.Fatal(ex);
-            }
-        }
-
-        private void AddHoverBehavior(Ellipse nodeEllipse, Border labelBorder, Node<MetroStation> node) {
-            // Create animation for hover effect
-            nodeEllipse.MouseEnter += (s, e) => {
-                nodeEllipse.Width = 24;
-                nodeEllipse.Height = 24;
-                Canvas.SetLeft(nodeEllipse, Canvas.GetLeft(nodeEllipse) - 3);
-                Canvas.SetTop(nodeEllipse, Canvas.GetTop(nodeEllipse) - 3);
-
-                // Highlight label
-                labelBorder.BorderBrush = new SolidColorBrush(Colors.DarkBlue);
-                labelBorder.Background = new SolidColorBrush(Colors.LightYellow);
-
-                // Show station info tooltip
-                ToolTip tooltip = new ToolTip {
-                    Content = $"Station: {node.Object.LibelleStation}\nLigne: {node.Object.LibelleLine}"
-                };
-                nodeEllipse.ToolTip = tooltip;
-            };
-
-            nodeEllipse.MouseLeave += (s, e) => {
-                nodeEllipse.Width = 18;
-                nodeEllipse.Height = 18;
-                Canvas.SetLeft(nodeEllipse, Canvas.GetLeft(nodeEllipse) + 3);
-                Canvas.SetTop(nodeEllipse, Canvas.GetTop(nodeEllipse) + 3);
-
-                // Restore label
-                labelBorder.BorderBrush = new SolidColorBrush(Colors.Gray);
-                labelBorder.Background = new SolidColorBrush(Color.FromArgb(180, 255, 255, 255));
-            };
         }
 
         // Helper method to get color based on metro line
@@ -715,219 +504,83 @@ namespace LivingParisApp {
             if (string.IsNullOrEmpty(lineCode)) return Colors.RosyBrown;
 
             // Create a color mapping for different metro lines
+            // Create a color mapping for different metro lines
             var colorMap = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase) {
                 { "1", Colors.DarkBlue },
                 { "2", Colors.Red },
                 { "3", Colors.Green },
+                { "3bis", Colors.OliveDrab },
                 { "4", Colors.Purple },
                 { "5", Colors.Orange },
                 { "6", Colors.Teal },
-                { "7", Colors.Pink },
+                { "7", Colors.Aquamarine },
+                { "7bis", Colors.MediumVioletRed },
                 { "8", Colors.YellowGreen },
                 { "9", Colors.Brown },
                 { "10", Colors.DeepSkyBlue },
+                { "11", Colors.Gold },
+                { "12", Colors.Indigo },
+                { "13", Colors.Crimson },
+                { "14", Colors.LimeGreen },
                 // Add more lines as needed
             };
 
             return colorMap.TryGetValue(lineCode, out var color) ? color : Colors.RosyBrown;
         }
 
-        private double ScaleLongitude(double longitude) {
-            double width = metroCanvas.Width;
-            // Basic linear mapping is fine for longitude
-            return (longitude - minLon) / (maxLon - minLon) * width;
+        private void DrawEdges() {
+            try {
+                foreach (MetroStationLink<MetroStation> link in _map.GetAllLinks()) {
+                    // Create a MapPolyline instead of a regular Polyline
+                    var start = link.A.Object;
+                    var end = link.B.Object;
+                    DrawEdge(start, end);
+                }
+            }
+            catch (Exception ex) {
+                Logger.Error(ex);
+            }
         }
 
-        private double ScaleLatitude(double latitude) {
-            double height = metroCanvas.Height;
-
-            // Convert latitude to Mercator projection
-            double latRad = latitude * Math.PI / 180; // Convert to radians
-            double mercatorY = Math.Log(Math.Tan(Math.PI / 4 + latRad / 2));
-
-            // Calculate the Mercator Y values for min and max latitudes
-            double minLatRad = minLat * Math.PI / 180;
-            double maxLatRad = maxLat * Math.PI / 180;
-            double minMercatorY = Math.Log(Math.Tan(Math.PI / 4 + minLatRad / 2));
-            double maxMercatorY = Math.Log(Math.Tan(Math.PI / 4 + maxLatRad / 2));
-
-            // Scale and invert
-            return height - ((mercatorY - minMercatorY) / (maxMercatorY - minMercatorY)) * height;
-        }
-
-        private void DrawEdges(LinkedList<Node<MetroStation>> path, List<Node<MetroStation>> stations) {
+        private void DrawHighlightedEdges(LinkedList<Node<MetroStation>> path) {
             // Create path edge list for highlighting
-            var pathEdges = new List<(Node<MetroStation> Start, Node<MetroStation> End)>();
             if (path != null && path.Count > 1) {
                 var current = path.First;
                 while (current?.Next != null) {
-                    pathEdges.Add((current.Value, current.Next.Value));
+                    DrawEdge(current.Value.Object, current.Next.Value.Object, true);
                     current = current.Next;
                 }
             }
-
-            // Group connections by line for better visualization
-            var lineConnections = new Dictionary<string, List<(Point Start, Point End, bool IsPath)>>();
-
-            foreach (var stationNode in stations) {
-                if (!stationCoordinates.TryGetValue(stationNode, out Point startPoint))
-                    continue;
-
-                // Get all connected stations
-                var connections = _map.AdjacencyList[stationNode];
-                foreach (var connection in connections) {
-                    var neighborNode = connection.Item1;
-                    if (neighborNode == null || !stationCoordinates.TryGetValue(neighborNode, out Point endPoint))
-                        continue;
-
-                    // Determine if this connection is part of the highlighted path
-                    bool isPathConnection = pathEdges.Any(edge =>
-                        (edge.Start == stationNode && edge.End == neighborNode) ||
-                        (edge.Start == neighborNode && edge.End == stationNode));
-
-                    // Get line code and normalize it
-                    string lineCode = stationNode.Object.LibelleLine ?? "default";
-
-                    // Add to line connections
-                    if (!lineConnections.ContainsKey(lineCode))
-                        lineConnections[lineCode] = new List<(Point, Point, bool)>();
-
-                    lineConnections[lineCode].Add((startPoint, endPoint, isPathConnection));
-                }
-            }
-
-            // Draw connections by line
-            foreach (var linePair in lineConnections) {
-                string lineCode = linePair.Key;
-                var connections = linePair.Value;
-
-                Color baseColor = GetStationColor(lineCode);
-                Brush regularBrush = new SolidColorBrush(baseColor);
-
-                // Create highlighted path brush with glow effect
-                LinearGradientBrush highlightBrush = new LinearGradientBrush {
-                    StartPoint = new Point(0, 0),
-                    EndPoint = new Point(1, 1)
-                };
-                highlightBrush.GradientStops.Add(new GradientStop(Colors.Yellow, 0.0));
-                highlightBrush.GradientStops.Add(new GradientStop(Colors.Orange, 1.0));
-
-                foreach (var (start, end, isPath) in connections) {
-                    // Create beautiful curved line with appropriate styling
-                    System.Windows.Shapes.Path linePath = new System.Windows.Shapes.Path();
-
-                    // Define geometry for bezier curve
-                    PathGeometry geometry = new PathGeometry();
-                    PathFigure figure = new PathFigure { StartPoint = start };
-
-                    // Calculate control points
-                    Vector direction = end - start;
-                    double distance = direction.Length;
-
-                    Point controlPoint1 = start + (direction * 0.33);
-                    Point controlPoint2 = start + (direction * 0.66);
-
-                    figure.Segments.Add(new BezierSegment(controlPoint1, controlPoint2, end, true));
-                    geometry.Figures.Add(figure);
-
-                    linePath.Data = geometry;
-                    linePath.Stroke = isPath ? highlightBrush : regularBrush;
-                    linePath.StrokeThickness = isPath ? 6 : 4;
-                    linePath.StrokeStartLineCap = PenLineCap.Round;
-                    linePath.StrokeEndLineCap = PenLineCap.Round;
-
-                    if (isPath) {
-                        // Add glow effect for highlighted path
-                        linePath.Effect = new DropShadowEffect {
-                            Color = Colors.Gold,
-                            Direction = 0,
-                            ShadowDepth = 0,
-                            BlurRadius = 10,
-                            Opacity = 0.7
-                        };
-                    }
-
-                    Panel.SetZIndex(linePath, isPath ? 3 : 1);
-                    metroCanvas.Children.Add(linePath);
-                }
-            }
-
-            // Add legend for metro lines (optional)
-            CreateLineLegend(lineConnections.Keys.ToList());
         }
 
-        private void CreateLineLegend(List<string> lineNames) {
-            // Remove any existing legend
-            var existingLegend = metroCanvas.Children.OfType<Border>().FirstOrDefault(b => b.Name == "LineLegend");
-            if (existingLegend != null)
-                metroCanvas.Children.Remove(existingLegend);
+        private void DrawEdge(MetroStation start, MetroStation end, bool isHighlighted = false) {
+            // Create a MapPolyline instead of a regular Polyline
+            var mapPolyline = new MapPolyline();
+            Color baseColor = GetStationColor(start.LibelleLine);
 
-            // Create legend panel
-            StackPanel legendPanel = new StackPanel {
-                Orientation = Orientation.Vertical,
-                Background = new SolidColorBrush(Color.FromArgb(220, 255, 255, 255))
+            // Create a LocationCollection for the points
+            var locations = new LocationCollection {
+                new Location(start.Latitude, start.Longitude),
+                new Location(end.Latitude, end.Longitude)
             };
 
-            // Add legend title
-            TextBlock legendTitle = new TextBlock {
-                Text = "Metro Line",
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(5),
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-            legendPanel.Children.Add(legendTitle);
+            // Set the locations to the polyline
+            mapPolyline.Locations = locations;
 
-            // Add separator
-            legendPanel.Children.Add(new Separator { Margin = new Thickness(0, 0, 0, 5) });
-
-            // Add line entries
-            foreach (var line in lineNames.OrderBy(l => l)) {
-                StackPanel lineEntry = new StackPanel {
-                    Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(5)
-                };
-
-                Rectangle colorBox = new Rectangle {
-                    Width = 15,
-                    Height = 15,
-                    Fill = new SolidColorBrush(GetStationColor(line)),
-                    Margin = new Thickness(0, 0, 5, 0),
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                TextBlock lineLabel = new TextBlock {
-                    Text = $"Line {line}",
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-
-                lineEntry.Children.Add(colorBox);
-                lineEntry.Children.Add(lineLabel);
-                legendPanel.Children.Add(lineEntry);
+            // Style the mapPolyline
+            if (isHighlighted) {
+                mapPolyline.Stroke = new SolidColorBrush(Colors.DarkGoldenrod);
+                mapPolyline.StrokeThickness = 10;
+                mapPolyline.Opacity = 1;
+            }   
+            else {
+                mapPolyline.Stroke = new SolidColorBrush(baseColor);
+                mapPolyline.StrokeThickness = 3;
+                mapPolyline.Opacity = 0.7;
             }
 
-            // Create border for legend
-            Border legendBorder = new Border {
-                Name = "LineLegend",
-                Child = legendPanel,
-                BorderBrush = new SolidColorBrush(Colors.Gray),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(5),
-                Padding = new Thickness(5),
-                Effect = new DropShadowEffect {
-                    Color = Colors.Gray,
-                    Direction = 315,
-                    ShadowDepth = 3,
-                    BlurRadius = 5,
-                    Opacity = 0.5
-                }
-            };
-
-            // Position legend in top-right corner
-            Canvas.SetRight(legendBorder, -50);
-            Canvas.SetTop(legendBorder, 10);
-            Panel.SetZIndex(legendBorder, 100);
-
-            metroCanvas.Children.Add(legendBorder);
+            // Add the polyline to the map
+            ParisMap.Children.Add(mapPolyline);
         }
 
         #endregion
@@ -1563,7 +1216,7 @@ namespace LivingParisApp {
 
                     string outputPath = System.IO.Path.Combine(GetSolutionDirectoryInfo().FullName, "LivingParisApp", "exported-data", "graph-export.json");
                     File.WriteAllText(outputPath, json);
-                
+
                     DrawRelationshipMap();
 
                     // Calculate the order total for this chef
@@ -1910,13 +1563,9 @@ namespace LivingParisApp {
                         .ToList();
 
                     Logger.Log($"clientNode ({clientNode.Object.LibelleStation}) neighbours: {string.Join(", ", adjacentStationNames2)}");
-                    /*// Step 5: Use A* to find the shortest path
+                    // Step 5: Use A* to find the shortest path
                     var aStar = new Astar<MetroStation>();
                     var (path, totalLength) = aStar.Run(_map, chefNode, clientNode);
-                    */
-                    var dijkstra = new Dijkstra<MetroStation>();
-                    dijkstra.Init(_map, chefNode);
-                    var (path, totalLength) = dijkstra.GetPath(clientNode);
 
                     if (path == null || path.Count == 0) {
                         Logger.Warning($"No path found between the client's ({clientNode.Object.LibelleStation}) and chef's ({chefNode.Object.LibelleStation}) metro stations.");
@@ -1924,12 +1573,7 @@ namespace LivingParisApp {
                     }
 
                     // Step 6: Redraw the map with the path highlighted
-                    RenderMap(path);
-
-                    // Step 7: Switch to the Map tab to show the path
-                    if (metroMap.Parent is TabControl tabControl) {
-                        tabControl.SelectedItem = metroMap;
-                    }
+                    DrawHighlightedEdges(path);
                 }
                 catch (Exception ex) {
                     Logger.Log($"Error viewing order details: {ex.Message}");

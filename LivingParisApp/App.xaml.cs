@@ -39,6 +39,8 @@ namespace LivingParisApp {
                     Path.Combine(CsvAssetsPath, "MetroParisNoeuds.csv"),
                     Path.Combine(CsvAssetsPath, "MetroParisArcs.csv")
                 );
+
+                //Logger.Log(map.ToString());
                 
                 MainWindow window = new MainWindow(mySQLManager, map);
                 window.Show();
