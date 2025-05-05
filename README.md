@@ -23,7 +23,7 @@ This project aims to explore graphs and their functionality, particularly in opt
   - [Introduction](#introduction)
   - [Feature highlights](#feature-highlights)
   - [Getting started](#getting-started)
-    - [From release](#from-release)
+    - [From release (Not-Implemented-Yet)](#from-release-not-implemented-yet)
     - [Build from source code](#build-from-source-code)
   - [Development](#development)
     - [Structure](#structure)
@@ -135,7 +135,10 @@ where :
 
 * Xaml style is not consistent across tabs.
 * Dijkstra is broken
-  * *This is not not critical since we are currently using A*.*
+  * *This is not critical since we are currently using A.**
+* Shortest path drawn onto the map is not cleared before drawing another one.
+* The mock database has out-of-sync data
+  * *Not critical, only affects a shortest path to be found.*
 
 ### To do
 
