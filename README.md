@@ -23,7 +23,7 @@ This project aims to explore graphs and their functionality, particularly in opt
   - [Introduction](#introduction)
   - [Feature highlights](#feature-highlights)
   - [Getting started](#getting-started)
-    - [From release](#from-release)
+    - [From release (Not-Implemented-Yet)](#from-release-not-implemented-yet)
     - [Build from source code](#build-from-source-code)
   - [Development](#development)
     - [Structure](#structure)
@@ -59,7 +59,7 @@ This project aims to explore graphs and their functionality, particularly in opt
 
 ## Getting started
 
-### From release
+### From release (Not Implemented Yet)
 
 Download a release (`.zip` format) and run `LivingParisApp.exe`.
 
@@ -74,8 +74,6 @@ Download a release (`.zip` format) and run `LivingParisApp.exe`.
 ```
 run.app [--reset] [--noLogSQL] [--initMock]
 ```
-- Admin's email : `admin`
-- Admin's password : `admin`
 where :
 
 | Argument | Description |
@@ -83,6 +81,8 @@ where :
 | `--reset` | Wipe DB. |
 | `--initMock` | Wipe DB **and** populate it will new entries|
 | `--noLogSQL` | Do not log SQL queries. |
+
+**Note:** A custom log file has been implemented, its path will be given when starting the project.
 
 4. To run tests, run on `cmd.exe` :
 
@@ -135,7 +135,10 @@ where :
 
 * Xaml style is not consistent across tabs.
 * Dijkstra is broken
-  * *This is not not critical since we are currently using A*.*
+  * *This is not critical since we are currently using A.**
+* Shortest path drawn onto the map is not cleared before drawing another one.
+* The mock database has out-of-sync data
+  * *Not critical, only affects a shortest path to be found.*
 
 ### To do
 
@@ -168,7 +171,10 @@ As a client, you can:
   - Cancel orders when needed
 
 ### ⚙️ Admin
-
+---
+- Admin's email : `admin`
+- Admin's password : `admin`
+---
 Admins have comprehensive system oversight and can:
 - Manage all users across the platform
 - Control the dish catalog with abilities to:
