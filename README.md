@@ -74,8 +74,6 @@ Download a release (`.zip` format) and run `LivingParisApp.exe`.
 ```
 run.app [--reset] [--noLogSQL] [--initMock]
 ```
-- Admin's email : `admin`
-- Admin's password : `admin`
 where :
 
 | Argument | Description |
@@ -83,6 +81,8 @@ where :
 | `--reset` | Wipe DB. |
 | `--initMock` | Wipe DB **and** populate it will new entries|
 | `--noLogSQL` | Do not log SQL queries. |
+
+**Note:** A custom log file has been implemented, its path will be given when starting the project.
 
 4. To run tests, run on `cmd.exe` :
 
@@ -171,7 +171,10 @@ As a client, you can:
   - Cancel orders when needed
 
 ### ⚙️ Admin
-
+---
+- Admin's email : `admin`
+- Admin's password : `admin`
+---
 Admins have comprehensive system oversight and can:
 - Manage all users across the platform
 - Control the dish catalog with abilities to:
