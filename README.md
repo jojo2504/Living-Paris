@@ -7,7 +7,6 @@
   
 ## Collaborators
 - Bahyamin | Benjamin Zilber
-- Tibo-7 | Thilbault Thery
 
 ## Introduction
 
